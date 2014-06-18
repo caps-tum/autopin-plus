@@ -19,3 +19,9 @@
 *.exe
 *.out
 *.app
+
+# Backup files
+*~
+
+# Libre Office lock files
+.~lock.*
