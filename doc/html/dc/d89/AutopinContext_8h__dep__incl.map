@@ -1,0 +1,34 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$d3/d59/Configuration_8h.html" title="src/Configuration.h" alt="" coords="985,80,1116,107"/>
+<area shape="rect" id="node7" href="$d4/d09/Autopin_8h.html" title="src/Autopin.h" alt="" coords="1215,453,1313,480"/>
+<area shape="rect" id="node15" href="$d3/dc9/ObservedProcess_8h.html" title="src/ObservedProcess.h" alt="" coords="607,155,765,181"/>
+<area shape="rect" id="node18" href="$dc/d65/OSServices_8h.html" title="src/OSServices.h" alt="" coords="456,229,581,256"/>
+<area shape="rect" id="node20" href="$d1/d49/ControlStrategy_8h.html" title="src/ControlStrategy.h" alt="" coords="781,304,928,331"/>
+<area shape="rect" id="node42" href="$d1/d27/TraceThread_8h.html" title="src/os/linux/TraceThread.h" alt="" coords="147,229,324,256"/>
+<area shape="rect" id="node47" href="$d9/d4b/PinningHistory_8h.html" title="src/PinningHistory.h" alt="" coords="1289,155,1428,181"/>
+<area shape="rect" id="node60" href="$db/dc1/PerformanceMonitor_8h.html" title="src/PerformanceMonitor.h" alt="" coords="1666,155,1837,181"/>
+<area shape="rect" id="node81" href="$d5/d6d/AutopinContext_8cpp.html" title="src/AutopinContext.cpp" alt="" coords="2679,80,2837,107"/>
+<area shape="rect" id="node5" href="$d8/d09/StandardConfiguration_8h.html" title="src/StandardConfiguration.h" alt="" coords="1080,155,1264,181"/>
+<area shape="rect" id="node57" href="$d5/d0c/Configuration_8cpp.html" title="src/Configuration.cpp" alt="" coords="909,155,1056,181"/>
+<area shape="rect" id="node13" href="$d9/db5/StandardConfiguration_8cpp.html" title="src/StandardConfiguration.cpp" alt="" coords="909,229,1107,256"/>
+<area shape="rect" id="node9" href="$d7/d8d/Autopin_8cpp.html" title="src/Autopin.cpp" alt="" coords="653,528,765,555"/>
+<area shape="rect" id="node11" href="$df/d0a/main_8cpp.html" title="src/main.cpp" alt="" coords="1215,528,1312,555"/>
+<area shape="rect" id="node29" href="$d7/d18/ObservedProcess_8cpp.html" title="src/ObservedProcess.cpp" alt="" coords="459,304,632,331"/>
+<area shape="rect" id="node34" href="$de/d19/OSServicesLinux_8cpp.html" title="src/os/linux/OSServicesLinux.cpp" alt="" coords="416,379,635,405"/>
+<area shape="rect" id="node31" href="$db/d0f/OSServicesLinux_8h.html" title="src/os/linux/OSServicesLinux.h" alt="" coords="67,304,272,331"/>
+<area shape="rect" id="node38" href="$dd/d29/OSServices_8cpp.html" title="src/OSServices.cpp" alt="" coords="296,304,435,331"/>
+<area shape="rect" id="node22" href="$d3/d8b/ControlStrategy_8cpp.html" title="src/ControlStrategy.cpp" alt="" coords="757,379,916,405"/>
+<area shape="rect" id="node24" href="$d2/df3/Strategy__autopin1_8h.html" title="src/strategy/autopin1/Strategy_autopin1.h" alt="" coords="941,379,1205,405"/>
+<area shape="rect" id="node27" href="$d3/d59/Strategy__autopin1_8cpp.html" title="src/strategy/autopin1/Strategy_autopin1.cpp" alt="" coords="911,453,1189,480"/>
+<area shape="rect" id="node36" href="$d0/d14/TraceThread_8cpp.html" title="src/os/linux/TraceThread.cpp" alt="" coords="5,379,195,405"/>
+<area shape="rect" id="node49" href="$d2/d8d/XMLPinningHistory_8h.html" title="src/XMLPinningHistory.h" alt="" coords="1462,229,1628,256"/>
+<area shape="rect" id="node55" href="$d6/dcc/PinningHistory_8cpp.html" title="src/PinningHistory.cpp" alt="" coords="1232,229,1385,256"/>
+<area shape="rect" id="node52" href="$d5/d6c/XMLPinningHistory_8cpp.html" title="src/XMLPinningHistory.cpp" alt="" coords="1439,304,1620,331"/>
+<area shape="rect" id="node63" href="$d9/dfa/Monitor__perf_8h.html" title="src/monitor/perf/Monitor_perf.h" alt="" coords="1652,229,1851,256"/>
+<area shape="rect" id="node67" href="$d9/dab/Monitor__perfmon_8h.html" title="src/monitor/perfmon/Monitor_perfmon.h" alt="" coords="1876,229,2127,256"/>
+<area shape="rect" id="node71" href="$d5/d4e/Monitor__random_8h.html" title="src/monitor/random/Monitor_random.h" alt="" coords="2361,229,2604,256"/>
+<area shape="rect" id="node76" href="$d8/d0d/PerformanceMonitor_8cpp.html" title="src/PerformanceMonitor.cpp" alt="" coords="2151,229,2337,256"/>
+<area shape="rect" id="node65" href="$d8/d06/Monitor__perf_8cpp.html" title="src/monitor/perf/Monitor_perf.cpp" alt="" coords="1645,304,1859,331"/>
+<area shape="rect" id="node69" href="$da/d7d/Monitor__perfmon_8cpp.html" title="src/monitor/perfmon/Monitor_perfmon.cpp" alt="" coords="1884,304,2148,331"/>
+<area shape="rect" id="node74" href="$d1/d84/Monitor__random_8cpp.html" title="src/monitor/random/Monitor_random.cpp" alt="" coords="2189,304,2445,331"/>
+</map>

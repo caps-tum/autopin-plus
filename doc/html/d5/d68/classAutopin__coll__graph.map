@@ -1,0 +1,12 @@
+<map id="G" name="G">
+<area shape="rect" id="node2" href="$d7/d48/classOSServices.html" title="Abstracts all resources of the underlying operating system needed by autopin+." alt="" coords="131,1237,305,1461"/>
+<area shape="rect" id="node40" href="$d1/dc2/classControlStrategy.html" title="Base class for control strategies." alt="" coords="709,2086,872,2325"/>
+<area shape="rect" id="node49" href="$d2/dfa/classObservedProcess.html" title="This class implements the internal representation of the process observed by autopin+." alt="" coords="289,1592,495,2021"/>
+<area shape="rect" id="node5" href="$d4/d41/classAutopinContext.html" title="Class encapsulating all runtime information for each class." alt="" coords="556,493,703,747"/>
+<area shape="rect" id="node15" href="$d4/de4/classPinningHistory.html" title="Manages pinnings and corresponding performance values." alt="" coords="1095,1171,1275,1527"/>
+<area shape="rect" id="node31" href="$d4/da7/classConfiguration.html" title="Abstract base class for the general handling of configuration files." alt="" coords="702,824,879,1107"/>
+<area shape="rect" id="node36" href="$d5/daa/classPerformanceMonitor.html" title="Base class for performance monitors." alt="" coords="594,1223,752,1476"/>
+<area shape="rect" id="node7" href="$da/d72/classOutputChannel.html" title="Class for printing output on the terminal." alt="" coords="231,147,364,429"/>
+<area shape="rect" id="node9" href="$d9/dd6/classError.html" title="Class for error handling." alt="" coords="906,220,1048,356"/>
+<area shape="rect" id="node21" href="$d4/de4/classPinningHistory.html#db/d82/structPinningHistory_1_1monitor__config" title="Stores configuration options for a PerformanceMonitor." alt="" coords="1485,574,1684,666"/>
+</map>

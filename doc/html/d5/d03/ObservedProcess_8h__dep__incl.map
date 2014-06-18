@@ -1,0 +1,16 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$d4/d09/Autopin_8h.html" title="src/Autopin.h" alt="" coords="183,304,282,331"/>
+<area shape="rect" id="node9" href="$dc/d65/OSServices_8h.html" title="src/OSServices.h" alt="" coords="666,80,791,107"/>
+<area shape="rect" id="node11" href="$d1/d49/ControlStrategy_8h.html" title="src/ControlStrategy.h" alt="" coords="269,155,415,181"/>
+<area shape="rect" id="node20" href="$d7/d18/ObservedProcess_8cpp.html" title="src/ObservedProcess.cpp" alt="" coords="883,155,1057,181"/>
+<area shape="rect" id="node25" href="$de/d19/OSServicesLinux_8cpp.html" title="src/os/linux/OSServicesLinux.cpp" alt="" coords="874,229,1093,256"/>
+<area shape="rect" id="node33" href="$d1/d27/TraceThread_8h.html" title="src/os/linux/TraceThread.h" alt="" coords="464,80,641,107"/>
+<area shape="rect" id="node5" href="$d7/d8d/Autopin_8cpp.html" title="src/Autopin.cpp" alt="" coords="488,379,601,405"/>
+<area shape="rect" id="node7" href="$df/d0a/main_8cpp.html" title="src/main.cpp" alt="" coords="184,379,281,405"/>
+<area shape="rect" id="node22" href="$db/d0f/OSServicesLinux_8h.html" title="src/os/linux/OSServicesLinux.h" alt="" coords="491,155,697,181"/>
+<area shape="rect" id="node29" href="$dd/d29/OSServices_8cpp.html" title="src/OSServices.cpp" alt="" coords="721,155,859,181"/>
+<area shape="rect" id="node13" href="$d3/d8b/ControlStrategy_8cpp.html" title="src/ControlStrategy.cpp" alt="" coords="26,229,185,256"/>
+<area shape="rect" id="node15" href="$d2/df3/Strategy__autopin1_8h.html" title="src/strategy/autopin1/Strategy_autopin1.h" alt="" coords="210,229,474,256"/>
+<area shape="rect" id="node18" href="$d3/d59/Strategy__autopin1_8cpp.html" title="src/strategy/autopin1/Strategy_autopin1.cpp" alt="" coords="307,304,585,331"/>
+<area shape="rect" id="node27" href="$d0/d14/TraceThread_8cpp.html" title="src/os/linux/TraceThread.cpp" alt="" coords="499,229,689,256"/>
+</map>
