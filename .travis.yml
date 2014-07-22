@@ -1,0 +1,15 @@
+compiler:
+  - clang
+  - gcc
+
+before_install:
+    - sudo apt-get update -qq
+
+install:
+    - sudo apt-get install -qq libqt4-dev cmake
+
+script:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make

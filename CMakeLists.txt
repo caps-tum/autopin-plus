@@ -2,7 +2,19 @@
 project(autopin+)
 cmake_minimum_required(VERSION 2.6)
 
-ADD_DEFINITIONS(-g3 -O2 -std=c++11 -Wno-deprecated-register)
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+  # using Clang
+  ADD_DEFINITIONS(-g -Ofast -std=c++11 -Wno-deprecated-register)
+#  ADD_DEFINITIONS(-g3 -O0 -std=c++11 --analyze -Weverything -Wno-deprecated-register -Wno-c++98-compat -Wno-padded)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  # using GCC
+  ADD_DEFINITIONS(-g -O2 -std=c++11 -Wno-deprecated-register)
+#  ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wno-deprecated-register)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
+  # using Intel C++
+  ADD_DEFINITIONS(-g -fast -std=c++11 -Wno-deprecated-register)
+#  ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wno-deprecated-register)
+endif()
 
 # Configuration options
 option(OS_LINUX "Build autopin+ for Linux" ON)
