@@ -208,6 +208,6 @@ class ControlStrategy : public QObject {
 				return false;
 			else
 				return (tida < tidb);
-		};
+		}
 	};
 };
