@@ -137,6 +137,10 @@ void ObservedProcess::start() {
 		context.info("> The connection with the observed process has been established");
 	}
 
+	// We have either just created a new process or attached to an existing one. Either way, we should really
+	// tell all interested parties to update their internal list of monitored threads now.
+	emit sig_TaskCreated(pid);
+
 	context.disableIndentation();
 }
 
