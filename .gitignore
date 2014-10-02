@@ -25,3 +25,6 @@
 
 # Libre Office lock files
 .~lock.*
+
+# Build directory
+build
