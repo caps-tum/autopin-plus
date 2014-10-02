@@ -153,7 +153,7 @@ void Main::slot_TaskCreated(int tid) {
 		});
 
 		if (it != pinned_tasks.end()) return;
-		
+
 		unsigned int i = pinned_tasks.size();
 		PinningHistory::autopin_pinning pinning = pinnings[current_pinning];
 		if (i < pinning.size()) {
