@@ -44,7 +44,7 @@ class Exception : public std::exception {
 	 *
 	 * Returns a pointer to a \0-terminated, UTF8-encoded string describing the problem.
 	 */
-	virtual const char *what() const throw();
+	virtual const char *what() const noexcept;
 
   private:
 	/*!
