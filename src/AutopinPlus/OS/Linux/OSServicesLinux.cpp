@@ -65,7 +65,6 @@ OSServicesLinux::OSServicesLinux(const AutopinContext &context)
 
 	connect(&tracer, SIGNAL(sig_TaskCreated(int)), this, SIGNAL(sig_TaskCreated(int)));
 	connect(&tracer, SIGNAL(sig_TaskTerminated(int)), this, SIGNAL(sig_TaskTerminated(int)));
-
 }
 
 OSServicesLinux::~OSServicesLinux() {
@@ -75,7 +74,6 @@ OSServicesLinux::~OSServicesLinux() {
 	if (tracer.isRunning()) tracer.terminate();
 
 	current_service = nullptr;
-
 
 	if (comm_notifier != nullptr) delete comm_notifier;
 }

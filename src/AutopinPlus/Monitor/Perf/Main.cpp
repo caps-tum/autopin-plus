@@ -199,8 +199,7 @@ int Main::createPerfCounter(int tid) {
 
 int Main::startPerfCounter(int fd) { return ioctl(fd, PERF_EVENT_IOC_ENABLE); }
 
-int Main::sys_perf_event_open(struct perf_event_attr *attr, pid_t pid, int cpu, int group_fd,
-									  unsigned long flags) {
+int Main::sys_perf_event_open(struct perf_event_attr *attr, pid_t pid, int cpu, int group_fd, unsigned long flags) {
 	attr->size = sizeof(*attr);
 	return syscall(__NR_perf_event_open, attr, pid, cpu, group_fd, flags);
 }

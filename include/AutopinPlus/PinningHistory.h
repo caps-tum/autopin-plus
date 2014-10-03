@@ -130,9 +130,9 @@ class PinningHistory {
 	 */
 	std::list<pinning_result> getPinnings(int phase) const;
 
-	const QString& getStrategy() const;
+	const QString &getStrategy() const;
 
-	const Configuration::configopts& getStrategyOptions() const;
+	const Configuration::configopts &getStrategyOptions() const;
 
 	Configuration::configopts::const_iterator getStrategyOption(QString s) const;
 

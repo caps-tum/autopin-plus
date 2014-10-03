@@ -33,8 +33,7 @@ namespace Strategy {
 namespace Autopin1 {
 
 Main::Main(Configuration *config, ObservedProcess *proc, OSServices *service,
-									 const PerformanceMonitor::monitor_list &monitors, PinningHistory *history,
-									 const AutopinContext &context)
+		   const PerformanceMonitor::monitor_list &monitors, PinningHistory *history, const AutopinContext &context)
 	: ControlStrategy(config, proc, service, monitors, history, context), current_pinning(0), best_pinning(-1),
 	  monitor(nullptr), notifications(false) {
 	// Setup timers
@@ -261,9 +260,8 @@ void Main::slot_stopPinning() {
 void Main::slot_TaskCreated(int tid) {
 	// Only pin new tasks when the measurement is currently running
 	if (notifications) {
-		auto it = std::find_if(pinned_tasks.begin(), pinned_tasks.end(), [tid](const pinned_task &t) {
-		   return t.tid == tid;
-		});
+		auto it = std::find_if(pinned_tasks.begin(), pinned_tasks.end(),
+							   [tid](const pinned_task &t) { return t.tid == tid; });
 
 		if (it != pinned_tasks.end()) return;
 
@@ -298,9 +296,8 @@ void Main::slot_TaskCreated(int tid) {
 
 void Main::slot_TaskTerminated(int tid) {
 	if (notifications) {
-		auto it = std::find_if(pinned_tasks.begin(), pinned_tasks.end(), [tid](const pinned_task &t) {
-		   return t.tid == tid;
-		});
+		auto it = std::find_if(pinned_tasks.begin(), pinned_tasks.end(),
+							   [tid](const pinned_task &t) { return t.tid == tid; });
 
 		if (it == pinned_tasks.end()) return;
 
@@ -359,7 +356,6 @@ void Main::applyPinning(PinningHistory::autopin_pinning pinning) {
 	}
 }
 
-
 void Main::checkPinnedTasks() {
 	// There is no need to check for terminated tasks if process tracing is enabled
 	if (proc->getTrace()) return;
@@ -372,7 +368,7 @@ void Main::checkPinnedTasks() {
 
 	running_tasks = proc_tree.getAllTasks();
 
-	auto new_end = std::remove_if(pinned_tasks.begin(), pinned_tasks.end(),[&](const pinned_task& t) {
+	auto new_end = std::remove_if(pinned_tasks.begin(), pinned_tasks.end(), [&](const pinned_task &t) {
 		const int tid = t.tid;
 
 		if (running_tasks.find(tid) == running_tasks.end()) {

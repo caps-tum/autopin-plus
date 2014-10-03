@@ -81,7 +81,6 @@ void XMLPinningHistory::init() {
 				break;
 		}
 
-
 		// Find start for config
 		while (!hreader.atEnd()) {
 			hreader.readNextStartElement();

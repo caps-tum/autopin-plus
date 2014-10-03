@@ -57,8 +57,7 @@ class Main : public ControlStrategy {
 	 * \param[in]	context	Refernce to the context of the object calling the constructor
 	 */
 	Main(Configuration *config, ObservedProcess *proc, OSServices *service,
-					  const PerformanceMonitor::monitor_list &monitors, PinningHistory *history,
-					  const AutopinContext &context);
+		 const PerformanceMonitor::monitor_list &monitors, PinningHistory *history, const AutopinContext &context);
 
 	void init() override;
 	Configuration::configopts getConfigOpts() override;

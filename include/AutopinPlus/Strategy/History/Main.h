@@ -57,8 +57,7 @@ class Main : public ControlStrategy {
 	 * \param[in] context     Refernce to the context of the object calling the constructor
 	 */
 	Main(Configuration *config, ObservedProcess *proc, OSServices *service,
-					  const PerformanceMonitor::monitor_list &monitors, PinningHistory *history,
-					  const AutopinContext &context);
+		 const PerformanceMonitor::monitor_list &monitors, PinningHistory *history, const AutopinContext &context);
 
 	void init() override;
 	Configuration::configopts getConfigOpts() override;
@@ -70,7 +69,6 @@ class Main : public ControlStrategy {
 	 * \brief Assigns tasks to cores
 	 */
 	void slot_startPinning();
-
 
 	void slot_TaskCreated(int tid) override;
 	void slot_TaskTerminated(int tid) override;
@@ -163,7 +161,6 @@ class Main : public ControlStrategy {
 	 * Skipped thread ids as strings
 	 */
 	QStringList skip_str;
-
 
 	/*!
 	 * Tasks actually pinned to cores

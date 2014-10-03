@@ -193,11 +193,11 @@ void TraceThread::run() {
 				if (ret != 0) REPORTV(Error::PROC_TRACE, "ptrace_eventmsg", "Could not get ptrace event information");
 
 				switch (status >> 16) {
-				case(PTRACE_EVENT_CLONE) :
+				case (PTRACE_EVENT_CLONE):
 
-				case(PTRACE_EVENT_FORK) :
+				case (PTRACE_EVENT_FORK):
 
-				case(PTRACE_EVENT_VFORK) :
+				case (PTRACE_EVENT_VFORK):
 					newTask(event_msg);
 					break;
 
@@ -246,7 +246,7 @@ void TraceThread::newTask(int pid) {
 						   "Could not set ptrace options for process " + QString::number(pid));
 
 		new_tasks.erase(pid);
-        tasks.insert(pid);
+		tasks.insert(pid);
 
 		CHECK_ERRORV(ptraceContinue(pid));
 

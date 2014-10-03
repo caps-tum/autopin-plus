@@ -81,16 +81,13 @@ std::list<PinningHistory::pinning_result> PinningHistory::getPinnings(int phase)
 	return std::list<pinning_result>();
 }
 
-const QString& PinningHistory::getStrategy() const {
-	return strategy;
-}
+const QString &PinningHistory::getStrategy() const { return strategy; }
 
-const Configuration::configopts& PinningHistory::getStrategyOptions() const {
-	return strategy_options;
-}
+const Configuration::configopts &PinningHistory::getStrategyOptions() const { return strategy_options; }
 
 Configuration::configopts::const_iterator PinningHistory::getStrategyOption(QString s) const {
-	return std::find_if(getStrategyOptions().begin(), getStrategyOptions().end(), [&](const std::pair<QString, QStringList> &p) {
+	return std::find_if(getStrategyOptions().begin(), getStrategyOptions().end(),
+						[&](const std::pair<QString, QStringList> &p) {
 		if (p.first == s) return true;
 		return false;
 	});

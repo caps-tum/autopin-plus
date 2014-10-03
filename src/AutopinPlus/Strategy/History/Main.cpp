@@ -33,8 +33,7 @@ namespace Strategy {
 namespace History {
 
 Main::Main(Configuration *config, ObservedProcess *proc, OSServices *service,
-									 const PerformanceMonitor::monitor_list &monitors, PinningHistory *history,
-									 const AutopinContext &context)
+		   const PerformanceMonitor::monitor_list &monitors, PinningHistory *history, const AutopinContext &context)
 	: ControlStrategy(config, proc, service, monitors, history, context), current_pinning(0), best_pinning(-1),
 	  notifications(false) {
 
@@ -44,8 +43,6 @@ Main::Main(Configuration *config, ObservedProcess *proc, OSServices *service,
 
 	this->name = "history";
 }
-
-
 
 void Main::init() {
 
@@ -66,20 +63,16 @@ void Main::init() {
 
 	// Read user values from the configuration
 	auto it = history->getStrategyOption("init_time");
-	if (it != history->getStrategyOptions().end())
-		init_time = it->second.first().toInt();
+	if (it != history->getStrategyOptions().end()) init_time = it->second.first().toInt();
 
 	it = history->getStrategyOption("openmp_icc");
-	if (it != history->getStrategyOptions().end())
-		openmp_icc = it->second.first() == "true";
+	if (it != history->getStrategyOptions().end()) openmp_icc = it->second.first() == "true";
 
 	it = history->getStrategyOption("skip");
-	if (it != history->getStrategyOptions().end())
-		skip_str = it->second;
+	if (it != history->getStrategyOptions().end()) skip_str = it->second;
 
 	it = history->getStrategyOption("notification_interval");
-	if (it != history->getStrategyOptions().end())
-		notification_interval = it->second.first().toInt();
+	if (it != history->getStrategyOptions().end()) notification_interval = it->second.first().toInt();
 
 	for (int i = 0; i < skip_str.size(); i++) {
 		QString entry = skip_str[i];
@@ -144,13 +137,11 @@ void Main::slot_startPinning() {
 	applyPinning(history->getBestPinning(0).first);
 }
 
-
 void Main::slot_TaskCreated(int tid) {
 	// Only pin new tasks when the measurement is currently running
 	if (notifications) {
-		auto it = std::find_if(pinned_tasks.begin(), pinned_tasks.end(), [tid](const pinned_task &t) {
-		   return t.tid == tid;
-		});
+		auto it = std::find_if(pinned_tasks.begin(), pinned_tasks.end(),
+							   [tid](const pinned_task &t) { return t.tid == tid; });
 
 		if (it != pinned_tasks.end()) return;
 
@@ -178,9 +169,8 @@ void Main::slot_TaskCreated(int tid) {
 
 void Main::slot_TaskTerminated(int tid) {
 	if (notifications) {
-		auto it = std::find_if(pinned_tasks.begin(), pinned_tasks.end(), [tid](const pinned_task& t) {
-			return t.tid == tid;
-		});
+		auto it = std::find_if(pinned_tasks.begin(), pinned_tasks.end(),
+							   [tid](const pinned_task &t) { return t.tid == tid; });
 
 		if (it == pinned_tasks.end()) return;
 
@@ -241,7 +231,7 @@ void Main::checkPinnedTasks() {
 
 	running_tasks = proc_tree.getAllTasks();
 
-	auto new_end = std::remove_if(pinned_tasks.begin(), pinned_tasks.end(),[&](const pinned_task& t) {
+	auto new_end = std::remove_if(pinned_tasks.begin(), pinned_tasks.end(), [&](const pinned_task &t) {
 		const int tid = t.tid;
 
 		if (running_tasks.find(tid) == running_tasks.end()) {
