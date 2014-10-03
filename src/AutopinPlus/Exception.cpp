@@ -25,5 +25,7 @@
 namespace AutopinPlus {
 Exception::Exception(QString message) noexcept { this->message = message.toUtf8(); }
 
+Exception::~Exception() noexcept {}
+
 const char *Exception::what() const noexcept { return this->message.data(); }
 } // namespace AutopinPlus

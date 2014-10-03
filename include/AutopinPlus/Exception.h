@@ -40,6 +40,11 @@ class Exception : public std::exception {
 	Exception(QString message) noexcept;
 
 	/*!
+	 * \brief Destructor
+	 */
+	virtual ~Exception() noexcept;
+
+	/*!
 	 * \brief Get a description of the problem
 	 *
 	 * Returns a pointer to a \0-terminated, UTF8-encoded string describing the problem.
