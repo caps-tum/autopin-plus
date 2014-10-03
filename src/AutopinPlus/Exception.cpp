@@ -23,7 +23,7 @@
 #include <qstring.h>	// for QString
 
 namespace AutopinPlus {
-Exception::Exception(QString message) { this->message = message.toUtf8(); }
+Exception::Exception(QString message) noexcept { this->message = message.toUtf8(); }
 
 const char *Exception::what() const throw() { return this->message.data(); }
 } // namespace AutopinPlus

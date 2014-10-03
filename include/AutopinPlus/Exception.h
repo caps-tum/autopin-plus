@@ -37,7 +37,7 @@ class Exception : public std::exception {
 	 *
 	 * \param[in] message A message describing the problem
 	 */
-	Exception(QString message);
+	Exception(QString message) noexcept;
 
 	/*!
 	 * \brief Get a description of the problem
