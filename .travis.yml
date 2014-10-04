@@ -21,9 +21,10 @@ install:
     - sudo update-alternatives --config g++
 
 script:
+    - ./test.sh
     - mkdir build
     - cd build
-    - cmake ..
+    - cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     - make
 
 notifications:

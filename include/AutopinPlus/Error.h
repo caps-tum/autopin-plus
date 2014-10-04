@@ -127,7 +127,7 @@ class Error {
 	/*!
 	 * \brief Data structure for storing an error together with additional information
 	 */
-	typedef std::pair<autopin_errors, QString> error_pair;
+typedef std::pair<autopin_errors, QString> error_pair;
 
 	/*!
 	 * \brief Data structure for keeping errors that have occured
