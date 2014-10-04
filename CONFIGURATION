@@ -123,7 +123,7 @@ implemented by the class StandardConfiguration, which is used by default.
 	Option			Argument	Description
 
 	<name>.event_type	String		A valid perf event type
-	
+
 	These event types are currently suported:
 
 	PERF_COUNT_HW_CPU_CYCLES, PERF_COUNT_HW_INSTRUCTIONS, PERF_COUNT_HW_CACHE_REFERENCES, PERF_COUNT_HW_CACHE_MISSES,

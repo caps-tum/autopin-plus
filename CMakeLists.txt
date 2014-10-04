@@ -28,44 +28,40 @@ include(${QT_USE_FILE})
 add_definitions(${QT_DEFINITIONS})
 
 # Project include path
-include_directories(src)
+include_directories(include)
 
 # Source files
 # Headers only need to be added for classes containing the Q_OBJECT macro
 
 # Base files
-set(autopin+_SOURCES ${autopin+_SOURCES} src/main.cpp)
-set(autopin+_HEADERS ${autopin+_HEADERS} src/Autopin.h src/ObservedProcess.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/Autopin.cpp src/Error.cpp src/OutputChannel.cpp src/AutopinContext.cpp src/ObservedProcess.cpp src/ProcessTree.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/AutopinPlus/ObservedProcess.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/OutputChannel.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp)
 
 # Abstract base classes
-set(autopin+_HEADERS ${autopin+_HEADERS} src/OSServices.h src/ControlStrategy.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/Configuration.cpp src/PinningHistory.cpp src/OSServices.cpp src/ControlStrategy.cpp src/PerformanceMonitor.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OSServices.h include/AutopinPlus/ControlStrategy.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Configuration.cpp src/AutopinPlus/PinningHistory.cpp src/AutopinPlus/OSServices.cpp src/AutopinPlus/ControlStrategy.cpp src/AutopinPlus/PerformanceMonitor.cpp)
 
-# OS independent
-set(autopin+_SOURCES ${autopin+_SOURCES} src/StandardConfiguration.cpp src/XMLPinningHistory.cpp)
+# OS independent classes
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.cpp src/AutopinPlus/XMLPinningHistory.cpp)
 
-# Linux
+# Linux-specific classes
 add_definitions(-Dos_linux)
-include_directories(src/os/linux)
-set(autopin+_HEADERS ${autopin+_HEADERS} src/os/linux/OSServicesLinux.h src/os/linux/TraceThread.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/os/linux/OSServicesLinux.cpp  src/os/linux/TraceThread.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/Linux/OSServicesLinux.h include/AutopinPlus/OS/Linux/TraceThread.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/Linux/OSServicesLinux.cpp  src/AutopinPlus/OS/Linux/TraceThread.cpp)
 
-# Control strategies
-include_directories(src/strategy/autopin1)
-set(autopin+_HEADERS ${autopin+_HEADERS} src/strategy/autopin1/Strategy_autopin1.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/strategy/autopin1/Strategy_autopin1.cpp)
-include_directories(src/strategy/history)
-set(autopin+_HEADERS ${autopin+_HEADERS} src/strategy/history/Strategy_history.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/strategy/history/Strategy_history.cpp)
+# Autopin1 control strategy
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Autopin1/Main.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Autopin1/Main.cpp)
 
-# Perf
-include_directories(src/monitor/perf)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/monitor/perf/Monitor_perf.cpp)
+# History control strategy
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/History/Main.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/History/Main.cpp)
+
+# Perf performance monitor
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Perf/Main.cpp)
 
 # Random performance monitor
-include_directories(src/monitor/random)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/monitor/random/Monitor_random.cpp)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Random/Main.cpp)
 
 # Generating the Documentation
 find_package(Doxygen)
