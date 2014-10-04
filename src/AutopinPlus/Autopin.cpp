@@ -80,7 +80,7 @@ void Autopin::slot_autopinSetup() {
 
 	host = OS::Linux::OSServicesLinux::getHostname_static();
 
-	startup_msg = applicationName() + " " + applicationVersion() + " started with pid " +
+startup_msg = applicationName() + " " + applicationVersion() + " started with pid " +
 				  QString::number(applicationPid()) + " on " + host + "!\n" + "Running with Qt " + qVersion();
 	context.biginfo("\n" + startup_msg);
 
