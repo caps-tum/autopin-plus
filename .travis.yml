@@ -23,7 +23,11 @@ install:
 script:
     - mkdir build
     - cd build
-    - cmake ..
+    - cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    - mv compile_commands.json ..
+    - cd ..
+    - git diff --cached --name-only --diff-filter=ACMRT | grep "\.[cmh]$" | xargs -n1 clang-format -style=file -output-replacements-xml | grep "<replacement " >/dev/null
+    - if [ $? -ne 1 ] then echo "Commit did not match clang-format" exit 1; fi
     - make
 
 notifications:
