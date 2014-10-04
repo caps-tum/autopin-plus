@@ -43,7 +43,7 @@ autopin_estate Error::report(Error::autopin_errors error, QString opt) {
 	new_err.second = opt;
 	errors.push_back(new_err);
 
-	switch (error) {
+switch (error) {
 	case FILE_NOT_FOUND:
 		if (opt == "config") setError();
 
