@@ -28,12 +28,12 @@
 
 #pragma once
 
-#include <AutopinPlus/AutopinContext.h>
-#include <AutopinPlus/Configuration.h>
-#include <AutopinPlus/Error.h>
-#include <AutopinPlus/ProcessTree.h>
-#include <deque>
-#include <map>
+#include <AutopinPlus/AutopinContext.h> // for AutopinContext
+#include <AutopinPlus/Configuration.h>  // for Configuration, etc
+#include <AutopinPlus/ProcessTree.h>	// for ProcessTree, etc
+#include <deque>						// for deque
+#include <map>							// for map
+#include <qstring.h>					// for QString
 
 namespace AutopinPlus {
 
@@ -199,6 +199,32 @@ class PerformanceMonitor {
 	 * 	monitored the list is empty.
 	 */
 	virtual ProcessTree::autopin_tid_list getMonitoredTasks() = 0;
+
+	/*!
+	 * \brief Parses a string into a montype.
+	 *
+	 * This function parses the supplied string into a montype. If this fails, an exception is thrown.
+	 *
+	 * \param[in] string The string to be parsed.
+	 *
+	 * \exception Exception This exception will be thrown if the string could not be parsed.
+	 *
+	 * \return The parsed montype.
+	 */
+	static montype readMontype(const QString &string);
+
+	/*!
+	 * \brief Converts a montype into a string.
+	 *
+	 * This function converts the supplied montype into a string. If this fails, an exception is thrown.
+	 *
+	 * \param[in] type The montype to be converted.
+	 *
+	 * \exception Exception This exception will be thrown if the supplied montype was invalid.
+	 *
+	 * \return A string representing the supplied montype.
+	 */
+	static QString showMontype(const montype &type);
 
   protected:
 	/*!
