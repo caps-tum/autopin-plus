@@ -112,18 +112,6 @@ The ```random``` performance monitor is intended for testing. It does not perfor
 
     Type of the reported values (```MAX```, ```MIN``` or ```UNKNOWN```). This information can be used by control strategies to find out if bigger or smaller results are "better".
 
-## perfmon
-
-This monitor is based on the perfmon monitoring interface and thus requires the perfmon kernel patch. As perfmon uses ptrace, the process tracing feature of ```autopin+``` is not available when this monitor is used.
-
-The following options are available:
-
-  - ```<name>.event_type = <string>``` (no default)
-
-    A valid perfmon event type.
-
-The supported events depend on the hardware platform and can be determined with the perfmon utility.
-
 ## perf
 
 The ```perf``` monitor is based on the Linux Performance Counter subsystem which is part of newer kernel versions and does not require any kernel patches.
