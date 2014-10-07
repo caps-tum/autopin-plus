@@ -21,6 +21,7 @@ option(OS_LINUX "Build autopin+ for Linux" ON)
 
 # Find Qt 4 installation
 find_package(Qt4 4.7.3 REQUIRED QtCore)
+find_package(Qt4 4.7.3 REQUIRED QtNetwork)
 
 # Disable QtGui module and setup Qt
 set(QT_DONT_USE_QTGUI TRUE)
@@ -64,6 +65,9 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/History/Main.c
 # External data logger
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Logger/External/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Logger/External/Main.cpp src/AutopinPlus/Logger/External/Process.cpp)
+
+# ClustSafe performance monitor
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/ClustSafe/Main.cpp)
 
 # Perf performance monitor
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Perf/Main.cpp)

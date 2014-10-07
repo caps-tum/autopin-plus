@@ -134,6 +134,42 @@ The following options are available:
       - ```PERF_COUNT_HW_STALLED_CYCLES_FRONTEND```
       - ```PERF_COUNT_HW_STALLED_CYCLES_BACKEND```
 
+## clustsafe
+
+The ```clustsafe``` performance monitor can read the current energy levels from the ClustSafe devices made by MEGware.
+
+See also: http://www.megware.com/en/produkte_leistungen/eigenentwicklungen/clustsafe-71-8.aspx
+
+The following options are available:
+
+  - ```<name>.host = <string>``` (no default)
+
+    The host name or IP address of the ClustSafe device.
+
+  - ```<name>.port = <integer>``` (defaults to ```2010```)
+
+    The port on which the ClustSafe device listens.
+
+  - ```<name>.signature = <string>``` (defaults to ```MEGware```)
+
+    The signature string used to address a specific kind of ClustSafe device.
+
+  - ```<name>.password = <string>``` (defaults to ```""```)
+
+    The password used when accessing the ClustSafe device.
+
+  - ```<name>.outlets = <integer> [<integer>] [...]``` (no default)
+
+    The list of outlets whose values will be added to form the resulting value.
+
+  - ```<name>.timeout = <integer>``` (defaults to ```1000```)
+
+    The amount of milliseconds before a connection attempt or data read will time out.
+
+  - ```<name>.ttl = <integer>``` (defaults to ```10```)
+
+    To avoid unnecessary queries, the ClustSafe device will only be queried if the cached value is too old. This is the amount of milliseconds after which the cached value will be refreshed.
+
 # Control strategies
 
 The control strategy which will be used by ```autopin+``` must be specified with the option ```ControlStrategy```, for example:
@@ -233,8 +269,6 @@ The command will be spawned with ```stdin```, ```stdout``` and ```stderr``` conn
       - value (```float```)
 
         The raw value of the specified performance monitor for the specified thread at the specified time.
-
-    The first three fields are guaranteed to form an unique identifier, i.e. no two data points will have an identical value in all three fields.
 
   - ```stdout```, ```stderr```
 

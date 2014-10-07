@@ -28,6 +28,7 @@
 
 #include <AutopinPlus/Autopin.h>
 #include <AutopinPlus/Logger/External/Main.h>
+#include <AutopinPlus/Monitor/ClustSafe/Main.h>
 #include <AutopinPlus/Monitor/Perf/Main.h>
 #include <AutopinPlus/Monitor/Random/Main.h>
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
@@ -181,6 +182,12 @@ void Autopin::createPerformanceMonitors() {
 		}
 
 		current_type = config->getConfigOption(current_monitor + ".type");
+
+		if (current_type == "clustsafe") {
+			PerformanceMonitor *new_mon = new Monitor::ClustSafe::Main(current_monitor, config, context);
+			monitors.push_back(new_mon);
+			continue;
+		}
 
 		if (current_type == "perf") {
 			PerformanceMonitor *new_mon = new Monitor::Perf::Main(current_monitor, config, context);
