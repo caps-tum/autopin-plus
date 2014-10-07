@@ -35,7 +35,7 @@ include_directories(include)
 
 # Base files
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/AutopinPlus/ObservedProcess.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/OutputChannel.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/OutputChannel.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp src/AutopinPlus/Tools.cpp)
 
 # Abstract base classes
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OSServices.h include/AutopinPlus/ControlStrategy.h)
