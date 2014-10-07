@@ -185,3 +185,13 @@ The following options are available:
   - ```autopin1.notification_interval = <integer>``` (defaults to ```0```)
 
     If the communication channel is used the value of this option specifies the minimum interval between two phase change notifications.
+
+## noop
+
+The ```noop``` control strategy does nothing besides starting the configured performance monitors. It's useful if you want to measure the performance of an application without doing any kind of thread pinning.
+
+The following options are available:
+
+  - ```interval = <integer>``` (defaults to ```100```)
+
+    If process tracing is disabled (see the ```Trace``` option) we have to periodically query the OS for the current list of threads. This option configures the amount of milliseconds between two such queries.

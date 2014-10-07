@@ -33,6 +33,7 @@
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
 #include <AutopinPlus/Strategy/History/Main.h>
+#include <AutopinPlus/Strategy/Noop/Main.h>
 #include <AutopinPlus/XMLPinningHistory.h>
 #include <QFileInfo>
 #include <QString>
@@ -231,8 +232,14 @@ void Autopin::createControlStrategy() {
 		strategy = new Strategy::Autopin1::Main(config, proc, service, monitors, history, context);
 		return;
 	}
+
 	if (strategy_config == "history") {
 		strategy = new Strategy::History::Main(config, proc, service, monitors, history, context);
+		return;
+	}
+
+	if (strategy_config == "noop") {
+		strategy = new Strategy::Noop::Main(config, proc, service, monitors, history, context);
 		return;
 	}
 

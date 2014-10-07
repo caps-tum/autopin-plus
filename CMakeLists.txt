@@ -53,6 +53,10 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/Linux/OSServicesLinu
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Autopin1/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Autopin1/Main.cpp)
 
+# Noop control strategy
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Noop/Main.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Noop/Main.cpp)
+
 # History control strategy
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/History/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/History/Main.cpp)
