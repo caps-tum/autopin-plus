@@ -195,3 +195,63 @@ The following options are available:
   - ```interval = <integer>``` (defaults to ```100```)
 
     If process tracing is disabled (see the ```Trace``` option) we have to periodically query the OS for the current list of threads. This option configures the amount of milliseconds between two such queries.
+
+# Data Loggers
+
+You can specify one or more data loggers via the ```DataLoggers``` option:
+
+```DataLoggers = <foo> [<bar>] [<baz>]```
+
+ Data loggers have access to the configured performance monitors and can show or save their values at a fixed time or periodically. Please note that data loggers will never create processes or start/stop performance monitors themselves, so they can only be used in combination with a suitable control strategy. Additionally every data logger can only be specified once.
+
+The following data loggers are available:
+
+## external
+
+The ```external``` data logger spawns a configurable program and periodically sends it the current performance data for further processing.
+
+The command will be spawned with ```stdin```, ```stdout``` and ```stderr``` connected as follows:
+
+  - ```stdin```
+
+	This channel will be connected to the logger, which will periodically write data points containg performance data to it.
+
+    The performance data is formatted as plain text, with each data point on a separate line. A data point contains the following data (in this order) separated by tab stops:
+
+      - monitor (```string```)
+
+        Name of the performance monitor as configured in the configuration file.
+
+      - tid (```integer```)
+
+        Thread id (TID) of the thread being monitored.
+
+      - time (```float```)
+
+        The time between the start of the logger and the creation of the data point, in seconds.
+
+      - value (```float```)
+
+        The raw value of the specified performance monitor for the specified thread at the specified time.
+
+    The first three fields are guaranteed to form an unique identifier, i.e. no two data points will have an identical value in all three fields.
+
+  - ```stdout```, ```stderr```
+
+    These channel will be connected to the logger which will read the data sent there and print it (prefixed by ```[stdout]``` or ```[stderr]```) on screen using ```autopin+```'s logging system.
+
+If autopin+ terminates, it will close all communication channels. However, the program itself will not be terminated. Your program should detect the ```EOF``` and react appropriately.
+
+The following options are available:
+
+  - ```external.command = <command> [<argument>] [<argument>] [...]``` (defaults to ```cat```)
+
+    The external command as described above. The command will be invoked directly (without using the system shell), but ```$PATH``` lookup is supported.
+
+  - ```external.interval = <integer>``` (defaults to ```100```)
+
+    The time in milliseconds between two data points. Please note that the actual data points may be further apart as gathering the necessary data also takes time.
+
+  - ```external.systemwide = <boolean>``` (defaults to ```false```)
+
+    If set to true, the logger will only emit data points for the first of the monitored threads instead of for all of them (it will still emit data points for all performance monitors though). This is useful if your performance monitors are measuring system-wide values which are identical for all threads.

@@ -38,8 +38,8 @@ set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/A
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/OutputChannel.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp src/AutopinPlus/Tools.cpp)
 
 # Abstract base classes
-set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OSServices.h include/AutopinPlus/ControlStrategy.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Configuration.cpp src/AutopinPlus/PinningHistory.cpp src/AutopinPlus/OSServices.cpp src/AutopinPlus/ControlStrategy.cpp src/AutopinPlus/PerformanceMonitor.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OSServices.h include/AutopinPlus/ControlStrategy.h include/AutopinPlus/DataLogger.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Configuration.cpp src/AutopinPlus/PinningHistory.cpp src/AutopinPlus/OSServices.cpp src/AutopinPlus/ControlStrategy.cpp src/AutopinPlus/PerformanceMonitor.cpp src/AutopinPlus/DataLogger.cpp)
 
 # OS independent classes
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.cpp src/AutopinPlus/XMLPinningHistory.cpp)
@@ -60,6 +60,10 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Noop/Main.cpp)
 # History control strategy
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/History/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/History/Main.cpp)
+
+# External data logger
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Logger/External/Main.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Logger/External/Main.cpp src/AutopinPlus/Logger/External/Process.cpp)
 
 # Perf performance monitor
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Perf/Main.cpp)

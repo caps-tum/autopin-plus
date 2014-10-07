@@ -27,7 +27,7 @@
  */
 
 #include <AutopinPlus/Autopin.h>
-
+#include <AutopinPlus/Logger/External/Main.h>
 #include <AutopinPlus/Monitor/Perf/Main.h>
 #include <AutopinPlus/Monitor/Random/Main.h>
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
@@ -55,6 +55,7 @@ Autopin::Autopin(int &argc, char **argv)
 Autopin::~Autopin() {
 	delete strategy;
 
+	for (auto logger : loggers) delete logger;
 	for (auto &elem : monitors) delete elem;
 
 	delete proc;
@@ -121,6 +122,13 @@ void Autopin::slot_autopinSetup() {
 	// Setup and initialize pinning strategy
 	CHECK_ERRORV(createControlStrategy());
 	CHECK_ERRORV(strategy->init());
+
+	// Setup and initialize data loggers
+	context.info("  > Initializing data loggers");
+	CHECK_ERRORV(createDataLoggers());
+	for (auto logger : loggers) {
+		CHECK_ERRORV(logger->init());
+	}
 
 	// Setup global Qt connections
 	createComponentConnections();
@@ -244,6 +252,17 @@ void Autopin::createControlStrategy() {
 	}
 
 	REPORTV(Error::UNSUPPORTED, "", "Control strategy \"" + strategy_config + "\" is not supported");
+}
+
+void Autopin::createDataLoggers() {
+	for (auto logger : config->getConfigOptionList("DataLoggers")) {
+		if (logger == "external") {
+			loggers.append(new Logger::External::Main(config, monitors, context));
+		} else {
+			REPORTV(Error::UNSUPPORTED, "critical", "Data logger \"" + logger + "\" is not supported");
+			return;
+		}
+	}
 }
 
 void Autopin::setPinningHistoryEnv() {
