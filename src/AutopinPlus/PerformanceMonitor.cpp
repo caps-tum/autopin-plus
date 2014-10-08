@@ -45,6 +45,8 @@ QString PerformanceMonitor::getType() { return type; }
 
 QString PerformanceMonitor::getName() { return name; }
 
+QString PerformanceMonitor::getUnit() { return ""; }
+
 void PerformanceMonitor::start(ProcessTree::autopin_tid_list tasks) {
 	for (const auto &task : tasks) {
 		CHECK_ERRORV(start(task));

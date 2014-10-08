@@ -269,6 +269,11 @@ ProcessTree::autopin_tid_list Main::getMonitoredTasks() {
 	return result;
 }
 
+QString Main::getUnit() {
+	// The ClustSafe device returns the energy in Joules
+	return "Joules";
+}
+
 uint8_t Main::calculateChecksum(QByteArray array) {
 	uint8_t result = 0;
 

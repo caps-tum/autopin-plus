@@ -320,6 +320,11 @@ ProcessTree::autopin_tid_list Main::getMonitoredTasks() {
 	return result;
 }
 
+QString Main::getUnit() {
+	// Return the unit as configured by the sensor.
+	return sensor.unit;
+}
+
 Sensor Main::readSensor(const QString &input) {
 	Sensor result;
 

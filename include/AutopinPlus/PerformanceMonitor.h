@@ -101,6 +101,13 @@ class PerformanceMonitor {
 	QString getName();
 
 	/*!
+	 * \brief Get the unit of the performance monitor.
+	 *
+	 * \return The unit of the performance monitor or the empty string if the monitor doesn't have a unit.
+	 */
+	virtual QString getUnit();
+
+	/*!
 	 * \brief Returns the configuration options of the monitor
 	 *
 	 * \return A list with the configuration options

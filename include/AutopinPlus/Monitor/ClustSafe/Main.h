@@ -74,6 +74,9 @@ class Main : public PerformanceMonitor {
 	// Overridden from the base class
 	ProcessTree::autopin_tid_list getMonitoredTasks() override;
 
+	// Overridden from the base class
+	QString getUnit() override;
+
   private:
 	/*!
 	 * \brief Calculates a (very simple) checksum over an array.
