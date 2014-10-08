@@ -170,6 +170,123 @@ The following options are available:
 
     To avoid unnecessary queries, the ClustSafe device will only be queried if the cached value is too old. This is the amount of milliseconds after which the cached value will be refreshed.
 
+## gperf
+
+The ```gperf``` monitor is also based on Linux' perf subsystem. Compared to ```perf``` monitor it is more generic and allows to monitor (almost) all events available on the system.
+
+The following options are available:
+
+ - ```<name>.sensor = <string>``` (no default)
+
+    This controls which sensor you want to use. For a list sensors available on your system run
+
+    ```
+    ls /sys/bus/event_source/devices/*/events/* | grep -E -v '\.(scale|unit)$'
+    ```
+
+    Depending on your hardware and kernel configuration, the output will look **roughly** like this:
+
+      - ```/sys/bus/event_source/devices/cpu/events/branch-instructions```
+      - ```/sys/bus/event_source/devices/cpu/events/branch-misses```
+      - ```/sys/bus/event_source/devices/cpu/events/bus-cycles```
+      - ```/sys/bus/event_source/devices/cpu/events/cache-misses```
+      - ```/sys/bus/event_source/devices/cpu/events/cache-references```
+      - ```/sys/bus/event_source/devices/cpu/events/cpu-cycles```
+      - ```/sys/bus/event_source/devices/cpu/events/instructions```
+      - ```/sys/bus/event_source/devices/cpu/events/mem-loads```
+      - ```/sys/bus/event_source/devices/cpu/events/mem-stores```
+      - ```/sys/bus/event_source/devices/cpu/events/stalled-cycles-frontend```
+      - ```/sys/bus/event_source/devices/power/events/energy-cores```
+      - ```/sys/bus/event_source/devices/power/events/energy-gpu```
+      - ```/sys/bus/event_source/devices/power/events/energy-pkg```
+      - ```/sys/bus/event_source/devices/uncore_cbox_0/events/clockticks```
+      - ```/sys/bus/event_source/devices/uncore_cbox_1/events/clockticks```
+
+    Any of these files can be used as a sensor. Be aware, that you need to pass the full, absolute path to the file. Relative paths and symlinks **will not work**, as the program will try to read additional information from files located in the vicinity.
+
+    Additionally, the kernel provides abstraced names for some hardware-based sensors. These names are guaranteed to be the identical on all systems. However, there is **no guarantee** that a suiting sensor actually exists on your system! The following hardware sensors are available:
+
+      - ```hardware/cpu-cycles```
+      - ```hardware/instructions```
+      - ```hardware/cache-references```
+      - ```hardware/cache-misses```
+      - ```hardware/branch-instructions```
+      - ```hardware/branch-misses```
+      - ```hardware/bus-cycles```
+      - ```hardware/ref-cpu-cycles```
+      - ```hardware/stalled-cycles-frontend```
+      - ```hardware/stalled-cycles-backend```
+      - ```cache/l1d-read-access```
+      - ```cache/l1d-read-miss```
+      - ```cache/l1d-write-access```
+      - ```cache/l1d-write-miss```
+      - ```cache/l1d-prefetch-access```
+      - ```cache/l1d-prefetch-miss```
+      - ```cache/l1i-read-access```
+      - ```cache/l1i-read-miss```
+      - ```cache/l1i-write-access```
+      - ```cache/l1i-write-miss```
+      - ```cache/l1i-prefetch-access```
+      - ```cache/l1i-prefetch-miss```
+      - ```cache/ll-read-access```
+      - ```cache/ll-read-miss```
+      - ```cache/ll-write-access```
+      - ```cache/ll-write-miss```
+      - ```cache/ll-prefetch-access```
+      - ```cache/ll-prefetch-miss```
+      - ```cache/dtlb-read-access```
+      - ```cache/dtlb-read-miss```
+      - ```cache/dtlb-write-access```
+      - ```cache/dtlb-write-miss```
+      - ```cache/dtlb-prefetch-access```
+      - ```cache/dtlb-prefetch-miss```
+      - ```cache/itlb-read-access```
+      - ```cache/itlb-read-miss```
+      - ```cache/itlb-write-access```
+      - ```cache/itlb-write-miss```
+      - ```cache/itlb-prefetch-access```
+      - ```cache/itlb-prefetch-miss```
+      - ```cache/bpu-read-access```
+      - ```cache/bpu-read-miss```
+      - ```cache/bpu-write-access```
+      - ```cache/bpu-write-miss```
+      - ```cache/bpu-prefetch-access```
+      - ```cache/bpu-prefetch-miss```
+      - ```cache/node-read-access```
+      - ```cache/node-read-miss```
+      - ```cache/node-write-access```
+      - ```cache/node-write-miss```
+      - ```cache/node-prefetch-access```
+      - ```cache/node-prefetch-miss```
+
+    The kernel also provides some sensors which are done entirely in software and should therefore be available on all machines. The following software sensors are available:
+
+      - ```software/cpu-clock```
+      - ```software/task-clock```
+      - ```software/page-faults```
+      - ```software/context-switches```
+      - ```software/cpu-migrations```
+      - ```software/page-faults-min```
+      - ```software/page-faults-maj```
+      - ```software/alignment-faults```
+      - ```software/emulation-faults```
+      - ```software/dummy```
+
+    Finally, we also allow configuring the value used in the ```attr``` parameter of the ```perf_event_open(2)``` syscall manually. The format for this is:
+
+      - ```perf_event_attr/key1=value1,key2=value2,...```
+
+    The available keys are the fields in the ```perf_event_attr struct``` defined in the ```/usr/include/linux/perf_event.h``` file. The valid values are numeric values in the C language convention (i.e. with either no prefix or ```0``` or ```0x``` as a prefix).
+    Be aware that the values **will not be checked** in any way, not even for an overflow. Omitted values default to ```0```, except for the ```size``` field (which will be set to the correct value) and the ```disabled``` field (which will be set to ```1```).
+
+  - ```<name>.processors = <integer> [<integer>] [...]``` (no default)
+
+    This list controls which processors to monitor. If omitted, the program will try to automatically determine a sensible list from the value of the ```sensor``` option. If that fails, the program will try to monitor all available processors. Not all sensors support that!
+
+  - ```<name>.valtype = <string>``` (defaults to ```MIN```)
+
+    This can be one of ```MIN```, ```MAX``` or ```UNKNOWN```. If set to ```MIN```, smaller values will be considered ```better```. If set to ```MAX```, bigger values will be be preferred. If set to ```UNKNOWN``` no preference is selected.
+
 # Control strategies
 
 The control strategy which will be used by ```autopin+``` must be specified with the option ```ControlStrategy```, for example:
