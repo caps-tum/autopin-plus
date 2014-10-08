@@ -121,10 +121,10 @@ Configuration::configopts Main::getConfigOpts() {
 }
 
 void Main::slot_logDataPoint() {
-	// If another thread is already here, just abort and don't do anything. This is also important in single-threaded
+	// If another thread is already here, just abort and don't do anything. This is also important in a single-threaded
 	// program, as some performance monitors might hand control back to the event loop within their value() function
-	// which leads to a race condition
-	// between our own time and whatever it is that the performance monitor is waiting for.
+	// which leads to a race condition between our own timer and whatever it is that the performance monitor is waiting
+	// for.
 	if (!mutex.tryLock()) {
 		return;
 	}
@@ -150,7 +150,7 @@ void Main::slot_logDataPoint() {
 void Main::slot_readyReadStandardError() {
 	QTextStream stream(process.readAllStandardError());
 
-	// Log all lines written by the process to stdout.
+	// Log all lines written by the process to stderr.
 	while (!stream.atEnd()) {
 		context.info("[stderr] " + stream.readLine());
 	}
@@ -159,7 +159,7 @@ void Main::slot_readyReadStandardError() {
 void Main::slot_readyReadStandardOutput() {
 	QTextStream stream(process.readAllStandardOutput());
 
-	// Log all lines written by the process to stderr.
+	// Log all lines written by the process to stdout.
 	while (!stream.atEnd()) {
 		context.info("[stdout] " + stream.readLine());
 	}
