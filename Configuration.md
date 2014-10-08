@@ -172,11 +172,11 @@ The following options are available:
 
 ## gperf
 
-The ```gperf``` monitor is also based on Linux' perf subsystem. Compared to ```perf``` monitor it is more generic and allows to monitor (almost) all events available on the system.
+The ```gperf``` monitor is also based on Linux' perf subsystem. Compared to the ```perf``` monitor it is more generic and allows to monitor (almost) all events available on the system.
 
 The following options are available:
 
- - ```<name>.sensor = <string>``` (no default)
+  - ```<name>.sensor = <string>``` (no default)
 
     This controls which sensor you want to use. For a list sensors available on your system run
 
@@ -281,7 +281,7 @@ The following options are available:
 
   - ```<name>.processors = <integer> [<integer>] [...]``` (no default)
 
-    This list controls which processors to monitor. If omitted, the program will try to automatically determine a sensible list from the value of the ```sensor``` option. If that fails, the program will try to monitor all available processors. Not all sensors support that!
+    This list controls which processors to monitor. If omitted, the program will try to automatically determine a sensible list from the value of the ```<name>.sensor``` option. If that fails, the program will try to monitor all available processors. Not all sensors support that!
 
   - ```<name>.valtype = <string>``` (defaults to ```MIN```)
 
@@ -365,9 +365,9 @@ The ```external``` data logger spawns a configurable program and periodically se
 
 The command will be spawned with ```stdin```, ```stdout``` and ```stderr``` connected as follows:
 
-  - ```stdin```
+  - stdin
 
-	This channel will be connected to the logger, which will periodically write data points containg performance data to it.
+    This channel will be connected to the logger, which will periodically write data points containg performance data to it.
 
     The performance data is formatted as plain text, with each data point on a separate line. A data point contains the following data (in this order) separated by tab stops:
 
@@ -391,11 +391,11 @@ The command will be spawned with ```stdin```, ```stdout``` and ```stderr``` conn
 
         The unit of the value, or ```none``` if the performance monitor doesn't have a unit.
 
-  - ```stdout```, ```stderr```
+  - stdout, stderr
 
     These channel will be connected to the logger which will read the data sent there and print it (prefixed by ```[stdout]``` or ```[stderr]```) on screen using ```autopin+```'s logging system.
 
-If autopin+ terminates, it will close all communication channels. However, the program itself will not be terminated. Your program should detect the ```EOF``` and react appropriately.
+When the data logger terminates, it will close all those communication channels. However, the program itself will not be terminated. Your program should detect the ```EOF``` and react appropriately.
 
 The following options are available:
 
