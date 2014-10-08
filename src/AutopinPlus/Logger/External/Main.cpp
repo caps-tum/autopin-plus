@@ -133,7 +133,8 @@ void Main::slot_logDataPoint() {
 	for (auto monitor : monitors) {
 		for (auto task : monitor->getMonitoredTasks()) {
 			QTextStream(&process) << monitor->getName() << "	" << task << "	" << fixed << running.elapsed() / 1000.0
-								  << "	" << fixed << monitor->value(task) << endl;
+								  << "	" << fixed << monitor->value(task) << "	"
+								  << (monitor->getUnit().isEmpty() ? "none" : monitor->getUnit()) << endl;
 
 			// If the user told us, that the performance monitors are system-wide, stop after the first thread.
 			if (systemwide) {

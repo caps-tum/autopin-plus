@@ -387,6 +387,10 @@ The command will be spawned with ```stdin```, ```stdout``` and ```stderr``` conn
 
         The raw value of the specified performance monitor for the specified thread at the specified time.
 
+      - unit (```string```)
+
+        The unit of the value, or ```none``` if the performance monitor doesn't have a unit.
+
   - ```stdout```, ```stderr```
 
     These channel will be connected to the logger which will read the data sent there and print it (prefixed by ```[stdout]``` or ```[stderr]```) on screen using ```autopin+```'s logging system.
