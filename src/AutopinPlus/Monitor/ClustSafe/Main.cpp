@@ -285,7 +285,7 @@ uint8_t Main::calculateChecksum(QByteArray array) {
 	return result;
 }
 
-void Main::checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) {
+void Main::checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) const {
 	// Check if array starts with the expected prefix.
 	if (array.startsWith(prefix)) {
 		array.remove(0, prefix.size());

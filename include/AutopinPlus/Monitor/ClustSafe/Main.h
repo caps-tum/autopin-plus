@@ -99,7 +99,7 @@ class Main : public PerformanceMonitor {
 	 *
 	 * \exception Exception This exception will be thrown if the specified prefix is not present.
 	 */
-	void checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field);
+	void checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) const;
 
 	/*!
 	 * \brief Sends a command to a ClustSafe device and returns the answer.
