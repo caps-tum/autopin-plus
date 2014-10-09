@@ -90,7 +90,7 @@ class Main : public ControlStrategy {
 	/*!
 	 * \brief Stores the (configurable) interval between the regular queries to the OS for the current list of threads.
 	 */
-	int interval;
+	int interval = 100;
 
 	/*!
 	 * \brief Mutex which prevents two threads from updating the monitors at the same time.

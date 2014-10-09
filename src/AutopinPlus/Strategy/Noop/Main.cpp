@@ -62,9 +62,6 @@ void Main::init() {
 						   name + ".init() failed: Could not parse the 'interval' option.");
 			return;
 		}
-	} else {
-		// Default to a polling interval of 100 milliseconds
-		interval = 100;
 	}
 
 	context.disableIndentation();
