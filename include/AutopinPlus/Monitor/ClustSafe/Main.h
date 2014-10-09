@@ -85,7 +85,7 @@ class Main : public PerformanceMonitor {
 	 *
 	 * \return The calculated checksum.
 	 */
-	uint8_t calculateChecksum(QByteArray array);
+	static uint8_t calculateChecksum(QByteArray array);
 
 	/*!
 	 * \brief Checks if an array has a specific prefix and drops it.
