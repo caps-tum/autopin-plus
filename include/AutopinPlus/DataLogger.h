@@ -44,7 +44,8 @@ class DataLogger : public QObject {
 	 * \param[in] monitors Reference to the list of performance monitors to use
 	 * \param[in] context Reference to the instance of the AutopinContext class to use.
 	 */
-	DataLogger(Configuration *const config, PerformanceMonitor::monitor_list &monitors, const AutopinContext &context);
+	DataLogger(Configuration *const config, PerformanceMonitor::monitor_list const &monitors,
+			   const AutopinContext &context);
 
 	/*!
 	 * \brief Initializes the data logger.

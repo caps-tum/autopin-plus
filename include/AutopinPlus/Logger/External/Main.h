@@ -50,7 +50,7 @@ class Main : public DataLogger {
 	 * \param[in] monitors Reference to the list of performance monitors to use
 	 * \param[in] context Reference to the instance of the "AutopinContext" class to use.
 	 */
-	Main(Configuration *const config, PerformanceMonitor::monitor_list &monitors, const AutopinContext &context);
+	Main(Configuration *const config, PerformanceMonitor::monitor_list const &monitors, const AutopinContext &context);
 
 	// Overridde from the base class.
 	void init() override;
