@@ -39,7 +39,7 @@ namespace AutopinPlus {
 namespace Logger {
 namespace External {
 
-Main::Main(Configuration *config, PerformanceMonitor::monitor_list &monitors, const AutopinContext &context)
+Main::Main(Configuration *const config, PerformanceMonitor::monitor_list &monitors, const AutopinContext &context)
 	: DataLogger(config, monitors, context) {
 	name = "external";
 }
