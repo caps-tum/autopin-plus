@@ -54,9 +54,6 @@ void Main::init() {
 		command = config->getConfigOptionList(name + ".command");
 
 		context.info("     - " + name + ".command = " + command.join(" "));
-	} else {
-		// Use "cat" per default as a (very simple) data logger.
-		command = QStringList("cat");
 	}
 
 	// Read and parse the "interval" option.
@@ -69,18 +66,12 @@ void Main::init() {
 						   name + ".init() failed: Could not parse the 'interval' option.");
 			return;
 		}
-	} else {
-		// By default, log the values every 100 milliseconds.
-		interval = 100;
 	}
 
 	// Read and parse the "systemwide" option.
 	if (config->configOptionExists(name + ".systemwide") > 0) {
 		systemwide = config->getConfigOptionBool(name + ".systemwide");
 		context.info("     - " + name + ".systemwide = " + (systemwide ? "true" : "false"));
-	} else {
-		// By default, monitor all threads, and not just the first one.
-		systemwide = false;
 	}
 
 	// Connect stdout and stderr of the the external data logger to our callbacks...

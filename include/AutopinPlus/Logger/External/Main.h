@@ -78,18 +78,18 @@ class Main : public DataLogger {
 	/*!
 	 * \brief The program to which the performance data will be sent and its arguments.
 	 */
-	QStringList command;
+	QStringList command = QStringList("cat");
 
 	/*!
 	 * \brief The amount in milliseconds between two data points.
 	 */
-	int interval;
+	int interval = 100;
 
 	/*!
 	 * \brief If true, we will only send performance data for the first monitored thread since we assume that the values
 	 *        are identical for all threads.
 	 */
-	bool systemwide;
+	bool systemwide = false;
 
 	/*!
 	 * \brief The running instance of the specified command.
