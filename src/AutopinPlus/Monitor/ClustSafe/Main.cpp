@@ -211,7 +211,7 @@ double Main::value(int thread) {
 		timer.restart();
 	}
 
-	// Return the cached value of the counter minus the thread-specific offset
+	// Return the cached value of the counter.
 	return cached;
 }
 
