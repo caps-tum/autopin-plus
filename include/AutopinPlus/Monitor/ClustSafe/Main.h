@@ -121,7 +121,7 @@ class Main : public PerformanceMonitor {
 	 *
 	 * \return The resulting array which contains the specified value in network byte order.
 	 */
-	QByteArray toArray(uint16_t value);
+	static QByteArray toArray(uint16_t value);
 
 	/*!
 	 * \brief The host name or IP address of the ClustSafe device.
