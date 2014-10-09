@@ -49,12 +49,6 @@ Main::Main(QString name, Configuration *config, const AutopinContext &context)
 
 	// Set the "valtype" field of the base class to minimal, as almost always smaller values are "better".
 	valtype = PerformanceMonitor::montype::MIN;
-
-	// Set started to false.
-	started = false;
-
-	// Set the cached value to 0.
-	cached = 0;
 }
 
 void Main::init() {
@@ -81,27 +75,18 @@ void Main::init() {
 						   name + ".init() failed: Could not parse the 'port' option (" + QString(e.what()) + ").");
 			return;
 		}
-	} else {
-		// Use the default port for ClustSafe devices
-		port = 2010;
 	}
 
 	// Read and parse the "signature" option
 	if (config->configOptionExists(name + ".signature") > 0) {
 		signature = config->getConfigOption(name + ".signature");
 		context.info("     - " + name + ".signature = " + signature);
-	} else {
-		// Use "MEGware" as the default signature string.
-		signature = "MEGware";
 	}
 
 	// Read and parse the "password" option
 	if (config->configOptionExists(name + ".password") > 0) {
 		password = config->getConfigOption(name + ".password");
 		context.info("     - " + name + ".password = " + password);
-	} else {
-		// Use an empty password per default.
-		password = "";
 	}
 
 	// Read and parse the "outlets" option
@@ -130,9 +115,6 @@ void Main::init() {
 						   name + ".init() failed: Could not parse the 'timeout' option (" + QString(e.what()) + ").");
 			return;
 		}
-	} else {
-		// Use a timeout of 1000 milliseconds per default
-		timeout = 1000;
 	}
 
 	// Read and parse the "ttl" option
@@ -145,9 +127,6 @@ void Main::init() {
 						   name + ".init() failed: Could not parse the 'ttl' option (" + QString(e.what()) + ").");
 			return;
 		}
-	} else {
-		// Use a TTL of 10 milliseconds per default
-		ttl = 10;
 	}
 }
 

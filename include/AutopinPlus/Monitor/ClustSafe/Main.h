@@ -131,17 +131,17 @@ class Main : public PerformanceMonitor {
 	/*!
 	 * \brief The port on which the ClustSafe device listens.
 	 */
-	uint16_t port;
+	uint16_t port = 2010;
 
 	/*!
 	 * \brief The signature string used to address a specific kind of CLustSafe device.
 	 */
-	QString signature;
+	QString signature = "MEGware";
 
 	/*!
 	 * \brief The password used when accessing the ClustSafe device.
 	 */
-	QString password;
+	QString password = "";
 
 	/*!
 	 * \brief The list of outlets whose values will be added to form the resulting value.
@@ -151,22 +151,22 @@ class Main : public PerformanceMonitor {
 	/*!
 	 * \brief The amount of milliseconds before a connection attempt or data read will time out.
 	 */
-	uint64_t timeout;
+	uint64_t timeout = 1000;
 
 	/*!
 	 * \brief The amount of milliseconds after which the cached value will be refreshed.
 	 */
-	uint64_t ttl;
+	uint64_t ttl = 10;
 
 	/*!
 	 * \brief Stores if this monitor was already started once.
 	 */
-	bool started;
+	bool started = false;
 
 	/*!
 	 * \brief The cached value of the internal counter of the ClustSafe device.
 	 */
-	uint64_t cached;
+	uint64_t cached = 0;
 
 	/*!
 	 * \brief A set of threads which are currently monitored.
