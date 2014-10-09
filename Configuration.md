@@ -136,7 +136,7 @@ The following options are available:
 
 ## clustsafe
 
-The ```clustsafe``` performance monitor can read the current energy levels from the ClustSafe devices made by MEGware.
+The ```clustsafe``` performance monitor can read the current energy levels from the ClustSafe devices made by MEGWARE.
 
 See also: http://www.megware.com/en/produkte_leistungen/eigenentwicklungen/clustsafe-71-8.aspx
 

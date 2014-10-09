@@ -36,9 +36,9 @@ namespace Monitor {
 namespace ClustSafe {
 
 /*!
- * A performance monitor which supports querying the ClustSafe device from MEGware.
+ * A performance monitor which supports querying the ClustSafe device from MEGWARE.
  *
- * This performance monitor can read the current energy levels from the ClustSafe devices made by MEGware.
+ * This performance monitor can read the current energy levels from the ClustSafe devices made by MEGWARE.
  *
  * See also: http://www.megware.com/en/produkte_leistungen/eigenentwicklungen/clustsafe-71-8.aspx
  */
