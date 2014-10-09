@@ -64,7 +64,7 @@ class DataLogger : public QObject {
 	 *
 	 * \return A list with the configuration options.
 	 */
-	virtual Configuration::configopts getConfigOpts() = 0;
+	virtual Configuration::configopts getConfigOpts() const = 0;
 
   protected:
 	/*!

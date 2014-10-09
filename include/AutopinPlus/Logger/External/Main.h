@@ -56,7 +56,7 @@ class Main : public DataLogger {
 	void init() override;
 
 	// Overridde from the base class.
-	Configuration::configopts getConfigOpts() override;
+	Configuration::configopts getConfigOpts() const override;
 
   private slots:
 	/*!

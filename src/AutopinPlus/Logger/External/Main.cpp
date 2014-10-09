@@ -110,7 +110,7 @@ void Main::init() {
 	context.disableIndentation();
 }
 
-Configuration::configopts Main::getConfigOpts() {
+Configuration::configopts Main::getConfigOpts() const {
 	Configuration::configopts result;
 
 	result.push_back(Configuration::configopt("command", command));
