@@ -178,7 +178,7 @@ The following options are available:
 
   - ```<name>.sensor = <string>``` (no default)
 
-    This controls which sensor you want to use. For a list sensors available on your system run
+    This controls which sensor you want to use. For a list of sensors available on your system run
 
     ```
     ls /sys/bus/event_source/devices/*/events/* | grep -E -v '\.(scale|unit)$'
