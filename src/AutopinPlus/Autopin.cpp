@@ -27,12 +27,15 @@
  */
 
 #include <AutopinPlus/Autopin.h>
-
+#include <AutopinPlus/Logger/External/Main.h>
+#include <AutopinPlus/Monitor/ClustSafe/Main.h>
+#include <AutopinPlus/Monitor/GPerf/Main.h>
 #include <AutopinPlus/Monitor/Perf/Main.h>
 #include <AutopinPlus/Monitor/Random/Main.h>
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
 #include <AutopinPlus/Strategy/History/Main.h>
+#include <AutopinPlus/Strategy/Noop/Main.h>
 #include <AutopinPlus/XMLPinningHistory.h>
 #include <QFileInfo>
 #include <QString>
@@ -54,6 +57,7 @@ Autopin::Autopin(int &argc, char **argv)
 Autopin::~Autopin() {
 	delete strategy;
 
+	for (auto logger : loggers) delete logger;
 	for (auto &elem : monitors) delete elem;
 
 	delete proc;
@@ -121,6 +125,13 @@ void Autopin::slot_autopinSetup() {
 	CHECK_ERRORV(createControlStrategy());
 	CHECK_ERRORV(strategy->init());
 
+	// Setup and initialize data loggers
+	context.info("  > Initializing data loggers");
+	CHECK_ERRORV(createDataLoggers());
+	for (auto logger : loggers) {
+		CHECK_ERRORV(logger->init());
+	}
+
 	// Setup global Qt connections
 	createComponentConnections();
 
@@ -172,6 +183,18 @@ void Autopin::createPerformanceMonitors() {
 		}
 
 		current_type = config->getConfigOption(current_monitor + ".type");
+
+		if (current_type == "clustsafe") {
+			PerformanceMonitor *new_mon = new Monitor::ClustSafe::Main(current_monitor, config, context);
+			monitors.push_back(new_mon);
+			continue;
+		}
+
+		if (current_type == "gperf") {
+			PerformanceMonitor *new_mon = new Monitor::GPerf::Main(current_monitor, config, context);
+			monitors.push_back(new_mon);
+			continue;
+		}
 
 		if (current_type == "perf") {
 			PerformanceMonitor *new_mon = new Monitor::Perf::Main(current_monitor, config, context);
@@ -231,12 +254,29 @@ void Autopin::createControlStrategy() {
 		strategy = new Strategy::Autopin1::Main(config, proc, service, monitors, history, context);
 		return;
 	}
+
 	if (strategy_config == "history") {
 		strategy = new Strategy::History::Main(config, proc, service, monitors, history, context);
 		return;
 	}
 
+	if (strategy_config == "noop") {
+		strategy = new Strategy::Noop::Main(config, proc, service, monitors, history, context);
+		return;
+	}
+
 	REPORTV(Error::UNSUPPORTED, "", "Control strategy \"" + strategy_config + "\" is not supported");
+}
+
+void Autopin::createDataLoggers() {
+	for (auto logger : config->getConfigOptionList("DataLoggers")) {
+		if (logger == "external") {
+			loggers.append(new Logger::External::Main(config, monitors, context));
+		} else {
+			REPORTV(Error::UNSUPPORTED, "critical", "Data logger \"" + logger + "\" is not supported");
+			return;
+		}
+	}
 }
 
 void Autopin::setPinningHistoryEnv() {

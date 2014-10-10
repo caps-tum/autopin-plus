@@ -30,6 +30,7 @@
 
 #include <AutopinPlus/AutopinContext.h>
 #include <AutopinPlus/ControlStrategy.h>
+#include <AutopinPlus/DataLogger.h>
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/ObservedProcess.h>
 #include <AutopinPlus/OutputChannel.h>
@@ -139,6 +140,13 @@ signals:
 	void createControlStrategy();
 
 	/*!
+	 * \brief Factory function for data loggers
+	 *
+	 * Reads the configuration and creates all requested data loggers.
+	 */
+	void createDataLoggers();
+
+	/*!
 	 * \brief Creates all global connections between Qt signals and slots
 	 */
 	void createComponentConnections();
@@ -182,6 +190,11 @@ signals:
 	 * Stores a pointer to an instance of a subclass of ControlStrategy.
 	 */
 	ControlStrategy *strategy;
+
+	/*!
+	 * Stores a list of pointers to data loggers.
+	 */
+	QList<DataLogger *> loggers;
 
 	/*!
 	 * Stores a pointer to an instance of a subclass of PinningHistory

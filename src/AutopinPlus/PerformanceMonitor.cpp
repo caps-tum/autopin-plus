@@ -28,6 +28,10 @@
 
 #include <AutopinPlus/PerformanceMonitor.h>
 
+#include <AutopinPlus/Error.h>	 // for CHECK_ERROR, CHECK_ERRORV
+#include <AutopinPlus/Exception.h> // for Exception
+#include <utility>				   // for pair
+
 namespace AutopinPlus {
 
 PerformanceMonitor::PerformanceMonitor(QString name, Configuration *config, const AutopinContext &context)
@@ -40,6 +44,8 @@ PerformanceMonitor::montype PerformanceMonitor::getValType() { return valtype; }
 QString PerformanceMonitor::getType() { return type; }
 
 QString PerformanceMonitor::getName() { return name; }
+
+QString PerformanceMonitor::getUnit() { return ""; }
 
 void PerformanceMonitor::start(ProcessTree::autopin_tid_list tasks) {
 	for (const auto &task : tasks) {
@@ -93,6 +99,44 @@ void PerformanceMonitor::clear() {
 
 	tasks = getMonitoredTasks();
 	clear(tasks);
+}
+
+PerformanceMonitor::montype PerformanceMonitor::readMontype(const QString &string) {
+	PerformanceMonitor::montype result;
+
+	if (string.toLower() == "max") {
+		result = montype::MAX;
+	} else if (string.toLower() == "min") {
+		result = montype::MIN;
+	} else if (string.toLower() == "unknown") {
+		result = montype::UNKNOWN;
+	} else {
+		throw Exception("PerformanceMonitor::readMontype(" + string +
+						") failed: Must be one of 'MAX', 'MIN', 'UNKNOWN'.");
+	}
+
+	return result;
+}
+
+QString PerformanceMonitor::showMontype(const montype &type) {
+	QString result;
+
+	switch (type) {
+	case montype::MAX:
+		result = "MAX";
+		break;
+	case montype::MIN:
+		result = "MIN";
+		break;
+	case montype::UNKNOWN:
+		result = "UNKNOWN";
+		break;
+	default:
+		throw Exception("PerformanceMonitor::showMontype(" + QString::number(type) + ") failed: Invalid montype.");
+		break;
+	}
+
+	return result;
 }
 
 } // namespace AutopinPlus

@@ -16,6 +16,20 @@ Project directories and files
     CONFIGURATION	User guide for autopin+
     README		This README
 
+Prerequisites
+------------
+
+In order to build ```autopin+```, you'll need
+
+ - the **CMake** build system, at least version 2.6
+ - the **Qt4** development framework, at least version 4.7.3
+ - the userspace development headers from the **Linux** kernel, at least version 3.13
+
+In order to build the optional documentation, you'll also need
+
+ - the **Doxygen** documentation generator
+ - the **Graphviz** graph drawing package
+
 Building autopin+
 ------------
 
