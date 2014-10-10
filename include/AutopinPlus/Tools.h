@@ -34,6 +34,13 @@ namespace AutopinPlus {
 class Tools {
   public:
 	/*!
+	 * \brief Constructor.
+	 *
+	 * This constructor is deleted to prevent this class from ever being instantiated.
+	 */
+	Tools() = delete;
+
+	/*!
 	 * \brief Parses a string to a double.
 	 *
 	 * This function parses the specified string to a double. If this fails, an exception is thrown.
@@ -122,13 +129,5 @@ class Tools {
 	 * \return A string list representing the supplied list of ints.
 	 */
 	static QStringList showInts(const QList<int> &list);
-
-  private:
-	/*!
-	 * \brief Constructor.
-	 *
-	 * This constructor is private to prevent this class from ever being instantiated.
-	 */
-	Tools();
 }; // class Tools
 } // namespace AutopinPlus
