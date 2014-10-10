@@ -253,7 +253,7 @@ QString Main::getUnit() {
 	return "Joules";
 }
 
-uint8_t Main::calculateChecksum(QByteArray array) {
+uint8_t Main::calculateChecksum(QByteArray const &array) {
 	uint8_t result = 0;
 
 	// Simply add up all bytes in the input array.
