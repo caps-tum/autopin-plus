@@ -6,7 +6,7 @@ autopin-plus
 Project directories and files
 ------------
 
-    build		Build directory (initially empty)
+    build		Build directory (has to be created)
     doc			Documentation of the source code
     src			Source code of autopin+
 
@@ -35,7 +35,7 @@ Building autopin+
 
     Currently, only Linux is supported. autopin+ is based on the Qt framework and requires
     CMake for compiling. In the following, it will be assumed that ccmake is used. In order
-    to compile autopin+ change to the build directory and execute
+    to compile autopin+ create the build directory, change to it and execute
 
       ccmake ..
 
