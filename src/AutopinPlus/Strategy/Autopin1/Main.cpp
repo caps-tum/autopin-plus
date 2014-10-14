@@ -228,12 +228,30 @@ void Main::slot_stopPinning() {
 
 	current_result = current_result / pinned_tasks.size();
 
-	if (best_pinning == -1) {
-		best_performance = current_result;
-		best_pinning = current_pinning;
-	} else if (current_result > best_performance) {
-		best_performance = current_result;
-		best_pinning = current_pinning;
+	switch (monitor_type) {
+	case PerformanceMonitor::montype::MAX:
+		if (best_pinning == -1) {
+			best_performance = current_result;
+			best_pinning = current_pinning;
+		} else if (current_result > best_performance) {
+			best_performance = current_result;
+			best_pinning = current_pinning;
+		}
+		break;
+	case PerformanceMonitor::montype::MIN:
+		if (best_pinning == -1) {
+			best_performance = current_result;
+			best_pinning = current_pinning;
+		} else if (current_result < best_performance) {
+			best_performance = current_result;
+			best_pinning = current_pinning;
+		}
+		break;
+	default:
+		// This shouldn't happen, we explicitely checked them monitor type in the init() function.
+		context.report(Error::UNSUPPORTED, "critical",
+					   name + ".slot_stopPinning(): Performance monitor has unknown type.");
+		return;
 	}
 
 	context.biginfo("> Result of pinning " + QString::number(current_pinning + 1) + ": " +
