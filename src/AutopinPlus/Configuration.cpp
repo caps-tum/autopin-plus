@@ -30,8 +30,8 @@
 
 namespace AutopinPlus {
 
-Configuration::Configuration(int argc, char **argv, const AutopinContext &context)
-	: argc(argc), argv(argv), context(context), env(QProcessEnvironment::systemEnvironment()), name("Configuration") {}
+Configuration::Configuration(const QString path, const AutopinContext &context)
+	: path(path), context(context), env(QProcessEnvironment::systemEnvironment()), name("Configuration") {}
 
 Configuration::~Configuration() {}
 

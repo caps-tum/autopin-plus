@@ -39,7 +39,7 @@
 #include <AutopinPlus/XMLPinningHistory.h>
 #include <QFileInfo>
 #include <QString>
-#include <QTimer>
+#include <QList>
 
 /*
  * Every implementation of OSServices must provide a static method
@@ -51,19 +51,10 @@
 namespace AutopinPlus {
 
 Autopin::Autopin(int &argc, char **argv)
-	: QCoreApplication(argc, argv), outchan(nullptr), err(nullptr), config(nullptr), service(nullptr), proc(nullptr),
-	  strategy(nullptr), history(nullptr) {}
+	: QCoreApplication(argc, argv), outchan(nullptr), err(nullptr), service(nullptr) {}
 
 Autopin::~Autopin() {
-	delete strategy;
-
-	for (auto logger : loggers) delete logger;
-	for (auto &elem : monitors) delete elem;
-
-	delete proc;
 	delete service;
-	delete history;
-	delete config;
 	delete err;
 	delete outchan;
 }
@@ -76,7 +67,7 @@ void Autopin::slot_autopinSetup() {
 	// Create error handler
 	err = new Error();
 
-	// Create autpin context
+	// Create autopin context
 	context = AutopinContext(outchan, err, 0);
 
 	// Start message
@@ -89,18 +80,24 @@ void Autopin::slot_autopinSetup() {
 	context.biginfo("\n" + startup_msg);
 
 	// Read configuration
-	context.biginfo("\nReading configuration ...");
-	config = new StandardConfiguration(this->argc(), this->argv(), context);
-	CHECK_ERRORV(config->init());
+	context.biginfo("\nReading configurations ...");
 
-	// Check if autopin+ output shall be written to a file
-	if (config->configOptionExists("Logfile") == 1) {
-		QString logpath = config->getConfigOption("Logfile");
-		context.biginfo("\nWriting autopin+ output to " + logpath + "\n");
-		if (!outchan->writeToFile(logpath)) REPORTV(Error::SYSTEM, "file_open", "Cannot open file " + logpath);
+	QList<StandardConfiguration *> configs;
 
-		// Write header to output file
-		context.biginfo(startup_msg);
+	bool isConfig = false;
+	for (int i = 1; i < this->argc(); i++) {
+		QString arg = this->argv()[i];
+		if (isConfig) {
+			StandardConfiguration *config = new StandardConfiguration(arg, context);
+			CHECK_ERRORV(config->init());
+			configs.push_back(config);
+			isConfig = false;
+			continue;
+		}
+		if (arg == "-c") {
+			isConfig = true;
+			continue;
+		}
 	}
 
 	context.biginfo("\nInitializing environment ...");
@@ -109,207 +106,15 @@ void Autopin::slot_autopinSetup() {
 	CHECK_ERRORV(createOSServices());
 	CHECK_ERRORV(service->init());
 
-	context.info("  > Initializing performance monitors");
-	// Setup and initialize performance monitors
-	CHECK_ERRORV(createPerformanceMonitors());
-	for (auto &elem : monitors) CHECK_ERRORV((elem)->init());
-
-	// Setup and initialize observed process
-	proc = new ObservedProcess(config, service, context);
-	CHECK_ERRORV(proc->init());
-
-	// Setup pinning history
-	CHECK_ERRORV(createPinningHistory());
-
-	// Setup and initialize pinning strategy
-	CHECK_ERRORV(createControlStrategy());
-	CHECK_ERRORV(strategy->init());
-
-	// Setup and initialize data loggers
-	context.info("  > Initializing data loggers");
-	CHECK_ERRORV(createDataLoggers());
-	for (auto logger : loggers) {
-		CHECK_ERRORV(logger->init());
+	for (const auto config : configs) {
+		std::unique_ptr<Watchdog> ptr(new Watchdog(config, service, context));
+		connect(this, SIGNAL(sig_autopinReady()), ptr.get(), SLOT(slot_watchdogRun()));
+		watchdogs.push_back(std::move(ptr));
 	}
-
-	// Setup global Qt connections
-	createComponentConnections();
-
-	// Read environment information for the pinning history
-	if (history != nullptr) setPinningHistoryEnv();
-
-	// Initialize the pinning history
-	if (history != nullptr) history->init();
-
-	context.biginfo("\nConnecting to the observed process ...");
-	// Starting observed process
-	CHECK_ERRORV(proc->start());
-
-	context.biginfo("\nStarting control strategy ...");
 
 	emit sig_autopinReady();
 }
 
-void Autopin::slot_autopinCleanup() {
-	context.biginfo("\nCleaning up ...");
-	if (proc != nullptr) proc->deinit();
-	if (history != nullptr) history->deinit();
-	context.biginfo("\nExiting ...");
-}
-
 void Autopin::createOSServices() { service = new OS::Linux::OSServicesLinux(context); }
-
-void Autopin::createPerformanceMonitors() {
-	QStringList config_monitors = config->getConfigOptionList("PerformanceMonitors");
-	QStringList existing_ids;
-
-	if (config_monitors.empty()) REPORTV(Error::BAD_CONFIG, "option_missing", "No performance monitor configured");
-
-	for (int i = 0; i < config_monitors.size(); i++) {
-		QString current_monitor = config_monitors[i], current_type;
-
-		if (existing_ids.contains(current_monitor))
-			REPORTV(Error::BAD_CONFIG, "inconsistent",
-					"The identifier " + current_monitor + " is already assigned to another monitor");
-
-		int numtypes = config->configOptionExists(current_monitor + ".type");
-
-		if (numtypes <= 0) {
-			REPORTV(Error::BAD_CONFIG, "option_missing",
-					"Type for monitor \"" + current_monitor + "\" is not specified");
-		} else if (numtypes > 1) {
-			REPORTV(Error::BAD_CONFIG, "inconsistent",
-					"Specified " + QString::number(numtypes) + " types for monitor " + current_monitor);
-		}
-
-		current_type = config->getConfigOption(current_monitor + ".type");
-
-		if (current_type == "clustsafe") {
-			PerformanceMonitor *new_mon = new Monitor::ClustSafe::Main(current_monitor, config, context);
-			monitors.push_back(new_mon);
-			continue;
-		}
-
-		if (current_type == "gperf") {
-			PerformanceMonitor *new_mon = new Monitor::GPerf::Main(current_monitor, config, context);
-			monitors.push_back(new_mon);
-			continue;
-		}
-
-		if (current_type == "perf") {
-			PerformanceMonitor *new_mon = new Monitor::Perf::Main(current_monitor, config, context);
-			monitors.push_back(new_mon);
-			continue;
-		}
-
-		if (current_type == "random") {
-			PerformanceMonitor *new_mon = new Monitor::Random::Main(current_monitor, config, context);
-			monitors.push_back(new_mon);
-			continue;
-		}
-
-		REPORTV(Error::UNSUPPORTED, "critical", "Performance monitor type \"" + current_type + "\" is not supported");
-	}
-}
-
-void Autopin::createPinningHistory() {
-	int optcount_read = config->configOptionExists("PinningHistory.load");
-	int optcount_write = config->configOptionExists("PinningHistory.save");
-
-	if (optcount_read <= 0 && optcount_write <= 0) return;
-	if (optcount_read > 1)
-		REPORTV(Error::BAD_CONFIG, "inconsistent",
-				"Specified " + QString::number(optcount_read) + " pinning histories as input");
-	if (optcount_write > 1)
-		REPORTV(Error::BAD_CONFIG, "inconsistent",
-				"Specified " + QString::number(optcount_write) + " pinning histories as output");
-
-	QString history_config;
-	if (optcount_read > 0)
-		history_config = config->getConfigOption("PinningHistory.load");
-	else if (optcount_write > 0)
-		history_config = config->getConfigOption("PinningHistory.save");
-
-	QFileInfo history_info(history_config);
-
-	if (history_info.suffix() == "xml") {
-		history = new XMLPinningHistory(config, context);
-		return;
-	}
-
-	REPORTV(Error::UNSUPPORTED, "critical",
-			"File type \"." + history_info.suffix() + "\" is not supported by any pinning history");
-}
-
-void Autopin::createControlStrategy() {
-	int optcount = config->configOptionExists("ControlStrategy");
-
-	if (optcount <= 0) REPORTV(Error::BAD_CONFIG, "option_missing", "No control strategy configured");
-	if (optcount > 1)
-		REPORTV(Error::BAD_CONFIG, "inconsistent", "Specified " + QString::number(optcount) + " control strategies");
-
-	QString strategy_config = config->getConfigOption("ControlStrategy");
-
-	if (strategy_config == "autopin1") {
-		strategy = new Strategy::Autopin1::Main(config, proc, service, monitors, history, context);
-		return;
-	}
-
-	if (strategy_config == "history") {
-		strategy = new Strategy::History::Main(config, proc, service, monitors, history, context);
-		return;
-	}
-
-	if (strategy_config == "noop") {
-		strategy = new Strategy::Noop::Main(config, proc, service, monitors, history, context);
-		return;
-	}
-
-	REPORTV(Error::UNSUPPORTED, "", "Control strategy \"" + strategy_config + "\" is not supported");
-}
-
-void Autopin::createDataLoggers() {
-	for (auto logger : config->getConfigOptionList("DataLoggers")) {
-		if (logger == "external") {
-			loggers.append(new Logger::External::Main(config, monitors, context));
-		} else {
-			REPORTV(Error::UNSUPPORTED, "critical", "Data logger \"" + logger + "\" is not supported");
-			return;
-		}
-	}
-}
-
-void Autopin::setPinningHistoryEnv() {
-	history->setHostname(OS::Linux::OSServicesLinux::getHostname_static());
-	history->setConfiguration(config->getName(), config->getConfigOpts());
-	QString comm = (proc->getCommChanAddr() == "") ? "Inactive" : "Active";
-	QString trace = (proc->getTrace()) ? "Active" : "Inactive";
-	history->setObservedProcess(proc->getCmd(), trace, comm, QString::number(proc->getCommTimeout()));
-	for (auto &elem : monitors) {
-		PinningHistory::monitor_config mconf;
-		mconf.name = (elem)->getName();
-		mconf.type = (elem)->getType();
-		mconf.opts = (elem)->getConfigOpts();
-
-		history->addPerformanceMonitor(mconf);
-	}
-	history->setControlStrategy(strategy->getName(), strategy->getConfigOpts());
-}
-
-void Autopin::createComponentConnections() {
-	// Connections between the OSServices and the ObservedProcess
-	connect(service, SIGNAL(sig_TaskCreated(int)), proc, SLOT(slot_TaskCreated(int)));
-	connect(service, SIGNAL(sig_TaskTerminated(int)), proc, SLOT(slot_TaskTerminated(int)));
-	connect(service, SIGNAL(sig_CommChannel(autopin_msg)), proc, SLOT(slot_CommChannel(autopin_msg)));
-
-	// Connections between the ObservedProcess and the ControlStrategy
-	connect(proc, SIGNAL(sig_TaskCreated(int)), strategy, SLOT(slot_TaskCreated(int)));
-	connect(proc, SIGNAL(sig_TaskTerminated(int)), strategy, SLOT(slot_TaskTerminated(int)));
-	connect(proc, SIGNAL(sig_PhaseChanged(int)), strategy, SLOT(slot_PhaseChanged(int)));
-	connect(proc, SIGNAL(sig_UserMessage(int, double)), strategy, SLOT(slot_UserMessage(int, double)));
-
-	// Connections between Autopin and the ControlStrategy
-	connect(this, SIGNAL(sig_autopinReady()), strategy, SLOT(slot_autopinReady()));
-}
 
 } // namespace AutopinPlus

@@ -35,8 +35,10 @@
 #include <AutopinPlus/ObservedProcess.h>
 #include <AutopinPlus/OutputChannel.h>
 #include <AutopinPlus/StandardConfiguration.h>
+#include <AutopinPlus/Watchdog.h>
 #include <QCoreApplication>
-#include <QTimer>
+#include <list>
+#include <memory>
 
 namespace AutopinPlus {
 
@@ -57,7 +59,7 @@ class Autopin : public QCoreApplication {
 	 * as soon as the Qt event loop is ready. Due to the setup in the ::main-function this signal will
 	 * cause the setup procedure slot_autopinSetup() to be executed.
 	 *
-	 * \param[in]	argc	Reference to the number of command line arguments of the application
+	 * \param[in] argc	Reference to the number of command line arguments of the application
 	 * \param[in] argv	String array with command line arguments
 	 *
 	 */
@@ -78,10 +80,6 @@ class Autopin : public QCoreApplication {
 	 * The end of the initialization process is signaled via sig_autopinReady().
 	 */
 	void slot_autopinSetup();
-	/*!
-	 * \brief Executes necessary operations before the application exits
-	 */
-	void slot_autopinCleanup();
 
 signals:
 	/*!
@@ -106,58 +104,12 @@ signals:
 	void createOSServices();
 
 	/*!
-	 * \brief Factory function for performance monitors
-	 *
-	 * Reads the configuration and creates all requested
-	 * performance monitors.
-	 *
-	 */
-	void createPerformanceMonitors();
-
-	/*!
-	 * \brief Factory function for the pinning history
-	 *
-	 * Reads the configuration and creates the requested
-	 * pinning history. The pinning history which is created
-	 * depends on the suffix of the history file:
-	 *
-	 * - .xml: XMLPinningHistory
-	 *
-	 */
-	void createPinningHistory();
-
-	/*!
-	 * \brief Provide environment options for the pinning history
-	 */
-	void setPinningHistoryEnv();
-
-	/*!
-	 * \brief Factory function for the control strategy
-	 *
-	 * Reads the configuration and creates the requested
-	 * control strategy.
-	 */
-	void createControlStrategy();
-
-	/*!
-	 * \brief Factory function for data loggers
-	 *
-	 * Reads the configuration and creates all requested data loggers.
-	 */
-	void createDataLoggers();
-
-	/*!
-	 * \brief Creates all global connections between Qt signals and slots
-	 */
-	void createComponentConnections();
-
-	/*!
 	 * Stores a pointer to an instance of the class OutputChannel.
 	 */
 	OutputChannel *outchan;
 
 	/*!
-	 * Stores a pointer to an instance of the class Output.
+	 * Stores a pointer to an instance of the class AutopinContext.
 	 */
 	AutopinContext context;
 
@@ -167,39 +119,14 @@ signals:
 	Error *err;
 
 	/*!
-	 * Stores a pointer to an instance of a subclass of Configuration.
-	 */
-	Configuration *config;
-
-	/*!
 	 * Stores a pointer to an instance of a subclass of OSServices.
 	 */
 	OSServices *service;
 
 	/*!
-	 * Stores a pointer to an instance of the class ObservedProcess.
+	 * Stores each Watchdog in a List.
 	 */
-	ObservedProcess *proc;
-
-	/*!
-	 * Stores a list of pointers to performance monitors.
-	 */
-	PerformanceMonitor::monitor_list monitors;
-
-	/*!
-	 * Stores a pointer to an instance of a subclass of ControlStrategy.
-	 */
-	ControlStrategy *strategy;
-
-	/*!
-	 * Stores a list of pointers to data loggers.
-	 */
-	QList<DataLogger *> loggers;
-
-	/*!
-	 * Stores a pointer to an instance of a subclass of PinningHistory
-	 */
-	PinningHistory *history;
+	std::list<std::unique_ptr<Watchdog>> watchdogs;
 };
 
 } // namespace AutopinPlus

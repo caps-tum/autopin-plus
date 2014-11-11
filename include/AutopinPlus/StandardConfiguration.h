@@ -32,6 +32,7 @@
 #include <AutopinPlus/Error.h>
 #include <list>
 #include <map>
+#include <QString>
 #include <QStringList>
 #include <QTextStream>
 #include <utility>
@@ -48,11 +49,10 @@ class StandardConfiguration : public Configuration {
 	 *
 	 * The configuration should not be read here but in the the method readConfiguration().
 	 *
-	 * \param[in] argc     Number of command line arguments
-	 * \param[in] argv     String array containing all commandline argumetns autopin+ has been started with
+	 * \param[in] path     Path to configuration-file
 	 * \param[in] context  Refernce to the context of the object calling the constructor
 	 */
-	StandardConfiguration(int argc, char **argv, const AutopinContext &context);
+	StandardConfiguration(const QString path, const AutopinContext &context);
 
 	void init() override;
 	Configuration::configopts getConfigOpts() override;
@@ -68,26 +68,6 @@ class StandardConfiguration : public Configuration {
 	 * \brief Data structure for storing a single key-value-pair
 	 */
 	typedef std::pair<QString, QStringList> arg_pair;
-
-	/*!
-	 * Stores the command line parameters of the application
-	 */
-	QStringList arguments;
-
-	/*!
-	 * Path to the default configuration
-	 */
-	QString default_config_path;
-
-	/*!
-	 * Path to the user configuration
-	 */
-	QString user_config_path;
-
-	/*!
-	 * Parsed command line options
-	 */
-	QStringList cmdline_options;
 
 	/*!
 	 * Internal representation of the configuration

@@ -67,11 +67,10 @@ class Configuration {
 	 *
 	 * The configuration should not be read here but in the the method readConfiguration().
 	 *
-	 * \param[in] argc	Number of command line arguments
-	 * \param[in] argv	String array containing all commandline argumetns autopin+ has been started with
-	 * \param[in]	context	Refernce to the context of the object calling the constructor
+	 * \param[in] path	    Path to the configuration file
+	 * \param[in] context	Refernce to the context of the object calling the constructor
 	 */
-	Configuration(int argc, char **argv, const AutopinContext &context);
+	Configuration(const QString path, const AutopinContext &context);
 
 	virtual ~Configuration();
 
@@ -200,13 +199,9 @@ class Configuration {
 
   protected:
 	/*!
-	 * Stores the number of command line arguments
+	 * Stores the path to the configuration file
 	 */
-	int argc;
-	/*!
-	 * Stores a pointer to the string array containing the command  line arguments
-	 */
-	char **argv;
+	QString path;
 
 	/*!
 	 * The runtime context
