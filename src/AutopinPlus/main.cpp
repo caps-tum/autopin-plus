@@ -52,7 +52,6 @@ int main(int argc, char **argv) {
 
 	// Connect the start-/quit-signals with the slots of the Autopin-object
 	QObject::connect(&app, SIGNAL(sig_eventLoopStarted()), &app, SLOT(slot_autopinSetup()));
-	QObject::connect(&app, SIGNAL(aboutToQuit()), &app, SLOT(slot_autopinCleanup()));
 
 	QTimer::singleShot(0, &app, SIGNAL(sig_eventLoopStarted()));
 

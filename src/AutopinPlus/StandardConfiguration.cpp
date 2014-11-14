@@ -32,13 +32,8 @@
 
 namespace AutopinPlus {
 
-StandardConfiguration::StandardConfiguration(int argc, char **argv, const AutopinContext &context)
-	: Configuration(argc, argv, context), default_config_path(""), user_config_path("") {
-	// Store command line arguments. Leave first argument out as it
-	// corresponds to the command for starting the application.
-	for (int i = 1; i < argc; i++) {
-		arguments.push_back(argv[i]);
-	}
+StandardConfiguration::StandardConfiguration(const QString path, const AutopinContext &context)
+	: Configuration(path, context) {
 
 	this->name = "StandardConfiguration";
 }
@@ -46,53 +41,13 @@ StandardConfiguration::StandardConfiguration(int argc, char **argv, const Autopi
 void StandardConfiguration::init() {
 	context.enableIndentation();
 
-	// Load default configuration if available
-	default_config_path = getEnvVariable("AUTOPIN_DEFAULT_CONFIG");
-	if (default_config_path != "") {
-		QFile default_config(default_config_path);
-		if (default_config.open(QIODevice::ReadOnly)) {
-			context.info("> Reading default configuration");
-			QTextStream default_stream(&default_config);
-			CHECK_ERRORV(parseConfigurationFile(default_stream));
-		} else
-			REPORTV(Error::FILE_NOT_FOUND, "config",
-					"Could not read default configuration \"" + default_config_path + "\"");
-	}
-
-	// Load specified configuration if available
-	for (int i = 0; i < arguments.size(); i++) {
-		QString arg = arguments[i];
-		if (arg == "-c") {
-			user_config_path = arguments[++i];
-			QFile user_config(user_config_path);
-			if (user_config.open(QIODevice::ReadOnly)) {
-				context.info("> Reading user configuration");
-				QTextStream user_stream(&user_config);
-				CHECK_ERRORV(parseConfigurationFile(user_stream));
-			} else {
-				REPORTV(Error::FILE_NOT_FOUND, "user_config",
-						"Could not read user configuration \"" + user_config_path + "\"");
-			}
-			break;
-		}
-	}
-
-	// Read other command line arguments if available
-	context.info("> Reading command line options");
-	for (int i = 0; i < arguments.size(); i++) {
-		QString arg = arguments[i];
-
-		if (arg == "-c") {
-			i++;
-			continue;
-		}
-		if (arg != "-c") {
-			if (arg.mid(0, 2) != "--")
-				REPORTV(Error::BAD_CONFIG, "option_format", "Invalid option format: \"" + arg + "\"");
-			arg = arg.mid(2);
-			CHECK_ERRORV(getArgs(arg));
-			cmdline_options.push_back(arg);
-		}
+	QFile configFile(path);
+	if (configFile.open(QIODevice::ReadOnly)) {
+		context.info("> Reading user configuration");
+		QTextStream user_stream(&configFile);
+		CHECK_ERRORV(parseConfigurationFile(user_stream));
+	} else {
+		REPORTV(Error::FILE_NOT_FOUND, "config_file", "Could not read configuration \"" + path + "\"");
 	}
 
 	context.disableIndentation();
@@ -101,11 +56,7 @@ void StandardConfiguration::init() {
 Configuration::configopts StandardConfiguration::getConfigOpts() {
 	Configuration::configopts result;
 
-	if (default_config_path != "")
-		result.push_back(Configuration::configopt("default_config", QStringList(default_config_path)));
-	if (user_config_path != "")
-		result.push_back(Configuration::configopt("user_config", QStringList(user_config_path)));
-	if (!cmdline_options.empty()) result.push_back(Configuration::configopt("cmdline_options", cmdline_options));
+	result.push_back(Configuration::configopt("default_config", QStringList(path)));
 
 	return result;
 }

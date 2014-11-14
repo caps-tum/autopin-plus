@@ -32,7 +32,8 @@ namespace AutopinPlus {
 
 AutopinContext::AutopinContext() {}
 
-AutopinContext::AutopinContext(OutputChannel *outchan, Error *err, int layer) : outchan(outchan), err(err) {
+AutopinContext::AutopinContext(OutputChannel *outchan, Error *err, int layer)
+	: outchan(outchan), err(err), indent(false) {
 	whitespace = "";
 	for (int i = 0; i < layer; i++) whitespace += "  ";
 }
