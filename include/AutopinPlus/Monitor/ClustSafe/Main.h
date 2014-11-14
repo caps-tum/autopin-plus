@@ -23,7 +23,6 @@
 #include <AutopinPlus/Configuration.h>		// for Configuration, etc
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor
 #include <AutopinPlus/ProcessTree.h>		// for ProcessTree, etc
-#include <qatomic_x86_64.h>					// for QBasicAtomicInt::deref
 #include <qbytearray.h>						// for QByteArray
 #include <qelapsedtimer.h>					// for QElapsedTimer
 #include <qglobal.h>						// for qFree
@@ -78,14 +77,6 @@ class Main : public PerformanceMonitor {
 	QString getUnit() override;
 
   private:
-	/*!
-	 * \brief Calculates a (very simple) checksum over an array.
-	 *
-	 * \param[in] array The array to be checksummed.
-	 *
-	 * \return The calculated checksum.
-	 */
-	static uint8_t calculateChecksum(QByteArray const &array);
 
 	/*!
 	 * \brief Checks if an array has a specific prefix and drops it.
@@ -111,17 +102,6 @@ class Main : public PerformanceMonitor {
 	 * \paramp[in] data   An optional array of binary data which usually contains arguments to the command.
 	 */
 	QByteArray sendCommand(uint16_t command, QByteArray data = QByteArray());
-
-	/*!
-	 * \brief Convert a uint16_t to a QByteArray.
-	 *
-	 * This function convert a unsigned 16-bit integer to a two-element byte array.
-	 *
-	 * \param[in] value The value to be converted.
-	 *
-	 * \return The resulting array which contains the specified value in network byte order.
-	 */
-	static QByteArray toArray(uint16_t value);
 
 	/*!
 	 * \brief The host name or IP address of the ClustSafe device.

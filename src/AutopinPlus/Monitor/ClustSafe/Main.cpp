@@ -26,12 +26,8 @@
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor
 #include <AutopinPlus/ProcessTree.h>
 #include <AutopinPlus/Tools.h> // for Tools
-#include <qatomic_x86_64.h>	// for QBasicAtomicInt::deref, etc
 #include <qbytearray.h>		   // for QByteArray
 #include <qelapsedtimer.h>	 // for QElapsedTimer
-#include <qglobal.h>		   // for qFree
-#include <qlist.h>			   // for QList
-#include <qset.h>			   // for QSet
 #include <qstring.h>		   // for operator+, QString
 #include <qstringlist.h>	   // for QStringList
 #include <QtEndian>			   // for qFromBigEndian
@@ -41,6 +37,43 @@
 namespace AutopinPlus {
 namespace Monitor {
 namespace ClustSafe {
+
+/*!
+ * \brief Convert a uint16_t to a QByteArray.
+ *
+ * This function convert a unsigned 16-bit integer to a two-element byte array.
+ *
+ * \param[in] value The value to be converted.
+ *
+ * \return The resulting array which contains the specified value in network byte order.
+ */
+static inline QByteArray toArray(uint16_t value) {
+	QByteArray result;
+
+	result.append((uint8_t)((value >> 8)));
+	result.append((uint8_t)((value >> 0)));
+
+	return result;
+}
+
+/*!
+ * \brief Calculates a (very simple) checksum over an array.
+ *
+ * \param[in] array The array to be checksummed.
+ *
+ * \return The calculated checksum.
+ */
+static inline uint8_t calculateChecksum(QByteArray const &array) {
+	uint8_t result = 0;
+
+	// Simply add up all bytes in the input array.
+	for (auto value : array) {
+		result += value;
+	}
+
+	return result;
+}
+
 
 Main::Main(QString name, Configuration *config, const AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
@@ -184,7 +217,8 @@ double Main::value(int thread) {
 		QByteArray payload;
 		try {
 			// Set the command to 0x010F which means "get the current energy consumption on all outlets".
-			payload = sendCommand(0x010F);
+			// Set the data to "0x01" which means "reset all counters after the response is sent".
+			payload = sendCommand(0x010F, QByteArray(1, 1));
 		} catch (Exception e) {
 			context.report(Error::MONITOR, "value", name + ".value(" + QString::number(thread) +
 														") failed: Could not read from the ClustSafe device (" +
@@ -193,7 +227,7 @@ double Main::value(int thread) {
 		}
 
 		// Reset the cached value to zero.
-		cached = 0;
+		//cached = 0;
 
 		// Re-add the value of all outlets in which we are interested to the cached value.
 		for (auto outlet : outlets) {
@@ -251,17 +285,6 @@ ProcessTree::autopin_tid_list Main::getMonitoredTasks() {
 QString Main::getUnit() {
 	// The ClustSafe device returns the energy in Joules
 	return "Joules";
-}
-
-uint8_t Main::calculateChecksum(QByteArray const &array) {
-	uint8_t result = 0;
-
-	// Simply add up all bytes in the input array.
-	for (auto value : array) {
-		result += value;
-	}
-
-	return result;
 }
 
 void Main::checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) const {
@@ -327,15 +350,6 @@ QByteArray Main::sendCommand(uint16_t command, QByteArray data) {
 
 	// Return the payload
 	return payload;
-}
-
-QByteArray Main::toArray(uint16_t value) {
-	QByteArray result;
-
-	result.append((uint8_t)((value >> 8)));
-	result.append((uint8_t)((value >> 0)));
-
-	return result;
 }
 
 } // namespace ClustSafe
