@@ -37,7 +37,7 @@
 
 namespace AutopinPlus {
 
-XMLPinningHistory::XMLPinningHistory(Configuration *config, const AutopinContext &context)
+XMLPinningHistory::XMLPinningHistory(const Configuration &config, const AutopinContext &context)
 	: PinningHistory(config, context) {}
 
 void XMLPinningHistory::init() {
@@ -52,10 +52,10 @@ void XMLPinningHistory::init() {
 	 */
 	history_load_path = "";
 	history_save_path = "";
-	if (config->configOptionExists("PinningHistory.load"))
-		history_load_path = config->getConfigOption("PinningHistory.load");
-	if (config->configOptionExists("PinningHistory.save"))
-		history_save_path = config->getConfigOption("PinningHistory.save");
+	if (config.configOptionExists("PinningHistory.load"))
+		history_load_path = config.getConfigOption("PinningHistory.load");
+	if (config.configOptionExists("PinningHistory.save"))
+		history_save_path = config.getConfigOption("PinningHistory.save");
 
 	context.info("  :: Reading pinning history from " + history_load_path);
 

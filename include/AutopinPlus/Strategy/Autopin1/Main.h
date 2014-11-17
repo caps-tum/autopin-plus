@@ -49,15 +49,14 @@ class Main : public ControlStrategy {
 	/*!
 	 * \brief Constructor
 	 *
-	 * \param[in] config		Pointer to the current Configuration instance
-	 * \param[in] proc		Pointer to the observed process
-	 * \param[in] service		Pointer to the current OSServices instance
+	 * \param[in] config	Reference to the current Configuration instance
+	 * \param[in] proc		Reference to the observed process
+	 * \param[in] service	Reference to the current OSServices instance
 	 * \param[in] monitors	Reference to a list of available instances of PerformanceMonitor
-	 * \param[in] history		Pointer to the current PinningHistory instance
-	 * \param[in]	context	Refernce to the context of the object calling the constructor
+	 * \param[in] context	Refernce to the context of the object calling the constructor
 	 */
-	Main(Configuration *config, ObservedProcess *proc, OSServices *service,
-		 const PerformanceMonitor::monitor_list &monitors, PinningHistory *history, const AutopinContext &context);
+	Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+		 const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context);
 
 	void init() override;
 	Configuration::configopts getConfigOpts() override;
@@ -200,7 +199,7 @@ class Main : public ControlStrategy {
 	/*!
 	 * The performance monitor used by the strategy
 	 */
-	PerformanceMonitor *monitor;
+	std::shared_ptr<PerformanceMonitor> monitor;
 
 	/*!
 	 * The type of the performance monitor

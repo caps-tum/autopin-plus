@@ -39,7 +39,7 @@ namespace AutopinPlus {
 namespace Logger {
 namespace External {
 
-Main::Main(Configuration *const config, PerformanceMonitor::monitor_list const &monitors, const AutopinContext &context)
+Main::Main(const Configuration &config, PerformanceMonitor::monitor_list const &monitors, const AutopinContext &context)
 	: DataLogger(config, monitors, context) {
 	name = "external";
 }
@@ -50,16 +50,16 @@ void Main::init() {
 	context.info("  :: Initializing " + name);
 
 	// Read and parse the "command" option.
-	if (config->configOptionExists(name + ".command") > 0) {
-		command = config->getConfigOptionList(name + ".command");
+	if (config.configOptionExists(name + ".command") > 0) {
+		command = config.getConfigOptionList(name + ".command");
 
 		context.info("     - " + name + ".command = " + command.join(" "));
 	}
 
 	// Read and parse the "interval" option.
-	if (config->configOptionExists(name + ".interval") > 0) {
+	if (config.configOptionExists(name + ".interval") > 0) {
 		try {
-			interval = Tools::readInt(config->getConfigOption(name + ".interval"));
+			interval = Tools::readInt(config.getConfigOption(name + ".interval"));
 			context.info("     - " + name + ".interval = " + QString::number(interval));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
@@ -69,8 +69,8 @@ void Main::init() {
 	}
 
 	// Read and parse the "systemwide" option.
-	if (config->configOptionExists(name + ".systemwide") > 0) {
-		systemwide = config->getConfigOptionBool(name + ".systemwide");
+	if (config.configOptionExists(name + ".systemwide") > 0) {
+		systemwide = config.getConfigOptionBool(name + ".systemwide");
 		context.info("     - " + name + ".systemwide = " + (systemwide ? "true" : "false"));
 	}
 

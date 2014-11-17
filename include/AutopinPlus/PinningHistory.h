@@ -77,11 +77,11 @@ class PinningHistory {
 	/*!
 	 * \brief Constructor
 	 *
-	 * \param[in] config		Pointer to the current Configuration instance
-	 * \param[in]	context	Refernce to the context of the object calling the constructor
+	 * \param[in] config	Reference to the current Configuration instance
+	 * \param[in] context	Reference to the context of the object calling the constructor
 	 *
 	 */
-	PinningHistory(Configuration *config, const AutopinContext &context);
+	PinningHistory(const Configuration &config, const AutopinContext &context);
 
 	virtual ~PinningHistory();
 
@@ -190,9 +190,9 @@ class PinningHistory {
 	typedef std::map<int, pinning_result> best_pinning_map;
 
 	/*!
-	 * Variables for storing a pointer to the current configuration instance
+	 * Reference to the current configuration instance
 	 */
-	Configuration *config;
+	const Configuration &config;
 
 	/*!
    * The runtime context

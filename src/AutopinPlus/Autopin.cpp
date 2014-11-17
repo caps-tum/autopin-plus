@@ -40,6 +40,7 @@
 #include <QFileInfo>
 #include <QString>
 #include <QList>
+#include <memory>
 
 /*
  * Every implementation of OSServices must provide a static method
@@ -50,22 +51,15 @@
 
 namespace AutopinPlus {
 
-Autopin::Autopin(int &argc, char **argv)
-	: QCoreApplication(argc, argv), outchan(nullptr), err(nullptr), service(nullptr) {}
-
-Autopin::~Autopin() {
-	delete service;
-	delete err;
-	delete outchan;
-}
+Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), service(nullptr) {}
 
 void Autopin::slot_autopinSetup() {
 	// Create output channel
-	outchan = new OutputChannel();
+	std::shared_ptr<OutputChannel> outchan(new OutputChannel());
 	// outchan->enableDebug();
 
 	// Create error handler
-	err = new Error();
+	std::shared_ptr<Error> err(new Error());
 
 	// Create autopin context
 	context = AutopinContext(outchan, err, 0);
@@ -82,7 +76,7 @@ void Autopin::slot_autopinSetup() {
 	// Read configuration
 	context.biginfo("\nReading configurations ...");
 
-	QList<StandardConfiguration *> configs;
+	std::list<StandardConfiguration *> configs;
 
 	bool isConfig = false;
 	for (int i = 1; i < this->argc(); i++) {
@@ -107,7 +101,7 @@ void Autopin::slot_autopinSetup() {
 	CHECK_ERRORV(service->init());
 
 	for (const auto config : configs) {
-		std::unique_ptr<Watchdog> ptr(new Watchdog(config, service, context));
+		std::unique_ptr<Watchdog> ptr(new Watchdog(std::unique_ptr<const Configuration>(config), *service, context));
 		connect(this, SIGNAL(sig_autopinReady()), ptr.get(), SLOT(slot_watchdogRun()));
 		watchdogs.push_back(std::move(ptr));
 	}
@@ -115,6 +109,6 @@ void Autopin::slot_autopinSetup() {
 	emit sig_autopinReady();
 }
 
-void Autopin::createOSServices() { service = new OS::Linux::OSServicesLinux(context); }
+void Autopin::createOSServices() { service = std::unique_ptr<OSServices>(new OS::Linux::OSServicesLinux(context)); }
 
 } // namespace AutopinPlus

@@ -27,19 +27,33 @@
  */
 
 #include <AutopinPlus/ControlStrategy.h>
+#include <AutopinPlus/XMLPinningHistory.h>
+
+#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
 
 #include <algorithm>
 #include <QChar>
 #include <QString>
 #include <QStringList>
+#include <QFileInfo>
 
 namespace AutopinPlus {
 
-ControlStrategy::ControlStrategy(Configuration *config, ObservedProcess *proc, OSServices *service,
-								 PerformanceMonitor::monitor_list monitors, PinningHistory *history,
-								 const AutopinContext &context)
-	: config(config), proc(proc), service(service), monitors(std::move(monitors)), history(history), context(context),
+ControlStrategy::ControlStrategy(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+								 PerformanceMonitor::monitor_list monitors, const AutopinContext &context)
+	: config(config), proc(proc), service(service), monitors(std::move(monitors)), context(context),
 	  name("ControlStrategy") {}
+
+void ControlStrategy::init() {
+	// Setup pinning history
+	CHECK_ERRORV(createPinningHistory());
+
+	// Read environment information for the pinning history
+	if (history != nullptr) setPinningHistoryEnv();
+
+	// Initialize the pinning history
+	if (history != nullptr) history->init();
+}
 
 QString ControlStrategy::getName() { return name; }
 
@@ -54,7 +68,7 @@ void ControlStrategy::slot_UserMessage(int arg, double val) {}
 bool ControlStrategy::addPinningToHistory(PinningHistory::autopin_pinning pinning, double value) {
 	if (history == nullptr) return false;
 
-	int phase = proc->getExecutionPhase();
+	int phase = proc.getExecutionPhase();
 	history->addPinning(phase, pinning, value);
 
 	return true;
@@ -64,10 +78,10 @@ PinningHistory::pinning_list ControlStrategy::readPinnings(QString opt) {
 	PinningHistory::pinning_list result;
 	QStringList pinnings;
 
-	if (config->configOptionExists(opt) <= 0)
+	if (config.configOptionExists(opt) <= 0)
 		REPORT(Error::BAD_CONFIG, "option_missing", "No pinning specified", result);
 
-	pinnings = config->getConfigOptionList(opt);
+	pinnings = config.getConfigOptionList(opt);
 
 	for (int i = 0; i < pinnings.size(); i++) {
 		QStringList pinning = pinnings[i].split(':', QString::SkipEmptyParts, Qt::CaseSensitive);
@@ -93,17 +107,63 @@ void ControlStrategy::refreshTasks() {
 
 	struct tasksort sort;
 
-	CHECK_ERRORV(ptree = proc->getProcessTree());
+	CHECK_ERRORV(ptree = proc.getProcessTree());
 	ProcessTree::autopin_tid_list task_set = ptree.getAllTasks();
 
 	tasks.clear();
 
 	for (const auto &elem : task_set) {
 		tasks.push_back(elem);
-		CHECK_ERRORV(sort.sort_tasks[elem] = service->getTaskSortId(elem));
+		CHECK_ERRORV(sort.sort_tasks[elem] = service.getTaskSortId(elem));
 	}
 
 	std::sort(tasks.begin(), tasks.end(), sort);
+}
+
+void ControlStrategy::createPinningHistory() {
+	int optcount_read = config.configOptionExists("PinningHistory.load");
+	int optcount_write = config.configOptionExists("PinningHistory.save");
+
+	if (optcount_read <= 0 && optcount_write <= 0) return;
+	if (optcount_read > 1)
+		REPORTV(Error::BAD_CONFIG, "inconsistent",
+				"Specified " + QString::number(optcount_read) + " pinning histories as input");
+	if (optcount_write > 1)
+		REPORTV(Error::BAD_CONFIG, "inconsistent",
+				"Specified " + QString::number(optcount_write) + " pinning histories as output");
+
+	QString history_config;
+	if (optcount_read > 0)
+		history_config = config.getConfigOption("PinningHistory.load");
+	else if (optcount_write > 0)
+		history_config = config.getConfigOption("PinningHistory.save");
+
+	QFileInfo history_info(history_config);
+
+	if (history_info.suffix() == "xml") {
+		history = std::unique_ptr<PinningHistory>(new XMLPinningHistory(config, context));
+		return;
+	}
+
+	REPORTV(Error::UNSUPPORTED, "critical",
+			"File type \"." + history_info.suffix() + "\" is not supported by any pinning history");
+}
+
+void ControlStrategy::setPinningHistoryEnv() {
+	history->setHostname(OS::Linux::OSServicesLinux::getHostname_static());
+	history->setConfiguration(config.getName(), config.getConfigOpts());
+	QString comm = (proc.getCommChanAddr() == "") ? "Inactive" : "Active";
+	QString trace = (proc.getTrace()) ? "Active" : "Inactive";
+	history->setObservedProcess(proc.getCmd(), trace, comm, QString::number(proc.getCommTimeout()));
+	for (auto &elem : monitors) {
+		PinningHistory::monitor_config mconf;
+		mconf.name = (elem)->getName();
+		mconf.type = (elem)->getType();
+		mconf.opts = (elem)->getConfigOpts();
+
+		history->addPerformanceMonitor(mconf);
+	}
+	history->setControlStrategy(this->getName(), this->getConfigOpts());
 }
 
 } // namespace AutopinPlus

@@ -34,7 +34,7 @@
 
 namespace AutopinPlus {
 
-PerformanceMonitor::PerformanceMonitor(QString name, Configuration *config, const AutopinContext &context)
+PerformanceMonitor::PerformanceMonitor(QString name, const Configuration &config, const AutopinContext &context)
 	: config(config), context(context), valtype(UNKNOWN), name(name) {}
 
 PerformanceMonitor::~PerformanceMonitor() {}

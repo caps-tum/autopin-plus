@@ -41,21 +41,24 @@ namespace AutopinPlus {
 namespace Strategy {
 namespace Noop {
 
-Main::Main(Configuration *config, ObservedProcess *proc, OSServices *service,
-		   const PerformanceMonitor::monitor_list &monitors, PinningHistory *history, const AutopinContext &context)
-	: ControlStrategy(config, proc, service, monitors, history, context) {
+Main::Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+		   const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context)
+	: ControlStrategy(config, proc, service, monitors, context) {
 	name = "noop";
 }
 
 void Main::init() {
+
+	ControlStrategy::init();
+
 	context.enableIndentation();
 
 	context.info("> Initializing control strategy " + name);
 
 	// Read and parse the "interval" option
-	if (config->configOptionExists(name + ".interval") > 0) {
+	if (config.configOptionExists(name + ".interval") > 0) {
 		try {
-			interval = Tools::readInt(config->getConfigOption(name + ".interval"));
+			interval = Tools::readInt(config.getConfigOption(name + ".interval"));
 			context.info("  - " + name + ".interval = " + QString::number(interval));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
@@ -77,7 +80,7 @@ Configuration::configopts Main::getConfigOpts() {
 
 void Main::slot_autopinReady() {
 	// Now that all initialization is done, ask the ObservedProcess if tracing is supported.
-	if (proc->getTrace()) {
+	if (proc.getTrace()) {
 		// Process tracing is enabled, so we can rely on the ObservedProcess to notify us if new threads are being
 		// created. Therefore, do nothing.
 	} else {

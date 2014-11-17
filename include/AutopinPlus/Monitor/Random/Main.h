@@ -50,7 +50,7 @@ class Main : public PerformanceMonitor {
 	 * \param[in] config		Pointer to the current Configuration instance
 	 * \param[in] context	Refernce to the context of the object calling the constructor
 	 */
-	Main(QString name, Configuration *config, const AutopinContext &context);
+	Main(QString name, const Configuration &config, const AutopinContext &context);
 
 	void init() override;
 	void start(int tid) override;

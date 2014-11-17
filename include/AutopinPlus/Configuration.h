@@ -84,14 +84,14 @@ class Configuration {
 	 *
 	 * \return The name of the configuration
    */
-	QString getName();
+	QString getName() const;
 
 	/*!
 	 * \brief Returns properties of the configuration
 	 *
 	 * \return A list with the properties of the configuration
 	 */
-	virtual configopts getConfigOpts() = 0;
+	virtual configopts getConfigOpts() const = 0;
 
 	/*!
 	 * \brief Reads an option from the configuration
@@ -104,7 +104,7 @@ class Configuration {
 	 * 	the specified name exits or count is to large an empty string
 	 * 	will be returned
 	 */
-	virtual QString getConfigOption(QString opt, int count = 0);
+	virtual QString getConfigOption(QString opt, int count = 0) const;
 
 	/*!
 	 * \brief Returns all configuration options stored in opt
@@ -113,7 +113,7 @@ class Configuration {
 	 * \return A list of strings containing all configuration options
 	 * 	stored in opt. If no such option exists the list will be empty.
 	 */
-	virtual QStringList getConfigOptionList(QString opt) = 0;
+	virtual QStringList getConfigOptionList(QString opt) const = 0;
 
 	/**
 	 * \brief Reads an integer option from the configuration
@@ -127,7 +127,7 @@ class Configuration {
 	 * 	integer 0 will be returned. If count is to large 0 will
 	 * 	be returned, too.
 	 */
-	int getConfigOptionInt(QString opt, int count = 0);
+	int getConfigOptionInt(QString opt, int count = 0) const;
 
 	/**
 	 * \brief Reads a double option from the configuration
@@ -141,7 +141,7 @@ class Configuration {
 	 * 	integer 0 will be returned. If count is to large 0 will
 	 * 	be returned, too.
 	 */
-	double getConfigOptionDouble(QString opt, int count = 0);
+	double getConfigOptionDouble(QString opt, int count = 0) const;
 
 	/**
 	 * \brief Reads a bool option from the configuration
@@ -161,7 +161,7 @@ class Configuration {
 	 * 	integer false will be returned. If count is to large false will
 	 * 	be returned, too.
 	 */
-	virtual bool getConfigOptionBool(QString opt, int count = 0);
+	virtual bool getConfigOptionBool(QString opt, int count = 0) const;
 
 	/*!
 	 * \brief Checks if a configuration option with the specified name exists
@@ -171,7 +171,7 @@ class Configuration {
 	 * \return	The number of configuration options saved in the configuration
 	 * 	entry opt. If there exists no such entry -1 is returned
 	 */
-	virtual int configOptionExists(QString opt);
+	virtual int configOptionExists(QString opt) const;
 
 	/*!
 	 * \brief Checks if a config option is a valid bool value
@@ -185,7 +185,7 @@ class Configuration {
 	 * \return true if the specified option is a valid bool value and
 	 * 	false in all other cases.
 	 */
-	virtual bool configOptionBool(QString opt, int count = 0);
+	virtual bool configOptionBool(QString opt, int count = 0) const;
 
 	/*!
 	 * \brief Accesses environment variables

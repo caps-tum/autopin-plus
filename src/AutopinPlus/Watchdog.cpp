@@ -35,11 +35,10 @@
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
 #include <AutopinPlus/Strategy/History/Main.h>
 #include <AutopinPlus/Strategy/Noop/Main.h>
-#include <AutopinPlus/XMLPinningHistory.h>
-#include <QFileInfo>
 #include <QString>
 #include <QTimer>
 #include <QList>
+#include <memory>
 
 /*
  * Every implementation of OSServices must provide a static method
@@ -50,19 +49,8 @@
 
 namespace AutopinPlus {
 
-Watchdog::Watchdog(Configuration *config, OSServices *service, const AutopinContext &context)
-	: config(config), service(service), context(context), process(nullptr), strategy(nullptr), history(nullptr) {}
-
-Watchdog::~Watchdog() {
-	delete strategy;
-
-	for (auto logger : loggers) delete logger;
-	for (auto &elem : monitors) delete elem;
-
-	delete process;
-	delete service;
-	delete history;
-}
+Watchdog::Watchdog(std::unique_ptr<const Configuration> config, OSServices &service, const AutopinContext &context)
+	: config(std::move(config)), service(service), context(context), process(nullptr), strategy(nullptr) {}
 
 void Watchdog::slot_watchdogRun() {
 
@@ -76,14 +64,12 @@ void Watchdog::slot_watchdogRun() {
 	context.biginfo("  > Initializing performance monitors");
 
 	// Setup and initialize observed process
-	process = new ObservedProcess(config, service, context);
+	process = std::unique_ptr<ObservedProcess>(new ObservedProcess(*config, service, context));
 	CHECK_ERRORV(process->init());
-
-	// Setup pinning history
-	CHECK_ERRORV(createPinningHistory());
 
 	// Setup and initialize pinning strategy
 	CHECK_ERRORV(createControlStrategy());
+
 	CHECK_ERRORV(strategy->init());
 
 	// Setup and initialize data loggers
@@ -96,12 +82,6 @@ void Watchdog::slot_watchdogRun() {
 
 	// Setup global Qt connections
 	createComponentConnections();
-
-	// Read environment information for the pinning history
-	if (history != nullptr) setPinningHistoryEnv();
-
-	// Initialize the pinning history
-	if (history != nullptr) history->init();
 
 	context.info("\nConnecting to the observed process ...");
 
@@ -137,60 +117,31 @@ void Watchdog::createPerformanceMonitors() {
 		current_type = config->getConfigOption(current_monitor + ".type");
 
 		if (current_type == "clustsafe") {
-			PerformanceMonitor *new_mon = new Monitor::ClustSafe::Main(current_monitor, config, context);
-			monitors.push_back(new_mon);
+			monitors.push_back(
+				std::shared_ptr<PerformanceMonitor>(new Monitor::ClustSafe::Main(current_monitor, *config, context)));
 			continue;
 		}
 
 		if (current_type == "gperf") {
-			PerformanceMonitor *new_mon = new Monitor::GPerf::Main(current_monitor, config, context);
-			monitors.push_back(new_mon);
+			monitors.push_back(
+				std::shared_ptr<PerformanceMonitor>(new Monitor::GPerf::Main(current_monitor, *config, context)));
 			continue;
 		}
 
 		if (current_type == "perf") {
-			PerformanceMonitor *new_mon = new Monitor::Perf::Main(current_monitor, config, context);
-			monitors.push_back(new_mon);
+			monitors.push_back(
+				std::shared_ptr<PerformanceMonitor>(new Monitor::Perf::Main(current_monitor, *config, context)));
 			continue;
 		}
 
 		if (current_type == "random") {
-			PerformanceMonitor *new_mon = new Monitor::Random::Main(current_monitor, config, context);
-			monitors.push_back(new_mon);
+			monitors.push_back(
+				std::shared_ptr<PerformanceMonitor>(new Monitor::Random::Main(current_monitor, *config, context)));
 			continue;
 		}
 
 		REPORTV(Error::UNSUPPORTED, "critical", "Performance monitor type \"" + current_type + "\" is not supported");
 	}
-}
-
-void Watchdog::createPinningHistory() {
-	int optcount_read = config->configOptionExists("PinningHistory.load");
-	int optcount_write = config->configOptionExists("PinningHistory.save");
-
-	if (optcount_read <= 0 && optcount_write <= 0) return;
-	if (optcount_read > 1)
-		REPORTV(Error::BAD_CONFIG, "inconsistent",
-				"Specified " + QString::number(optcount_read) + " pinning histories as input");
-	if (optcount_write > 1)
-		REPORTV(Error::BAD_CONFIG, "inconsistent",
-				"Specified " + QString::number(optcount_write) + " pinning histories as output");
-
-	QString history_config;
-	if (optcount_read > 0)
-		history_config = config->getConfigOption("PinningHistory.load");
-	else if (optcount_write > 0)
-		history_config = config->getConfigOption("PinningHistory.save");
-
-	QFileInfo history_info(history_config);
-
-	if (history_info.suffix() == "xml") {
-		history = new XMLPinningHistory(config, context);
-		return;
-	}
-
-	REPORTV(Error::UNSUPPORTED, "critical",
-			"File type \"." + history_info.suffix() + "\" is not supported by any pinning history");
 }
 
 void Watchdog::createControlStrategy() {
@@ -203,17 +154,20 @@ void Watchdog::createControlStrategy() {
 	QString strategy_config = config->getConfigOption("ControlStrategy");
 
 	if (strategy_config == "autopin1") {
-		strategy = new Strategy::Autopin1::Main(config, process, service, monitors, history, context);
+		strategy = std::unique_ptr<ControlStrategy>(
+			new Strategy::Autopin1::Main(*config, *process, service, monitors, context));
 		return;
 	}
 
 	if (strategy_config == "history") {
-		strategy = new Strategy::History::Main(config, process, service, monitors, history, context);
+		strategy = std::unique_ptr<ControlStrategy>(
+			new Strategy::History::Main(*config, *process, service, monitors, context));
 		return;
 	}
 
 	if (strategy_config == "noop") {
-		strategy = new Strategy::Noop::Main(config, process, service, monitors, history, context);
+		strategy =
+			std::unique_ptr<ControlStrategy>(new Strategy::Noop::Main(*config, *process, service, monitors, context));
 		return;
 	}
 
@@ -223,7 +177,7 @@ void Watchdog::createControlStrategy() {
 void Watchdog::createDataLoggers() {
 	for (auto logger : config->getConfigOptionList("DataLoggers")) {
 		if (logger == "external") {
-			loggers.append(new Logger::External::Main(config, monitors, context));
+			loggers.push_back(std::shared_ptr<DataLogger>(new Logger::External::Main(*config, monitors, context)));
 		} else {
 			REPORTV(Error::UNSUPPORTED, "critical", "Data logger \"" + logger + "\" is not supported");
 			return;
@@ -231,34 +185,17 @@ void Watchdog::createDataLoggers() {
 	}
 }
 
-void Watchdog::setPinningHistoryEnv() {
-	history->setHostname(OS::Linux::OSServicesLinux::getHostname_static());
-	history->setConfiguration(config->getName(), config->getConfigOpts());
-	QString comm = (process->getCommChanAddr() == "") ? "Inactive" : "Active";
-	QString trace = (process->getTrace()) ? "Active" : "Inactive";
-	history->setObservedProcess(process->getCmd(), trace, comm, QString::number(process->getCommTimeout()));
-	for (auto &elem : monitors) {
-		PinningHistory::monitor_config mconf;
-		mconf.name = (elem)->getName();
-		mconf.type = (elem)->getType();
-		mconf.opts = (elem)->getConfigOpts();
-
-		history->addPerformanceMonitor(mconf);
-	}
-	history->setControlStrategy(strategy->getName(), strategy->getConfigOpts());
-}
-
 void Watchdog::createComponentConnections() {
 	// Connections between the OSServices and the ObservedProcess
-	connect(service, SIGNAL(sig_TaskCreated(int)), process, SLOT(slot_TaskCreated(int)));
-	connect(service, SIGNAL(sig_TaskTerminated(int)), process, SLOT(slot_TaskTerminated(int)));
-	connect(service, SIGNAL(sig_CommChannel(autopin_msg)), process, SLOT(slot_CommChannel(autopin_msg)));
+	connect(&service, SIGNAL(sig_TaskCreated(int)), process.get(), SLOT(slot_TaskCreated(int)));
+	connect(&service, SIGNAL(sig_TaskTerminated(int)), process.get(), SLOT(slot_TaskTerminated(int)));
+	connect(&service, SIGNAL(sig_CommChannel(autopin_msg)), process.get(), SLOT(slot_CommChannel(autopin_msg)));
 
 	// Connections between the ObservedProcess and the ControlStrategy
-	connect(process, SIGNAL(sig_TaskCreated(int)), strategy, SLOT(slot_TaskCreated(int)));
-	connect(process, SIGNAL(sig_TaskTerminated(int)), strategy, SLOT(slot_TaskTerminated(int)));
-	connect(process, SIGNAL(sig_PhaseChanged(int)), strategy, SLOT(slot_PhaseChanged(int)));
-	connect(process, SIGNAL(sig_UserMessage(int, double)), strategy, SLOT(slot_UserMessage(int, double)));
+	connect(process.get(), SIGNAL(sig_TaskCreated(int)), strategy.get(), SLOT(slot_TaskCreated(int)));
+	connect(process.get(), SIGNAL(sig_TaskTerminated(int)), strategy.get(), SLOT(slot_TaskTerminated(int)));
+	connect(process.get(), SIGNAL(sig_PhaseChanged(int)), strategy.get(), SLOT(slot_PhaseChanged(int)));
+	connect(process.get(), SIGNAL(sig_UserMessage(int, double)), strategy.get(), SLOT(slot_UserMessage(int, double)));
 }
 
 } // namespace AutopinPlus

@@ -55,8 +55,8 @@ class StandardConfiguration : public Configuration {
 	StandardConfiguration(const QString path, const AutopinContext &context);
 
 	void init() override;
-	Configuration::configopts getConfigOpts() override;
-	QStringList getConfigOptionList(QString opt) override;
+	Configuration::configopts getConfigOpts() const override;
+	QStringList getConfigOptionList(QString opt) const override;
 
   private:
 	/*!

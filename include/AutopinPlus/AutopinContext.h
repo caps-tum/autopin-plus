@@ -31,6 +31,7 @@
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/OutputChannel.h>
 #include <QString>
+#include <memory>
 
 namespace AutopinPlus {
 
@@ -58,10 +59,10 @@ class AutopinContext {
 	 * instances should be created from an exising AutopinContext object.
 	 *
 	 * \param[in] outchan	The OutputChannel providing access to the terminal
-	 * \param[in]	err 	Pointer to the runtime instance of the Error class
+	 * \param[in]	err 	Shared pointer to the runtime instance of the Error class
 	 * \param[in] layer	The initial amount of leading whitespace
 	 */
-	AutopinContext(OutputChannel *outchan, Error *err, int layer);
+	AutopinContext(std::shared_ptr<OutputChannel> outchan, std::shared_ptr<Error> err, int layer);
 
 	/*!
 	 * \brief Constructor
@@ -129,7 +130,7 @@ class AutopinContext {
 	 *
 	 * \return The global error state of autopin
 	 */
-	autopin_estate autopinErrorState();
+	autopin_estate autopinErrorState() const;
 
   private:
 	/*!
@@ -147,14 +148,14 @@ class AutopinContext {
 	void error(QString msg);
 
 	/*!
-	 * Stores a pointer to the current runtime instance of OutputChannel
+	 * Stores a shared pointer to the current runtime instance of OutputChannel
 	 */
-	OutputChannel *outchan;
+	std::shared_ptr<OutputChannel> outchan;
 
 	/*!
-	 * Stores a pointer to the current runtime instance of Error
+	 * Stores a shared pointer to the current runtime instance of Error
 	 */
-	Error *err;
+	std::shared_ptr<Error> err;
 
 	/*!
 	 * Stores the leading whitespace used for indentation

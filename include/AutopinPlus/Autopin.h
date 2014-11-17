@@ -65,11 +65,6 @@ class Autopin : public QCoreApplication {
 	 */
 	Autopin(int &argc, char **argv);
 
-	/*!
-	 * \brief Destructor
-	 */
-	virtual ~Autopin();
-
   public slots:
 	/*!
 	 * \brief Procedure for initializing the environment
@@ -104,24 +99,14 @@ signals:
 	void createOSServices();
 
 	/*!
-	 * Stores a pointer to an instance of the class OutputChannel.
-	 */
-	OutputChannel *outchan;
-
-	/*!
 	 * Stores a pointer to an instance of the class AutopinContext.
 	 */
 	AutopinContext context;
 
 	/*!
-	 * Stores a pointer to an instance of the class Error.
-	 */
-	Error *err;
-
-	/*!
 	 * Stores a pointer to an instance of a subclass of OSServices.
 	 */
-	OSServices *service;
+	std::unique_ptr<OSServices> service;
 
 	/*!
 	 * Stores each Watchdog in a List.

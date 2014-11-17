@@ -43,11 +43,11 @@ class XMLPinningHistory : public PinningHistory {
 	/*!
 	 * \brief Constructor
 	 *
-	 * \param[in] config	Pointer to the current Configuration instance
-	 * \param[in]	context	Refernce to the context of the object calling the constructor
+	 * \param[in] config	Reference to the current Configuration instance
+	 * \param[in] context	Reference to the context of the object calling the constructor
 	 *
 	 */
-	XMLPinningHistory(Configuration *config, const AutopinContext &context);
+	XMLPinningHistory(const Configuration &config, const AutopinContext &context);
 
 	void init() override;
 	void deinit() override;
