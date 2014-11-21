@@ -55,11 +55,11 @@ Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), service
 
 void Autopin::slot_autopinSetup() {
 	// Create output channel
-	std::shared_ptr<OutputChannel> outchan(new OutputChannel());
+	auto outchan = std::make_shared<OutputChannel>();
 	// outchan->enableDebug();
 
 	// Create error handler
-	std::shared_ptr<Error> err(new Error());
+	auto err = std::make_shared<Error>();
 
 	// Create autopin context
 	context = AutopinContext(outchan, err, 0);

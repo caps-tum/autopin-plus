@@ -118,25 +118,25 @@ void Watchdog::createPerformanceMonitors() {
 
 		if (current_type == "clustsafe") {
 			monitors.push_back(
-				std::shared_ptr<PerformanceMonitor>(new Monitor::ClustSafe::Main(current_monitor, *config, context)));
+				std::make_shared<Monitor::ClustSafe::Main>(current_monitor, *config, context));
 			continue;
 		}
 
 		if (current_type == "gperf") {
 			monitors.push_back(
-				std::shared_ptr<PerformanceMonitor>(new Monitor::GPerf::Main(current_monitor, *config, context)));
+				std::make_shared<Monitor::GPerf::Main>(current_monitor, *config, context));
 			continue;
 		}
 
 		if (current_type == "perf") {
 			monitors.push_back(
-				std::shared_ptr<PerformanceMonitor>(new Monitor::Perf::Main(current_monitor, *config, context)));
+				std::make_shared<Monitor::Perf::Main>(current_monitor, *config, context));
 			continue;
 		}
 
 		if (current_type == "random") {
 			monitors.push_back(
-				std::shared_ptr<PerformanceMonitor>(new Monitor::Random::Main(current_monitor, *config, context)));
+				std::make_shared<Monitor::Random::Main>(current_monitor, *config, context));
 			continue;
 		}
 
@@ -177,7 +177,7 @@ void Watchdog::createControlStrategy() {
 void Watchdog::createDataLoggers() {
 	for (auto logger : config->getConfigOptionList("DataLoggers")) {
 		if (logger == "external") {
-			loggers.push_back(std::shared_ptr<DataLogger>(new Logger::External::Main(*config, monitors, context)));
+			loggers.push_back(std::make_shared<Logger::External::Main>(*config, monitors, context));
 		} else {
 			REPORTV(Error::UNSUPPORTED, "critical", "Data logger \"" + logger + "\" is not supported");
 			return;
