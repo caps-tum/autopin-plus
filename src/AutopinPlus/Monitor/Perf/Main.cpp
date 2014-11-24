@@ -38,7 +38,7 @@ namespace AutopinPlus {
 namespace Monitor {
 namespace Perf {
 
-Main::Main(QString name, Configuration *config, const AutopinContext &context)
+Main::Main(QString name, const Configuration &config, const AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	valtype = PerformanceMonitor::MAX;
 	type = "perf";
@@ -49,8 +49,8 @@ void Main::init() {
 	context.info("  :: Initializing \"" + name + "\" (perf)");
 
 	// Get the type of instructions to count
-	if (config->configOptionExists(name + ".event_type") == 1) {
-		QString event_name = config->getConfigOption(name + ".event_type");
+	if (config.configOptionExists(name + ".event_type") == 1) {
+		QString event_name = config.getConfigOption(name + ".event_type");
 		if (event_name == "PERF_COUNT_HW_CPU_CYCLES")
 			event_type = PERF_COUNT_HW_CPU_CYCLES;
 		else if (event_name == "PERF_COUNT_HW_INSTRUCTIONS")
@@ -73,7 +73,7 @@ void Main::init() {
 			REPORTV(Error::BAD_CONFIG, "option_format", "Event " + event_name + " is not supported by perf");
 
 		context.info("     - Using event type " + event_name);
-	} else if (config->configOptionExists(name + ".event_type") > 1) {
+	} else if (config.configOptionExists(name + ".event_type") > 1) {
 		REPORTV(Error::BAD_CONFIG, "inconsistent", "More than type specified for performance monitor " + name);
 	} else
 		REPORTV(Error::BAD_CONFIG, "option_missing", "No event type specified for performance monitor " + name);
@@ -84,8 +84,7 @@ void Main::init() {
 Configuration::configopts Main::getConfigOpts() {
 	Configuration::configopts result;
 
-	result.push_back(
-		Configuration::configopt("event_type", QStringList(config->getConfigOption(name + ".event_type"))));
+	result.push_back(Configuration::configopt("event_type", QStringList(config.getConfigOption(name + ".event_type"))));
 
 	return result;
 }

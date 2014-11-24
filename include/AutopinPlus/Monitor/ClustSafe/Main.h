@@ -47,10 +47,10 @@ class Main : public PerformanceMonitor {
 	 * \brief Constructor
 	 *
 	 * \param[in] name    Name of this monitor
-	 * \param[in] config  Pointer to the configuration
-	 * \param[in] context Pointer to the context
+	 * \param[in] config  Reference to the configuration
+	 * \param[in] context Reference to the context
 	 */
-	Main(QString name, Configuration *config, const AutopinContext &context);
+	Main(QString name, const Configuration &config, const AutopinContext &context);
 
 	// Overridden from the base class
 	void init() override;
@@ -77,7 +77,6 @@ class Main : public PerformanceMonitor {
 	QString getUnit() override;
 
   private:
-
 	/*!
 	 * \brief Checks if an array has a specific prefix and drops it.
 	*

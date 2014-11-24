@@ -53,7 +53,7 @@ void StandardConfiguration::init() {
 	context.disableIndentation();
 }
 
-Configuration::configopts StandardConfiguration::getConfigOpts() {
+Configuration::configopts StandardConfiguration::getConfigOpts() const {
 	Configuration::configopts result;
 
 	result.push_back(Configuration::configopt("default_config", QStringList(path)));
@@ -61,10 +61,11 @@ Configuration::configopts StandardConfiguration::getConfigOpts() {
 	return result;
 }
 
-QStringList StandardConfiguration::getConfigOptionList(QString opt) {
+QStringList StandardConfiguration::getConfigOptionList(QString opt) const {
 	QStringList result;
 
-	if (options.find(opt) != options.end()) return options[opt];
+	auto it = options.find(opt);
+	if (it != options.end()) return it->second; // BIG BIG TODO!!!
 
 	return result;
 }

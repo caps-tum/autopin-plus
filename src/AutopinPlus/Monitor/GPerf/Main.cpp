@@ -49,7 +49,7 @@ namespace AutopinPlus {
 namespace Monitor {
 namespace GPerf {
 
-Main::Main(QString name, Configuration *config, const AutopinContext &context)
+Main::Main(QString name, const Configuration &config, const AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	// Set the "type" field of the base class to the name of our monitor.
 	type = "gperf";
@@ -64,9 +64,9 @@ void Main::init() {
 	context.info("  :: Initializing " + name + " (" + type + ")");
 
 	// Read and parse the "processors" option
-	if (config->configOptionExists(name + ".processors") > 0) {
+	if (config.configOptionExists(name + ".processors") > 0) {
 		try {
-			processors = Tools::readInts(config->getConfigOptionList(name + ".processors"));
+			processors = Tools::readInts(config.getConfigOptionList(name + ".processors"));
 			context.info("     - " + name + ".processors = " + Tools::showInts(processors).join(" "));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
@@ -77,9 +77,9 @@ void Main::init() {
 	}
 
 	// Read and parse the "sensor" option
-	if (config->configOptionExists(name + ".sensor") > 0) {
+	if (config.configOptionExists(name + ".sensor") > 0) {
 		try {
-			sensor = readSensor(config->getConfigOption(name + ".sensor"));
+			sensor = readSensor(config.getConfigOption(name + ".sensor"));
 			context.info("     - " + name + ".sensor = " + showSensor(sensor));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
@@ -93,9 +93,9 @@ void Main::init() {
 	}
 
 	// Read and parse the "valtype" option
-	if (config->configOptionExists(name + ".valtype") > 0) {
+	if (config.configOptionExists(name + ".valtype") > 0) {
 		try {
-			valtype = readMontype(config->getConfigOption(name + ".valtype"));
+			valtype = readMontype(config.getConfigOption(name + ".valtype"));
 			context.info("     - " + name + ".valtype = " + showMontype(valtype));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",

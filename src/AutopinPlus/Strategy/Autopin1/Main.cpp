@@ -32,10 +32,10 @@ namespace AutopinPlus {
 namespace Strategy {
 namespace Autopin1 {
 
-Main::Main(Configuration *config, ObservedProcess *proc, OSServices *service,
-		   const PerformanceMonitor::monitor_list &monitors, PinningHistory *history, const AutopinContext &context)
-	: ControlStrategy(config, proc, service, monitors, history, context), current_pinning(0), best_pinning(-1),
-	  monitor(nullptr), notifications(false) {
+Main::Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+		   const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context)
+	: ControlStrategy(config, proc, service, monitors, context), current_pinning(0), best_pinning(-1), monitor(nullptr),
+	  notifications(false) {
 	// Setup timers
 	init_timer.setSingleShot(true);
 	connect(&init_timer, SIGNAL(timeout()), this, SLOT(slot_startPinning()));
@@ -50,6 +50,8 @@ Main::Main(Configuration *config, ObservedProcess *proc, OSServices *service,
 }
 
 void Main::init() {
+
+	ControlStrategy::init();
 
 	context.enableIndentation();
 
@@ -77,23 +79,23 @@ void Main::init() {
 	notification_interval = 0;
 
 	// Read user values from the configuration
-	if (config->configOptionExists(config_prefix + "init_time") > 0)
-		init_time = config->getConfigOptionInt(config_prefix + "init_time");
+	if (config.configOptionExists(config_prefix + "init_time") > 0)
+		init_time = config.getConfigOptionInt(config_prefix + "init_time");
 
-	if (config->configOptionExists(config_prefix + "warmup_time") > 0)
-		warmup_time = config->getConfigOptionInt(config_prefix + "warmup_time");
+	if (config.configOptionExists(config_prefix + "warmup_time") > 0)
+		warmup_time = config.getConfigOptionInt(config_prefix + "warmup_time");
 
-	if (config->configOptionExists(config_prefix + "measure_time") > 0)
-		measure_time = config->getConfigOptionInt(config_prefix + "measure_time");
+	if (config.configOptionExists(config_prefix + "measure_time") > 0)
+		measure_time = config.getConfigOptionInt(config_prefix + "measure_time");
 
-	if (config->configOptionBool(config_prefix + "openmp_icc"))
-		openmp_icc = config->getConfigOptionBool(config_prefix + "openmp_icc");
+	if (config.configOptionBool(config_prefix + "openmp_icc"))
+		openmp_icc = config.getConfigOptionBool(config_prefix + "openmp_icc");
 
-	if (config->configOptionExists(config_prefix + "skip") > 0)
-		skip_str = config->getConfigOptionList(config_prefix + "skip");
+	if (config.configOptionExists(config_prefix + "skip") > 0)
+		skip_str = config.getConfigOptionList(config_prefix + "skip");
 
-	if (config->configOptionExists(config_prefix + "notification_interval") > 0)
-		notification_interval = config->getConfigOptionInt(config_prefix + "notification_interval");
+	if (config.configOptionExists(config_prefix + "notification_interval") > 0)
+		notification_interval = config.getConfigOptionInt(config_prefix + "notification_interval");
 
 	for (int i = 0; i < skip_str.size(); i++) {
 		QString entry = skip_str[i];
@@ -115,7 +117,7 @@ void Main::init() {
 	if (openmp_icc) context.info("  :: OpenMP/ICC support is enabled");
 	if (!skip.empty()) context.info("  :: These tasks will be skipped: " + skip_str.join(" "));
 
-	if (proc->getCommChanAddr() != "")
+	if (proc.getCommChanAddr() != "")
 		context.info("  :: Minimum phase notification interval: " + QString::number(notification_interval));
 
 	init_timer.setInterval(init_time * 1000);
@@ -148,7 +150,7 @@ Configuration::configopts Main::getConfigOpts() {
 void Main::slot_autopinReady() {
 	context.enableIndentation();
 	context.info("> Set phase notification interval");
-	CHECK_ERRORV(proc->setPhaseNotificationInterval(notification_interval));
+	CHECK_ERRORV(proc.setPhaseNotificationInterval(notification_interval));
 
 	context.info("> Waiting " + QString::number(init_time) + " seconds (init time)");
 
@@ -293,7 +295,7 @@ void Main::slot_TaskCreated(int tid) {
 				context.info("  :: Not pinning task " + QString::number(tid) + " (icc thread)");
 			} else {
 				context.info("  :: Pinning task " + QString::number(tid) + " to core " + QString::number(pinning[i]));
-				CHECK_ERRORV(service->setAffinity(tid, pinning[i]));
+				CHECK_ERRORV(service.setAffinity(tid, pinning[i]));
 
 				pinned_task new_entry;
 				new_entry.tid = tid;
@@ -365,7 +367,7 @@ void Main::applyPinning(PinningHistory::autopin_pinning pinning) {
 			pinned_task new_entry;
 			new_entry.tid = tasks[j];
 			context.info("  :: Pinning task " + QString::number(tasks[j]) + " to core " + QString::number(pinning[i]));
-			CHECK_ERRORV(service->setAffinity(tasks[j], pinning[i]));
+			CHECK_ERRORV(service.setAffinity(tasks[j], pinning[i]));
 			pinned_tasks.push_back(new_entry);
 			i++;
 		}
@@ -376,13 +378,13 @@ void Main::applyPinning(PinningHistory::autopin_pinning pinning) {
 
 void Main::checkPinnedTasks() {
 	// There is no need to check for terminated tasks if process tracing is enabled
-	if (proc->getTrace()) return;
+	if (proc.getTrace()) return;
 
 	ProcessTree proc_tree;
 	ProcessTree::autopin_tid_list running_tasks;
 	QStringList terminated_tasks;
 
-	CHECK_ERRORV(proc_tree = proc->getProcessTree());
+	CHECK_ERRORV(proc_tree = proc.getProcessTree());
 
 	running_tasks = proc_tree.getAllTasks();
 

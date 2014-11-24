@@ -32,7 +32,7 @@ namespace AutopinPlus {
 
 AutopinContext::AutopinContext() {}
 
-AutopinContext::AutopinContext(OutputChannel *outchan, Error *err, int layer)
+AutopinContext::AutopinContext(std::shared_ptr<OutputChannel> outchan, std::shared_ptr<Error> err, int layer)
 	: outchan(outchan), err(err), indent(false) {
 	whitespace = "";
 	for (int i = 0; i < layer; i++) whitespace += "  ";
@@ -84,7 +84,7 @@ autopin_estate AutopinContext::report(Error::autopin_errors error, QString opt, 
 	return result;
 }
 
-autopin_estate AutopinContext::autopinErrorState() { return err->autopinErrorState(); }
+autopin_estate AutopinContext::autopinErrorState() const { return err->autopinErrorState(); }
 
 void AutopinContext::enableIndentation() { indent = true; }
 

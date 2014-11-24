@@ -35,9 +35,9 @@ Configuration::Configuration(const QString path, const AutopinContext &context)
 
 Configuration::~Configuration() {}
 
-QString Configuration::getName() { return name; }
+QString Configuration::getName() const { return name; }
 
-QString Configuration::getConfigOption(QString opt, int count) {
+QString Configuration::getConfigOption(QString opt, int count) const {
 	QStringList opts = getConfigOptionList(opt);
 
 	if (count >= 0 && count < opts.size())
@@ -46,22 +46,22 @@ QString Configuration::getConfigOption(QString opt, int count) {
 		return "";
 }
 
-int Configuration::configOptionExists(QString opt) {
+int Configuration::configOptionExists(QString opt) const {
 	QStringList opts = getConfigOptionList(opt);
 	return opts.size();
 }
 
-int Configuration::getConfigOptionInt(QString opt, int count) {
+int Configuration::getConfigOptionInt(QString opt, int count) const {
 	QString val = getConfigOption(opt, count);
 	return val.toInt();
 }
 
-double Configuration::getConfigOptionDouble(QString opt, int count) {
+double Configuration::getConfigOptionDouble(QString opt, int count) const {
 	QString val = getConfigOption(opt, count);
 	return val.toDouble();
 }
 
-bool Configuration::getConfigOptionBool(QString opt, int count) {
+bool Configuration::getConfigOptionBool(QString opt, int count) const {
 	QString val = getConfigOption(opt, count);
 
 	if (val == "true" || val == "True" || val == "TRUE")
@@ -72,7 +72,7 @@ bool Configuration::getConfigOptionBool(QString opt, int count) {
 		return (val.toDouble() != 0);
 }
 
-bool Configuration::configOptionBool(QString opt, int count) {
+bool Configuration::configOptionBool(QString opt, int count) const {
 	QString val = getConfigOption(opt, count);
 	bool isdouble;
 	val.toDouble(&isdouble);

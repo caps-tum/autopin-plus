@@ -34,6 +34,7 @@
 #include <deque>						// for deque
 #include <map>							// for map
 #include <qstring.h>					// for QString
+#include <memory>
 
 namespace AutopinPlus {
 
@@ -45,9 +46,9 @@ namespace AutopinPlus {
 class PerformanceMonitor {
   public:
 	/*!
-	 * \brief Data structure for storing pointers to performance monitors
+	 * \brief Data structure for storing shared pointers to performance monitors
 	 */
-	typedef std::deque<PerformanceMonitor *> monitor_list;
+	typedef std::deque<std::shared_ptr<PerformanceMonitor>> monitor_list;
 
 	/*!
 	 * \brief Data structure for assigning performance values to tasks
@@ -64,10 +65,10 @@ class PerformanceMonitor {
 	 * \brief Constructor
 	 *
 	 * \param[in] name		Name of the monitor
-	 * \param[in] config		Pointer to the current Configuration instance
-	 * \param[in] context		Refernce to the context of the object calling the constructor
+	 * \param[in] config	Reference to the current Configuration instance
+	 * \param[in] context	Reference to the context of the object calling the constructor
 	 */
-	PerformanceMonitor(QString name, Configuration *config, const AutopinContext &context);
+	PerformanceMonitor(QString name, const Configuration &config, const AutopinContext &context);
 
 	virtual ~PerformanceMonitor();
 
@@ -235,9 +236,9 @@ class PerformanceMonitor {
 
   protected:
 	/*!
-	 * Pointer to the current Configuration object
+	 * Reference of the current Configuration object
 	 */
-	Configuration *config;
+	const Configuration &config;
 
 	/*!
 	 * The runtime context

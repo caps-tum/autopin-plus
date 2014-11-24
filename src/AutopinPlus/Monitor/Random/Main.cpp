@@ -35,7 +35,7 @@ namespace AutopinPlus {
 namespace Monitor {
 namespace Random {
 
-Main::Main(QString name, Configuration *config, const AutopinContext &context)
+Main::Main(QString name, const Configuration &config, const AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	type = "random";
 }
@@ -53,15 +53,13 @@ void Main::init() {
 	valtype = MAX;
 	QString valtype_str = "MAX";
 
-	if (config->configOptionExists(name + ".rand_min") == 1)
-		rand_min = config->getConfigOptionDouble(name + ".rand_min");
-	if (config->configOptionExists(name + ".rand_max") == 1)
-		rand_max = config->getConfigOptionDouble(name + ".rand_max");
-	if (config->configOptionExists(name + ".valtype") == 1) {
-		if (config->getConfigOption(name + ".valtype") == "max") {
+	if (config.configOptionExists(name + ".rand_min") == 1) rand_min = config.getConfigOptionDouble(name + ".rand_min");
+	if (config.configOptionExists(name + ".rand_max") == 1) rand_max = config.getConfigOptionDouble(name + ".rand_max");
+	if (config.configOptionExists(name + ".valtype") == 1) {
+		if (config.getConfigOption(name + ".valtype") == "max") {
 			valtype = MAX;
 			valtype_str = "MAX";
-		} else if (config->getConfigOption(name + ".valtype") == "min") {
+		} else if (config.getConfigOption(name + ".valtype") == "min") {
 			valtype = MIN;
 			valtype_str = "MIN";
 		} else {

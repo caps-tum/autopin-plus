@@ -38,6 +38,7 @@
 #include <deque>
 #include <map>
 #include <QObject>
+#include <memory>
 
 namespace AutopinPlus {
 
@@ -57,16 +58,15 @@ class ControlStrategy : public QObject {
 	 * \param[in] proc		Pointer to the observed process
 	 * \param[in] service		Pointer to the current OSServices instance
 	 * \param[in] monitors	Reference to a list of available instances of PerformanceMonitor
-	 * \param[in] history		Pointer to the current PinningHistory instance
 	 * \param[in]	context	Refernce to the context of the object calling the constructor
 	 */
-	ControlStrategy(Configuration *config, ObservedProcess *proc, OSServices *service,
-					PerformanceMonitor::monitor_list monitors, PinningHistory *history, const AutopinContext &context);
+	ControlStrategy(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+					PerformanceMonitor::monitor_list monitors, const AutopinContext &context);
 
 	/*!
 	 * \brief Initializes the control strategy
 	 */
-	virtual void init() = 0;
+	virtual void init();
 
 	/*!
 	 * \brief Get the name of the control strategy
@@ -143,6 +143,23 @@ class ControlStrategy : public QObject {
 	PinningHistory::pinning_list readPinnings(QString opt);
 
 	/*!
+	 * \brief Factory function for the pinning history
+	 *
+	 * Reads the configuration and creates the requested
+	 * pinning history. The pinning history which is created
+	 * depends on the suffix of the history file:
+	 *
+	 * - .xml: XMLPinningHistory
+	 *
+	 */
+	void createPinningHistory();
+
+	/*!
+	 * \brief Provide environment options for the pinning history
+	 */
+	void setPinningHistoryEnv();
+
+	/*!
 	 * \brief Adds a pinning to the pinning history
 	 *
 	 * Checks if the pinning history feature is enabled and adds the
@@ -161,11 +178,11 @@ class ControlStrategy : public QObject {
 	/*!
 	 * Variables for storing runtime information in the constructor
 	 */
-	Configuration *config;
-	ObservedProcess *proc;
-	OSServices *service;
+	const Configuration &config;
+	const ObservedProcess &proc;
+	OSServices &service;
 	PerformanceMonitor::monitor_list monitors;
-	PinningHistory *history;
+	std::unique_ptr<PinningHistory> history;
 	//@}
 
 	/*!

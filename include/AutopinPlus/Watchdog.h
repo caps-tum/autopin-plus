@@ -37,16 +37,18 @@
 #include <AutopinPlus/StandardConfiguration.h>
 #include <QCoreApplication>
 #include <QTimer>
-#include <QList>
+#include <list>
+#include <memory>
 
 namespace AutopinPlus {
 
 /*!
  * \brief Basic class of autopin+
  *
- * On starting the application an instance of this class is created in the ::main-function.
- * All components required for running autopin+ are initialized and managed within this
- * class.
+ * This class manages all resources for running exactly one process in the context of autopin+
+ * It is responsible for allocating all the resources for running a process and also actually
+ * starts the process, as soon as it receives a signal on the slot slot_watchdogRun.
+ *
  */
 class Watchdog : public QObject {
 	Q_OBJECT
@@ -54,21 +56,12 @@ class Watchdog : public QObject {
 	/*!
 	 * \brief Constructor of the Watchdog-class
 	 *
-	 * This class manages all resources for running exactly one process in the context of autopin+
-	 * It is responsible for allocating all the resources for running a process and also actually
-	 * starts the process, as soon as it receives a signal on the slot slot_watchdogRun.
-	 *
 	 * \param[in] config  Config of the process, which is run by this class
 	 * \param[in] service OSService, used for pinning the threads
 	 * \param[in] context Reference to AutopinContext
 	 *
 	 */
-	Watchdog(Configuration *config, OSServices *service, const AutopinContext &context);
-
-	/*!
-	 * \brief Destructor
-	 */
-	virtual ~Watchdog();
+	Watchdog(std::unique_ptr<const Configuration> config, OSServices &service, const AutopinContext &context);
 
   public slots:
 	/*!
@@ -87,22 +80,6 @@ class Watchdog : public QObject {
 	void createPerformanceMonitors();
 
 	/*!
-	 * \brief Factory function for the pinning history
-	 *
-	 * Reads the configuration and creates the requested
-	 * pinning history. The pinning history which is created
-	 * depends on the suffix of the history file:
-	 *
-	 * - .xml: XMLPinningHistory
-	 *
-	 */
-	void createPinningHistory();
-
-	/*!
-	 * \brief Provide environment options for the pinning history
-	 */
-	void setPinningHistoryEnv();
-
 	/*!
 	 * \brief Factory function for the control strategy
 	 *
@@ -129,39 +106,34 @@ class Watchdog : public QObject {
 	AutopinContext context;
 
 	/*!
-	 * Stores a pointer to an instance of a subclass of Configuration.
+	 * Stores a unique pointer to an instance of a subclass of Configuration.
 	 */
-	Configuration *config;
+	std::unique_ptr<const Configuration> config;
 
 	/*!
-	 * Stores a pointer to an instance of a subclass of OSServices.
+	 * Reference to an instance of a subclass of OSServices.
 	 */
-	OSServices *service;
+	OSServices &service;
 
 	/*!
-	 * Stores a pinter to an instance of ObservedProcess.
+	 * Stores a unique pointer to an instance of ObservedProcess.
 	 */
-	ObservedProcess *process;
+	std::unique_ptr<ObservedProcess> process;
 
 	/*!
-	 * Stores a list of pointers to performance monitors.
+	 * Stores a list of shared pointers to performance monitors.
 	 */
 	PerformanceMonitor::monitor_list monitors;
 
 	/*!
-	 * Stores a pointer to an instance of a subclass of ControlStrategy.
+	 * Stores a unique pointer to an instance of a subclass of ControlStrategy.
 	 */
-	ControlStrategy *strategy;
+	std::unique_ptr<ControlStrategy> strategy;
 
 	/*!
-	 * Stores a list of pointers to data loggers.
+	 * Stores a list of shared pointers to data loggers.
 	 */
-	QList<DataLogger *> loggers;
-
-	/*!
-	 * Stores a pointer to an instance of a subclass of PinningHistory
-	 */
-	PinningHistory *history;
+	std::list<std::shared_ptr<DataLogger>> loggers;
 };
 
 } // namespace AutopinPlus

@@ -21,7 +21,7 @@
 
 namespace AutopinPlus {
 
-DataLogger::DataLogger(Configuration *const config, PerformanceMonitor::monitor_list const &monitors,
+DataLogger::DataLogger(const Configuration &config, PerformanceMonitor::monitor_list const &monitors,
 					   const AutopinContext &context)
 	: config(config), monitors(monitors), context(context) {}
 

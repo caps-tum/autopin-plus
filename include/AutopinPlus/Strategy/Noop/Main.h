@@ -44,15 +44,14 @@ class Main : public ControlStrategy {
 	/*!
 	 * \brief Constructor
 	 *
-	 * \param[in] config    Pointer to the instance of the Configuration class to use
-	 * \param[in] proc      Pointer to the instance of the ObservedProcess class to use
-	 * \param[in] service   Pointer to the instance of the OSServices class to use
+	 * \param[in] config    Reference to the instance of the Configuration class to use
+	 * \param[in] proc      Reference to the instance of the ObservedProcess class to use
+	 * \param[in] service   Reference to the instance of the OSServices class to use
 	 * \param[in] monitors  Reference to the list of performance monitors to use
-	 * \param[in] history   Pointer to the instance of the PinningHistory class to use
 	 * \param[in] context   Reference to the instance of the AutopinContext class to use
 	 */
-	Main(Configuration *config, ObservedProcess *proc, OSServices *service,
-		 const PerformanceMonitor::monitor_list &monitors, PinningHistory *history, const AutopinContext &context);
+	Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+		 const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context);
 
 	// Overridden from base class
 	void init() override;

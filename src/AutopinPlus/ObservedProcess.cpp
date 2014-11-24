@@ -37,7 +37,7 @@
 
 namespace AutopinPlus {
 
-ObservedProcess::ObservedProcess(Configuration *config, OSServices *service, const AutopinContext &context)
+ObservedProcess::ObservedProcess(const Configuration &config, OSServices &service, const AutopinContext &context)
 	: config(config), service(service), context(context), pid(-1), cmd(""), trace(false), running(false), phase(0),
 	  comm_addr(""), comm_timeout(60) {
 	integer = QRegExp("\\d+");
@@ -50,33 +50,33 @@ void ObservedProcess::init() {
 
 	context.info("> Initializing the observed process");
 
-	trace = config->getConfigOptionBool("Trace");
+	trace = config.getConfigOptionBool("Trace");
 
-	if (config->configOptionExists("CommChan") == 1) {
-		if (config->configOptionBool("CommChan")) {
-			if (config->getConfigOptionBool("CommChan")) CHECK_ERRORV(comm_addr = service->getCommDefaultAddr());
+	if (config.configOptionExists("CommChan") == 1) {
+		if (config.configOptionBool("CommChan")) {
+			if (config.getConfigOptionBool("CommChan")) CHECK_ERRORV(comm_addr = service.getCommDefaultAddr());
 		} else
-			comm_addr = config->getConfigOption("CommChan");
-	} else if (config->configOptionExists("CommChan") > 1) {
+			comm_addr = config.getConfigOption("CommChan");
+	} else if (config.configOptionExists("CommChan") > 1) {
 		REPORTV(Error::BAD_CONFIG, "inconsistent", "CommChan accepts only one value");
 	}
 
-	if (comm_addr != "" && config->getConfigOptionInt("CommChanTimeout") > 0)
-		comm_timeout = config->getConfigOptionInt("CommChanTimeout");
+	if (comm_addr != "" && config.getConfigOptionInt("CommChanTimeout") > 0)
+		comm_timeout = config.getConfigOptionInt("CommChanTimeout");
 
 	bool config_found = false;
 
-	if (config->configOptionExists("Attach") > 0) {
+	if (config.configOptionExists("Attach") > 0) {
 		config_found = true;
 		exec = false;
 
-		QString attach_expr = config->getConfigOption("Attach");
+		QString attach_expr = config.getConfigOption("Attach");
 
 		if (integer.exactMatch(attach_expr))
 			pid = attach_expr.toInt();
 		else {
 			ProcessTree::autopin_tid_list procs;
-			CHECK_ERRORV(procs = service->getPid(attach_expr));
+			CHECK_ERRORV(procs = service.getPid(attach_expr));
 
 			if (procs.size() == 0)
 				REPORTV(Error::PROCESS, "not_found", "No process found with name " + attach_expr);
@@ -84,15 +84,15 @@ void ObservedProcess::init() {
 				REPORTV(Error::PROCESS, "found_many", "There exist more processes with name " + attach_expr);
 			else {
 				pid = *(procs.begin());
-				cmd = service->getCmd(pid);
+				cmd = service.getCmd(pid);
 			}
 		}
 	}
 
-	if (config_found == false && config->configOptionExists("Exec") > 0) {
+	if (config_found == false && config.configOptionExists("Exec") > 0) {
 		config_found = true;
 		exec = true;
-		cmd = config->getConfigOptionList("Exec").join(" ");
+		cmd = config.getConfigOptionList("Exec").join(" ");
 	}
 
 	if (!config_found) REPORTV(Error::BAD_CONFIG, "option_missing", "No process configured");
@@ -101,8 +101,8 @@ void ObservedProcess::init() {
 }
 
 void ObservedProcess::deinit() {
-	service->detachFromProcess();
-	service->deinitCommChannel();
+	service.detachFromProcess();
+	service.deinitCommChannel();
 }
 
 void ObservedProcess::start() {
@@ -113,13 +113,13 @@ void ObservedProcess::start() {
 	// Initialize the communication channel
 	if (comm_addr != "") {
 		context.info("> Initializing the communication channel");
-		CHECK_ERRORV(service->initCommChannel(this));
+		CHECK_ERRORV(service.initCommChannel(this));
 	}
 
 	// Start the process
 	if (pid == -1) {
 		context.info("> Starting new process " + cmd);
-		CHECK_ERRORV(pid = service->createProcess(cmd, trace));
+		CHECK_ERRORV(pid = service.createProcess(cmd, trace));
 	}
 
 	running = true;
@@ -127,13 +127,13 @@ void ObservedProcess::start() {
 	// Setup process tracing if desired by the user
 	if (trace) {
 		context.info("> Attaching to process " + QString::number(pid));
-		CHECK_ERRORV(service->attachToProcess(this));
+		CHECK_ERRORV(service.attachToProcess(this));
 	}
 
 	if (comm_addr != "") {
 		context.info("> Waiting for process " + QString::number(pid) + " to connect (Timeout: " +
 					 QString::number(comm_timeout) + " sec)");
-		CHECK_ERRORV(service->connectCommChannel(60));
+		CHECK_ERRORV(service.connectCommChannel(60));
 		context.info("> The connection with the observed process has been established");
 	}
 
@@ -144,29 +144,29 @@ void ObservedProcess::start() {
 	context.disableIndentation();
 }
 
-int ObservedProcess::getPid() { return pid; }
+int ObservedProcess::getPid() const { return pid; }
 
-bool ObservedProcess::getExec() { return exec; }
+bool ObservedProcess::getExec() const { return exec; }
 
-int ObservedProcess::getExecutionPhase() { return phase; }
+int ObservedProcess::getExecutionPhase() const { return phase; }
 
-QString ObservedProcess::getCmd() { return cmd; }
+QString ObservedProcess::getCmd() const { return cmd; }
 
-QString ObservedProcess::getCommChanAddr() { return comm_addr; }
+QString ObservedProcess::getCommChanAddr() const { return comm_addr; }
 
-void ObservedProcess::setPhaseNotificationInterval(int interval) {
+void ObservedProcess::setPhaseNotificationInterval(int interval) const {
 	if (comm_addr == "" || interval < 0) return;
 
-	CHECK_ERRORV(service->sendMsg(APP_INTERVAL, interval, 0));
+	CHECK_ERRORV(service.sendMsg(APP_INTERVAL, interval, 0));
 }
 
-int ObservedProcess::getCommTimeout() { return comm_timeout; }
+int ObservedProcess::getCommTimeout() const { return comm_timeout; }
 
-bool ObservedProcess::getTrace() { return trace; }
+bool ObservedProcess::getTrace() const { return trace; }
 
-bool ObservedProcess::isRunning() { return running; }
+bool ObservedProcess::isRunning() const { return running; }
 
-ProcessTree ObservedProcess::getProcessTree() {
+ProcessTree ObservedProcess::getProcessTree() const {
 	if (!isRunning()) return ProcessTree::empty;
 
 	ProcessTree::autopin_tid_list tasks;
@@ -177,10 +177,10 @@ ProcessTree ObservedProcess::getProcessTree() {
 
 	ProcessTree result(pid);
 
-	CHECK_ERROR(tasks = service->getProcessThreads(pid), ProcessTree::empty);
+	CHECK_ERROR(tasks = service.getProcessThreads(pid), ProcessTree::empty);
 	result.addProcessTaskList(pid, tasks);
 
-	CHECK_ERROR(child_procs = service->getChildProcesses(pid), ProcessTree::empty);
+	CHECK_ERROR(child_procs = service.getChildProcesses(pid), ProcessTree::empty);
 
 	for (const auto &child_proc : child_procs) worklist.push_back(std::pair<int, int>(pid, child_proc));
 
@@ -189,10 +189,10 @@ ProcessTree ObservedProcess::getProcessTree() {
 		worklist.pop_front();
 
 		result.addChildProcess(work_item.first, work_item.second);
-		CHECK_ERROR(tasks = service->getProcessThreads(work_item.second), ProcessTree::empty);
+		CHECK_ERROR(tasks = service.getProcessThreads(work_item.second), ProcessTree::empty);
 		result.addProcessTaskList(work_item.second, tasks);
 
-		CHECK_ERROR(child_procs = service->getChildProcesses(work_item.second), ProcessTree::empty);
+		CHECK_ERROR(child_procs = service.getChildProcesses(work_item.second), ProcessTree::empty);
 
 		for (const auto &child_proc : child_procs)
 			worklist.push_back(std::pair<int, int>(work_item.second, child_proc));

@@ -74,8 +74,7 @@ static inline uint8_t calculateChecksum(QByteArray const &array) {
 	return result;
 }
 
-
-Main::Main(QString name, Configuration *config, const AutopinContext &context)
+Main::Main(QString name, const Configuration &config, const AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	// Set the "type" field of the base class to the name of our monitor.
 	type = "clustsafe";
@@ -90,8 +89,8 @@ void Main::init() {
 	context.info("  :: Initializing " + name + " (" + type + ")");
 
 	// Read and parse the "host" option
-	if (config->configOptionExists(name + ".host") > 0) {
-		host = config->getConfigOption(name + ".host");
+	if (config.configOptionExists(name + ".host") > 0) {
+		host = config.getConfigOption(name + ".host");
 		context.info("     - " + name + ".host = " + host);
 	} else {
 		context.report(Error::BAD_CONFIG, "option_missing", name + ".init() failed: Could not find the 'host' option.");
@@ -99,9 +98,9 @@ void Main::init() {
 	}
 
 	// Read and parse the "port" option
-	if (config->configOptionExists(name + ".port") > 0) {
+	if (config.configOptionExists(name + ".port") > 0) {
 		try {
-			port = Tools::readULong(config->getConfigOption(name + ".port"));
+			port = Tools::readULong(config.getConfigOption(name + ".port"));
 			context.info("     - " + name + ".port = " + QString::number(port));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
@@ -111,21 +110,21 @@ void Main::init() {
 	}
 
 	// Read and parse the "signature" option
-	if (config->configOptionExists(name + ".signature") > 0) {
-		signature = config->getConfigOption(name + ".signature");
+	if (config.configOptionExists(name + ".signature") > 0) {
+		signature = config.getConfigOption(name + ".signature");
 		context.info("     - " + name + ".signature = " + signature);
 	}
 
 	// Read and parse the "password" option
-	if (config->configOptionExists(name + ".password") > 0) {
-		password = config->getConfigOption(name + ".password");
+	if (config.configOptionExists(name + ".password") > 0) {
+		password = config.getConfigOption(name + ".password");
 		context.info("     - " + name + ".password = " + password);
 	}
 
 	// Read and parse the "outlets" option
-	if (config->configOptionExists(name + ".outlets") > 0) {
+	if (config.configOptionExists(name + ".outlets") > 0) {
 		try {
-			outlets = Tools::readInts(config->getConfigOptionList(name + ".outlets"));
+			outlets = Tools::readInts(config.getConfigOptionList(name + ".outlets"));
 			context.info("     - " + name + ".outlets = " + Tools::showInts(outlets).join(" "));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
@@ -139,9 +138,9 @@ void Main::init() {
 	}
 
 	// Read and parse the "timeout" option
-	if (config->configOptionExists(name + ".timeout") > 0) {
+	if (config.configOptionExists(name + ".timeout") > 0) {
 		try {
-			timeout = Tools::readULong(config->getConfigOption(name + ".timeout"));
+			timeout = Tools::readULong(config.getConfigOption(name + ".timeout"));
 			context.info("     - " + name + ".timeout = " + QString::number(timeout));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
@@ -151,9 +150,9 @@ void Main::init() {
 	}
 
 	// Read and parse the "ttl" option
-	if (config->configOptionExists(name + ".ttl") > 0) {
+	if (config.configOptionExists(name + ".ttl") > 0) {
 		try {
-			ttl = Tools::readULong(config->getConfigOption(name + ".ttl"));
+			ttl = Tools::readULong(config.getConfigOption(name + ".ttl"));
 			context.info("     - " + name + ".ttl = " + QString::number(ttl));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
@@ -227,7 +226,7 @@ double Main::value(int thread) {
 		}
 
 		// Reset the cached value to zero.
-		//cached = 0;
+		// cached = 0;
 
 		// Re-add the value of all outlets in which we are interested to the cached value.
 		for (auto outlet : outlets) {

@@ -58,11 +58,11 @@ class ObservedProcess : public QObject {
 	/*!
 	 * \brief Constructor
 	 *
-	 * \param[in] config	Pointer to the Configuration object containing the current configuration
-	 * \param[in] service	Poiner to the current instance of a subclass of OSServices
-	 * \param[in]	context	Refernce to the context of the object calling the constructor
+	 * \param[in] config	Reference to the Configuration object containing the current configuration
+	 * \param[in] service	Reference to the current instance of a subclass of OSServices
+	 * \param[in] context	Reference to the context of the object calling the constructor
 	 */
-	ObservedProcess(Configuration *config, OSServices *service, const AutopinContext &context);
+	ObservedProcess(const Configuration &config, OSServices &service, const AutopinContext &context);
 
 	~ObservedProcess();
 
@@ -99,14 +99,14 @@ class ObservedProcess : public QObject {
 	 * \return Returns the pid of the process. If there is any problem with the process or the process
 	 * 	has not been started yet -1 is retured
 	 */
-	int getPid();
+	int getPid() const;
 
 	/*!
 	 * \brief Returns the current execution phase of the process
 	 *
 	 * \return The current execution phase stored in phase
 	 */
-	int getExecutionPhase();
+	int getExecutionPhase() const;
 
 	/*!
 	 * \brief Returns the command the observed process has been started with
@@ -114,7 +114,7 @@ class ObservedProcess : public QObject {
 	 * \return Returns the command teh process has been started with. If the command
 	 * 	is not available or if there is any error the result will be empty.
 	 */
-	QString getCmd();
+	QString getCmd() const;
 
 	/*!
 	 * \brief Determines if the observed process has been started by autopin+
@@ -123,21 +123,21 @@ class ObservedProcess : public QObject {
 	 * 	false otherwise
 	 *
 	 */
-	bool getExec();
+	bool getExec() const;
 
 	/*!
 	 * \brief Determine if process tracing is active
 	 *
 	 * \return true if process tracing is active and false in all other cases
 	 */
-	bool getTrace();
+	bool getTrace() const;
 
 	/*!
 	 * \brief Reports if autopin+ has already attached to or started a process
 	 *
 	 * \return True after start() has returned successfully, false in all other cases
 	 */
-	bool isRunning();
+	bool isRunning() const;
 
 	/*!
 	 * \brief Creates and returns the ProcessTree of the observed process
@@ -150,7 +150,7 @@ class ObservedProcess : public QObject {
 	 *
 	 * \sa ProcessTree
 	 */
-	ProcessTree getProcessTree();
+	ProcessTree getProcessTree() const;
 
 	/*!
 	 * \brief Returns the desired address for the communication channel
@@ -163,7 +163,7 @@ class ObservedProcess : public QObject {
 	 * 	is provided by the OSServices.
 	 *
 	 */
-	QString getCommChanAddr();
+	QString getCommChanAddr() const;
 
 	/*!
 	 * \brief Sets the minimum between two phase change notifications from the observed process
@@ -171,7 +171,7 @@ class ObservedProcess : public QObject {
 	 * \param[in] interval The desired interval in seconds
 	 *
 	 */
-	void setPhaseNotificationInterval(int interval);
+	void setPhaseNotificationInterval(int interval) const;
 
 	/*!
 	 * \brief Returns the timout for the communication channel
@@ -179,7 +179,7 @@ class ObservedProcess : public QObject {
 	 * \return Timeout for the communication channel
 	 *
 	 */
-	int getCommTimeout();
+	int getCommTimeout() const;
 
 signals:
 	/*!
@@ -238,10 +238,10 @@ signals:
   private:
 	//@{
 	/*!
-	 * Member variable pointing to current instance of the (sub-)class. This variable is set in the constructor.
+	 * Member variable referencing the current instance of the (sub-)class. This variable is set in the constructor.
 	 */
-	Configuration *config;
-	OSServices *service;
+	const Configuration &config;
+	OSServices &service;
 	//@}
 
 	/*!

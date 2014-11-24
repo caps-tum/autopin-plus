@@ -30,7 +30,7 @@
 
 namespace AutopinPlus {
 
-PinningHistory::PinningHistory(Configuration *config, const AutopinContext &context)
+PinningHistory::PinningHistory(const Configuration &config, const AutopinContext &context)
 	: config(config), context(context), history_modified(false) {}
 
 PinningHistory::~PinningHistory() {}
