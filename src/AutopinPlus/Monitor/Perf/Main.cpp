@@ -38,15 +38,14 @@ namespace AutopinPlus {
 namespace Monitor {
 namespace Perf {
 
-Main::Main(QString name, const Configuration &config, const AutopinContext &context)
+Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	valtype = PerformanceMonitor::MAX;
 	type = "perf";
 }
 
 void Main::init() {
-	context.enableIndentation();
-	context.info("  :: Initializing \"" + name + "\" (perf)");
+	context.info("Initializing \"" + name + "\" (perf)");
 
 	// Get the type of instructions to count
 	if (config.configOptionExists(name + ".event_type") == 1) {
@@ -70,15 +69,13 @@ void Main::init() {
 		else if (event_name == "PERF_COUNT_HW_STALLED_CYCLES_BACKEND")
 			event_type = PERF_COUNT_HW_STALLED_CYCLES_BACKEND;
 		else
-			REPORTV(Error::BAD_CONFIG, "option_format", "Event " + event_name + " is not supported by perf");
+			context.report(Error::BAD_CONFIG, "option_format", "Event " + event_name + " is not supported by perf");
 
-		context.info("     - Using event type " + event_name);
+		context.info("Using event type " + event_name);
 	} else if (config.configOptionExists(name + ".event_type") > 1) {
-		REPORTV(Error::BAD_CONFIG, "inconsistent", "More than type specified for performance monitor " + name);
+		context.report(Error::BAD_CONFIG, "inconsistent", "More than type specified for performance monitor " + name);
 	} else
-		REPORTV(Error::BAD_CONFIG, "option_missing", "No event type specified for performance monitor " + name);
-
-	context.disableIndentation();
+		context.report(Error::BAD_CONFIG, "option_missing", "No event type specified for performance monitor " + name);
 }
 
 Configuration::configopts Main::getConfigOpts() {
@@ -96,20 +93,20 @@ void Main::start(int tid) {
 		ret = ioctl(fd, PERF_EVENT_IOC_RESET);
 		if (ret == -1) {
 			context.debug("perf: Could not reset counter!");
-			REPORTV(Error::MONITOR, "reset", "Could not reset perf for " + QString::number(tid));
+			context.report(Error::MONITOR, "reset", "Could not reset perf for " + QString::number(tid));
 		}
 
 		ret = startPerfCounter(fd);
 		if (ret == -1) {
 			context.debug("perf: Could not start counter!");
-			REPORTV(Error::MONITOR, "start", "Could not start perf for " + QString::number(tid));
+			context.report(Error::MONITOR, "start", "Could not start perf for " + QString::number(tid));
 		}
 	} else {
 		int newfd = createPerfCounter(tid);
 
 		if (newfd == -1) {
 			context.debug("perf: Could not create counter!");
-			REPORTV(Error::MONITOR, "create", "Could not create perf counter for " + QString::number(tid));
+			context.report(Error::MONITOR, "create", "Could not create perf counter for " + QString::number(tid));
 		} else
 			context.debug("perf: Created new counter!");
 
@@ -118,7 +115,7 @@ void Main::start(int tid) {
 		int ret = startPerfCounter(newfd);
 		if (ret == -1) {
 			context.debug("perf: Could not start counter!");
-			REPORTV(Error::MONITOR, "start", "Could not start perf for " + QString::number(tid));
+			context.report(Error::MONITOR, "start", "Could not start perf for " + QString::number(tid));
 		} else
 			context.debug("perf: Started counter!");
 	}
@@ -130,8 +127,10 @@ double Main::value(int tid) {
 	__u64 val;
 	int fd = perfds[tid];
 
-	if (read(fd, &val, sizeof(__u64)) == -1)
-		REPORT(Error::MONITOR, "value", "Could not read perf result for " + QString::number(tid), 0);
+	if (read(fd, &val, sizeof(__u64)) == -1) {
+		context.report(Error::MONITOR, "value", "Could not read perf result for " + QString::number(tid));
+		return 0;
+	}
 
 	double result = val;
 
@@ -143,10 +142,15 @@ double Main::stop(int tid) {
 
 	int fd = perfds[tid];
 
-	double result;
-	CHECK_ERROR(result = value(tid), 0);
+	double result = value(tid);
+	if (context.isError()) {
+		return 0;
+	}
 
-	if (close(fd) == -1) REPORT(Error::MONITOR, "stop", "Could not stop perf for task " + QString::number(tid), 0);
+	if (close(fd) == -1) {
+		context.report(Error::MONITOR, "stop", "Could not stop perf for task " + QString::number(tid));
+		return 0;
+	}
 
 	perfds.erase(tid);
 

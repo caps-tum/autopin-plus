@@ -58,7 +58,7 @@ class TraceThread : public QThread {
 	 *
 	 * \param[in]	context	Refernce to the context of the object calling the constructor
 	 */
-	explicit TraceThread(const AutopinContext &context);
+	explicit TraceThread(AutopinContext &context);
 
 	/*!
 	 * \brief Initializes and starts the thread
@@ -119,7 +119,7 @@ signals:
 	/*!
 	 * The runtime context
 	 */
-	AutopinContext context;
+	AutopinContext &context;
 
 	/*!
 	 * pid of the traced process

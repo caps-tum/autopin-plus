@@ -54,14 +54,14 @@ class ControlStrategy : public QObject {
 	/*!
 	 * \brief Constructor
 	 *
-	 * \param[in] config		Pointer to the current Configuration instance
-	 * \param[in] proc		Pointer to the observed process
-	 * \param[in] service		Pointer to the current OSServices instance
+	 * \param[in] config	Reference to the current Configuration instance
+	 * \param[in] proc		Reference to the observed process
+	 * \param[in] service	Reference to the current OSServices instance
 	 * \param[in] monitors	Reference to a list of available instances of PerformanceMonitor
-	 * \param[in]	context	Refernce to the context of the object calling the constructor
+	 * \param[in] context	Refernnce to the context of the object calling the constructor
 	 */
 	ControlStrategy(const Configuration &config, const ObservedProcess &proc, OSServices &service,
-					PerformanceMonitor::monitor_list monitors, const AutopinContext &context);
+					const PerformanceMonitor::monitor_list &monitors, AutopinContext &context);
 
 	/*!
 	 * \brief Initializes the control strategy
@@ -181,14 +181,14 @@ class ControlStrategy : public QObject {
 	const Configuration &config;
 	const ObservedProcess &proc;
 	OSServices &service;
-	PerformanceMonitor::monitor_list monitors;
+	const PerformanceMonitor::monitor_list &monitors;
 	std::unique_ptr<PinningHistory> history;
 	//@}
 
 	/*!
 	 * The runtime context
 	 */
-	AutopinContext context;
+	AutopinContext &context;
 
 	/*!
 	 * Current tasks of the observed process

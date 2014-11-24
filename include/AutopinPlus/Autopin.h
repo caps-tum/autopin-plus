@@ -29,11 +29,6 @@
 #pragma once
 
 #include <AutopinPlus/AutopinContext.h>
-#include <AutopinPlus/ControlStrategy.h>
-#include <AutopinPlus/DataLogger.h>
-#include <AutopinPlus/Error.h>
-#include <AutopinPlus/ObservedProcess.h>
-#include <AutopinPlus/OutputChannel.h>
 #include <AutopinPlus/StandardConfiguration.h>
 #include <AutopinPlus/Watchdog.h>
 #include <QCoreApplication>
@@ -65,6 +60,13 @@ class Autopin : public QCoreApplication {
 	 */
 	Autopin(int &argc, char **argv);
 
+	/*!
+	 * \brief Gets the current instance of Autopin
+	 *
+	 * \return the current instance
+	 */
+	static Autopin *instance();
+
   public slots:
 	/*!
 	 * \brief Procedure for initializing the environment
@@ -75,6 +77,13 @@ class Autopin : public QCoreApplication {
 	 * The end of the initialization process is signaled via sig_autopinReady().
 	 */
 	void slot_autopinSetup();
+
+	/*!
+	 * \brief Destroyes the watchdog.
+	 *
+	 * In this slot the watchdog gets deleted and erased from the watchdogs list.
+	 */
+	void slot_watchdogStop();
 
 signals:
 	/*!
@@ -91,27 +100,19 @@ signals:
 
   private:
 	/*!
-	 * \brief Factory function for the os services
-	 *
-	 * Creates the os services.
-	 *
-	 */
-	void createOSServices();
-
-	/*!
 	 * Stores a pointer to an instance of the class AutopinContext.
 	 */
 	AutopinContext context;
 
 	/*!
-	 * Stores a pointer to an instance of a subclass of OSServices.
-	 */
-	std::unique_ptr<OSServices> service;
-
-	/*!
 	 * Stores each Watchdog in a List.
 	 */
-	std::list<std::unique_ptr<Watchdog>> watchdogs;
+	std::list<Watchdog *> watchdogs;
+
+	/*!
+	 * \brief True, if the application runs in daemon mode, otherwise false.
+	 */
+	bool isDaemon = false;
 };
 
 } // namespace AutopinPlus

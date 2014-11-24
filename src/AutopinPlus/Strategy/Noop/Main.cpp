@@ -42,18 +42,15 @@ namespace Strategy {
 namespace Noop {
 
 Main::Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
-		   const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context)
+		   const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: ControlStrategy(config, proc, service, monitors, context) {
 	name = "noop";
 }
 
 void Main::init() {
-
 	ControlStrategy::init();
 
-	context.enableIndentation();
-
-	context.info("> Initializing control strategy " + name);
+	context.info("Initializing control strategy " + name);
 
 	// Read and parse the "interval" option
 	if (config.configOptionExists(name + ".interval") > 0) {
@@ -66,8 +63,6 @@ void Main::init() {
 			return;
 		}
 	}
-
-	context.disableIndentation();
 }
 
 Configuration::configopts Main::getConfigOpts() {
@@ -131,18 +126,18 @@ void Main::updateMonitors() {
 	// Iterate over all tasks which have been removed...
 	for (auto task : old_tasks - new_tasks) {
 		// ... and remove them from all monitors.
-		for (auto monitor : monitors) {
+		for (auto i = monitors.begin(); i != monitors.end(); i++) {
 			context.debug(name + ".updateMonitors(): Stopping monitor for dead task " + QString::number(task) + ".");
-			monitor->clear(task);
+			(*i)->clear(task);
 		}
 	}
 
 	// Iterator over all tasks which have been added...
 	for (auto task : new_tasks - old_tasks) {
 		// ... and add them to all monitors.
-		for (auto monitor : monitors) {
+		for (auto i = monitors.begin(); i != monitors.end(); i++) {
 			context.debug(name + ".updateMonitors(): Starting monitor for new task " + QString::number(task) + ".");
-			monitor->start(task);
+			(*i)->start(task);
 		}
 	}
 }

@@ -47,10 +47,10 @@ class Main : public PerformanceMonitor {
 	 * \brief Constructor
 	 *
 	 * \param[in] name		Name of the monitor
-	 * \param[in] config		Pointer to the current Configuration instance
-	 * \param[in] context	Refernce to the context of the object calling the constructor
+	 * \param[in] config	Pointer to the current Configuration instance
+	 * \param[in] context	Reference to the context of the object calling the constructor
 	 */
-	Main(QString name, const Configuration &config, const AutopinContext &context);
+	Main(QString name, const Configuration &config, AutopinContext &context);
 
 	void init() override;
 	void start(int tid) override;

@@ -81,7 +81,7 @@ class PinningHistory {
 	 * \param[in] context	Reference to the context of the object calling the constructor
 	 *
 	 */
-	PinningHistory(const Configuration &config, const AutopinContext &context);
+	PinningHistory(const Configuration &config, AutopinContext &context);
 
 	virtual ~PinningHistory();
 
@@ -197,7 +197,7 @@ class PinningHistory {
 	/*!
    * The runtime context
    */
-	AutopinContext context;
+	AutopinContext &context;
 
 	/*!
 	 * Internal representation of the pinning history

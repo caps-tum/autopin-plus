@@ -62,9 +62,7 @@ class ObservedProcess : public QObject {
 	 * \param[in] service	Reference to the current instance of a subclass of OSServices
 	 * \param[in] context	Reference to the context of the object calling the constructor
 	 */
-	ObservedProcess(const Configuration &config, OSServices &service, const AutopinContext &context);
-
-	~ObservedProcess();
+	ObservedProcess(const Configuration &config, OSServices &service, AutopinContext &context);
 
 	/*!
 	 * \brief Initializes the observed process
@@ -84,14 +82,6 @@ class ObservedProcess : public QObject {
 	 * the process with the specified id first.
 	 */
 	void start();
-
-	/*!
-	 * \brief Deinitializes the observed process
-	 *
-	 * Calling this function will stop process tracing. However,
-	 * the observed process will not be terminated.
-	 */
-	void deinit();
 
 	/*!
 	 * \brief Returns the pid of the observed process
@@ -213,7 +203,20 @@ signals:
 	 */
 	void sig_UserMessage(int arg, double val);
 
+	/*!
+	 * \brief
+	 */
+	void sig_ProcTerminated();
+
   public slots:
+	/*!
+	 * \brief handles the termination of the process
+	 *
+	 * \param[in] pid        the process id of the process
+	 * \param[in] exit_code  the exit code of the process
+	 */
+	void slot_ProcTerminated(int pid, int exit_code);
+
 	/*!
 	 * \brief Handles the termination of a task of the observed process
 	 *
@@ -247,7 +250,7 @@ signals:
 	/*!
 	 * The runtime context
 	 */
-	AutopinContext context;
+	AutopinContext &context;
 
 	/*!
 	 * \brief Regular expression for recognizing integer values in strings

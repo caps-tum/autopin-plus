@@ -47,7 +47,7 @@ class XMLPinningHistory : public PinningHistory {
 	 * \param[in] context	Reference to the context of the object calling the constructor
 	 *
 	 */
-	XMLPinningHistory(const Configuration &config, const AutopinContext &context);
+	XMLPinningHistory(const Configuration &config, AutopinContext &context);
 
 	void init() override;
 	void deinit() override;

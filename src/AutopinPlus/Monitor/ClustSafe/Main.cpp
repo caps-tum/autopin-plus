@@ -74,7 +74,7 @@ static inline uint8_t calculateChecksum(QByteArray const &array) {
 	return result;
 }
 
-Main::Main(QString name, const Configuration &config, const AutopinContext &context)
+Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	// Set the "type" field of the base class to the name of our monitor.
 	type = "clustsafe";
@@ -84,14 +84,12 @@ Main::Main(QString name, const Configuration &config, const AutopinContext &cont
 }
 
 void Main::init() {
-	context.enableIndentation();
-
-	context.info("  :: Initializing " + name + " (" + type + ")");
+	context.info("Initializing " + name + " (" + type + ")");
 
 	// Read and parse the "host" option
 	if (config.configOptionExists(name + ".host") > 0) {
 		host = config.getConfigOption(name + ".host");
-		context.info("     - " + name + ".host = " + host);
+		context.info("  - " + name + ".host = " + host);
 	} else {
 		context.report(Error::BAD_CONFIG, "option_missing", name + ".init() failed: Could not find the 'host' option.");
 		return;
@@ -101,7 +99,7 @@ void Main::init() {
 	if (config.configOptionExists(name + ".port") > 0) {
 		try {
 			port = Tools::readULong(config.getConfigOption(name + ".port"));
-			context.info("     - " + name + ".port = " + QString::number(port));
+			context.info("  - " + name + ".port = " + QString::number(port));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'port' option (" + QString(e.what()) + ").");
@@ -112,13 +110,13 @@ void Main::init() {
 	// Read and parse the "signature" option
 	if (config.configOptionExists(name + ".signature") > 0) {
 		signature = config.getConfigOption(name + ".signature");
-		context.info("     - " + name + ".signature = " + signature);
+		context.info("  - " + name + ".signature = " + signature);
 	}
 
 	// Read and parse the "password" option
 	if (config.configOptionExists(name + ".password") > 0) {
 		password = config.getConfigOption(name + ".password");
-		context.info("     - " + name + ".password = " + password);
+		context.info("  - " + name + ".password = " + password);
 	}
 
 	// Read and parse the "outlets" option
@@ -141,7 +139,7 @@ void Main::init() {
 	if (config.configOptionExists(name + ".timeout") > 0) {
 		try {
 			timeout = Tools::readULong(config.getConfigOption(name + ".timeout"));
-			context.info("     - " + name + ".timeout = " + QString::number(timeout));
+			context.info("  - " + name + ".timeout = " + QString::number(timeout));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'timeout' option (" + QString(e.what()) + ").");
@@ -153,7 +151,7 @@ void Main::init() {
 	if (config.configOptionExists(name + ".ttl") > 0) {
 		try {
 			ttl = Tools::readULong(config.getConfigOption(name + ".ttl"));
-			context.info("     - " + name + ".ttl = " + QString::number(ttl));
+			context.info("  - " + name + ".ttl = " + QString::number(ttl));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'ttl' option (" + QString(e.what()) + ").");
@@ -249,18 +247,17 @@ double Main::value(int thread) {
 }
 
 double Main::stop(int thread) {
-	double result = value(thread);
 
 	// Before stopping the counter, get its value one last time...
-	if (context.autopinErrorState() != autopin_estate::AUTOPIN_NOERROR) {
+	double result = value(thread);
+	if (context.isError()) {
 		context.report(Error::MONITOR, "stop", name + ".stop(" + QString::number(thread) + ") failed: value() failed.");
 		return 0;
 	}
 
 	// ... and then clear it.
 	clear(thread);
-
-	if (context.autopinErrorState() != autopin_estate::AUTOPIN_NOERROR) {
+	if (context.isError()) {
 		context.report(Error::MONITOR, "stop", name + ".stop(" + QString::number(thread) + ") failed: clear() failed.");
 		return 0;
 	}

@@ -33,7 +33,6 @@
 #include <AutopinPlus/DataLogger.h>
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/ObservedProcess.h>
-#include <AutopinPlus/OutputChannel.h>
 #include <AutopinPlus/StandardConfiguration.h>
 #include <QCoreApplication>
 #include <QTimer>
@@ -54,14 +53,16 @@ class Watchdog : public QObject {
 	Q_OBJECT
   public:
 	/*!
-	 * \brief Constructor of the Watchdog-class
+	 * \brief Constructor of Watchdog
 	 *
 	 * \param[in] config  Config of the process, which is run by this class
-	 * \param[in] service OSService, used for pinning the threads
-	 * \param[in] context Reference to AutopinContext
-	 *
 	 */
-	Watchdog(std::unique_ptr<const Configuration> config, OSServices &service, const AutopinContext &context);
+	Watchdog(std::unique_ptr<const Configuration> config);
+
+	/*!
+	 * \brief Destructor of Watchdog
+	 */
+	~Watchdog();
 
   public slots:
 	/*!
@@ -69,7 +70,25 @@ class Watchdog : public QObject {
 	 */
 	void slot_watchdogRun();
 
+signals:
+	/*!
+	 * Emitted, when the watchdogs stop, either because there is an error or
+	 * the observed process has terminated
+	 */
+
+	void sig_watchdogStop();
+
   private:
+	/*!
+	 * Counts the instances of Watchdog
+	 */
+	static int counter;
+
+	/*!
+	 * \brief Factory function for creating the runtime context
+	 */
+	void createContext();
+
 	/*!
 	 * \brief Factory function for performance monitors
 	 *
@@ -79,7 +98,6 @@ class Watchdog : public QObject {
 	 */
 	void createPerformanceMonitors();
 
-	/*!
 	/*!
 	 * \brief Factory function for the control strategy
 	 *
@@ -96,14 +114,29 @@ class Watchdog : public QObject {
 	void createDataLoggers();
 
 	/*!
+	 * \brief Factory function for creating an instance of ObservedProcess
+	 *
+	 * Reads the configuration and creates an instance of ObservedProcess
+	 */
+	void createObservedProcess();
+
+	/*!
+	 * \brief Factory function for the os services
+	 *
+	 * Creates the os services.
+	 *
+	 */
+	void createOSServices();
+
+	/*!
 	 * \brief Creates all global connections between Qt signals and slots
 	 */
 	void createComponentConnections();
 
 	/*!
-	 * Stores a pointer to an instance of the class AutopinContext.
+	 * Stores a unique pointer to current context.
 	 */
-	AutopinContext context;
+	std::unique_ptr<AutopinContext> context;
 
 	/*!
 	 * Stores a unique pointer to an instance of a subclass of Configuration.
@@ -111,9 +144,9 @@ class Watchdog : public QObject {
 	std::unique_ptr<const Configuration> config;
 
 	/*!
-	 * Reference to an instance of a subclass of OSServices.
+	 * Stores a unique pointer to an instance of a subclass of OSServices.
 	 */
-	OSServices &service;
+	std::unique_ptr<OSServices> service;
 
 	/*!
 	 * Stores a unique pointer to an instance of ObservedProcess.
@@ -121,7 +154,7 @@ class Watchdog : public QObject {
 	std::unique_ptr<ObservedProcess> process;
 
 	/*!
-	 * Stores a list of shared pointers to performance monitors.
+	 * Stores a list of unique pointers to performance monitors.
 	 */
 	PerformanceMonitor::monitor_list monitors;
 
@@ -131,9 +164,9 @@ class Watchdog : public QObject {
 	std::unique_ptr<ControlStrategy> strategy;
 
 	/*!
-	 * Stores a list of shared pointers to data loggers.
+	 * Stores a list of unique pointers to data loggers.
 	 */
-	std::list<std::shared_ptr<DataLogger>> loggers;
+	std::list<std::unique_ptr<DataLogger>> loggers;
 };
 
 } // namespace AutopinPlus

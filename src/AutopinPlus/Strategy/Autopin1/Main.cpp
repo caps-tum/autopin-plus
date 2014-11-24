@@ -33,7 +33,7 @@ namespace Strategy {
 namespace Autopin1 {
 
 Main::Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
-		   const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context)
+		   const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: ControlStrategy(config, proc, service, monitors, context), current_pinning(0), best_pinning(-1), monitor(nullptr),
 	  notifications(false) {
 	// Setup timers
@@ -53,22 +53,20 @@ void Main::init() {
 
 	ControlStrategy::init();
 
-	context.enableIndentation();
-
-	context.info("> Initializing control strategy autopin1");
+	context.info("Initializing control strategy autopin1");
 
 	QString config_prefix = "autopin1.";
 
 	// Read the pinnings from the configuration
-	CHECK_ERRORV(pinnings = readPinnings(config_prefix + "schedule"));
+	pinnings = readPinnings(config_prefix + "schedule");
 
 	// Select a performance monitor
 	if (!monitors.empty() && (*monitors.begin())->getValType() != PerformanceMonitor::UNKNOWN) {
-		monitor = *monitors.begin();
+		monitor = monitors.begin()->get();
 		monitor_type = monitor->getValType();
-		context.info("  :: Using performance monitor \"" + monitor->getName() + "\"");
+		context.info("  - Using performance monitor \"" + monitor->getName() + "\"");
 	} else
-		REPORTV(Error::BAD_CONFIG, "no_monitor", "No performance monitor found!");
+		context.report(Error::BAD_CONFIG, "no_monitor", "No performance monitor found!");
 
 	// Set standard values
 	init_time = 15;
@@ -101,30 +99,29 @@ void Main::init() {
 		QString entry = skip_str[i];
 		bool ok;
 		int entry_int = entry.toInt(&ok);
-		if (!ok) REPORTV(Error::BAD_CONFIG, "invalid_value", "Invalid id for skipped thread: " + entry);
+		if (!ok) context.report(Error::BAD_CONFIG, "invalid_value", "Invalid id for skipped thread: " + entry);
 		skip.insert(entry_int);
 	}
 
-	if (init_time < 0) REPORTV(Error::BAD_CONFIG, "invalid_value", "Invalid init time: " + QString::number(init_time));
+	if (init_time < 0)
+		context.report(Error::BAD_CONFIG, "invalid_value", "Invalid init time: " + QString::number(init_time));
 	if (warmup_time < 0)
-		REPORTV(Error::BAD_CONFIG, "invalid_value", "Invalid warmup time: " + QString::number(warmup_time));
+		context.report(Error::BAD_CONFIG, "invalid_value", "Invalid warmup time: " + QString::number(warmup_time));
 	if (measure_time <= 0)
-		REPORTV(Error::BAD_CONFIG, "invalid_value", "Invalid measure time: " + QString::number(measure_time));
+		context.report(Error::BAD_CONFIG, "invalid_value", "Invalid measure time: " + QString::number(measure_time));
 
-	context.info("  :: Init time: " + QString::number(init_time));
-	context.info("  :: Warmup time: " + QString::number(warmup_time));
-	context.info("  :: Measure time: " + QString::number(measure_time));
-	if (openmp_icc) context.info("  :: OpenMP/ICC support is enabled");
-	if (!skip.empty()) context.info("  :: These tasks will be skipped: " + skip_str.join(" "));
+	context.info("  - Init time: " + QString::number(init_time));
+	context.info("  - Warmup time: " + QString::number(warmup_time));
+	context.info("  - Measure time: " + QString::number(measure_time));
+	if (openmp_icc) context.info("  - OpenMP/ICC support is enabled");
+	if (!skip.empty()) context.info("  - These tasks will be skipped: " + skip_str.join(" "));
 
 	if (proc.getCommChanAddr() != "")
-		context.info("  :: Minimum phase notification interval: " + QString::number(notification_interval));
+		context.info("  - Minimum phase notification interval: " + QString::number(notification_interval));
 
 	init_timer.setInterval(init_time * 1000);
 	warmup_timer.setInterval(warmup_time * 1000);
 	measure_timer.setInterval(measure_time * 1000);
-
-	context.disableIndentation();
 }
 
 Configuration::configopts Main::getConfigOpts() {
@@ -148,79 +145,72 @@ Configuration::configopts Main::getConfigOpts() {
 }
 
 void Main::slot_autopinReady() {
-	context.enableIndentation();
-	context.info("> Set phase notification interval");
-	CHECK_ERRORV(proc.setPhaseNotificationInterval(notification_interval));
+	context.info("Set phase notification interval");
+	proc.setPhaseNotificationInterval(notification_interval);
 
-	context.info("> Waiting " + QString::number(init_time) + " seconds (init time)");
+	context.info("Waiting " + QString::number(init_time) + " seconds (init time)");
 
 	// Start timer
 	init_timer.start();
-	context.disableIndentation();
 }
 
 void Main::slot_startPinning() {
 	// Refresh the list with tasks
-	CHECK_ERRORV(refreshTasks());
+	refreshTasks();
 
 	// Enable notifications for new tasks
 	notifications = true;
 
-	context.enableIndentation();
-
 	PinningHistory::autopin_pinning &new_pinning = pinnings[current_pinning];
 	context.info("");
 	QString msg =
-		"> Test pinning " + QString::number(current_pinning + 1) + " of " + QString::number(pinnings.size()) + ":";
+		"Test pinning " + QString::number(current_pinning + 1) + " of " + QString::number(pinnings.size()) + ":";
 
 	for (auto &elem : new_pinning) msg += " " + QString::number(elem);
 
 	context.info(msg);
 
 	// Pin threads
-	CHECK_ERRORV(applyPinning(new_pinning));
+	applyPinning(new_pinning);
 
 	// Start timer
-	context.info("> Waiting " + QString::number(warmup_time) + " seconds (warmup time)");
-	context.disableIndentation();
+	context.info("Waiting " + QString::number(warmup_time) + " seconds (warmup time)");
+
 	warmup_timer.start();
 }
 
 void Main::slot_startMonitor() {
-	context.enableIndentation();
-
 	// Start timer
 	measure_start.invalidate();
 	measure_start.start();
 
-	context.info("> Start performance monitoring");
-	CHECK_ERRORV(checkPinnedTasks());
+	context.info("Start performance monitoring");
+	checkPinnedTasks();
 
 	for (auto it = pinned_tasks.begin(); it != pinned_tasks.end(); it++) {
-		CHECK_ERRORV(monitor->start(it->tid));
+		monitor->start(it->tid);
 		it->start = measure_start.elapsed();
 		it->stop = -1;
 	}
 
 	// Start timer
-	context.info("> Waiting " + QString::number(measure_time) + " seconds (measure time)");
-	context.disableIndentation();
+	context.info("Waiting " + QString::number(measure_time) + " seconds (measure time)");
+
 	measure_timer.start();
 }
 
 void Main::slot_stopPinning() {
-	context.enableIndentation();
 	notifications = false;
 
-	context.info("> Reading results of pinning " + QString::number(current_pinning + 1));
-	CHECK_ERRORV(checkPinnedTasks());
+	context.info("Reading results of pinning " + QString::number(current_pinning + 1));
+	checkPinnedTasks();
 
 	double current_result = 0;
 
 	for (auto &elem : pinned_tasks) {
 		if (elem.stop == -1) {
 			elem.stop = measure_start.elapsed();
-			CHECK_ERRORV(elem.result = monitor->stop(elem.tid));
+			elem.result = monitor->stop(elem.tid);
 		}
 		double tres = elem.result;
 		elem.result = tres / (elem.stop - elem.start);
@@ -256,8 +246,7 @@ void Main::slot_stopPinning() {
 		return;
 	}
 
-	context.biginfo("> Result of pinning " + QString::number(current_pinning + 1) + ": " +
-					QString::number(current_result));
+	context.info("Result of pinning " + QString::number(current_pinning + 1) + ": " + QString::number(current_result));
 	addPinningToHistory(pinnings[current_pinning], current_result);
 	pinned_tasks.clear();
 
@@ -266,15 +255,13 @@ void Main::slot_stopPinning() {
 		QTimer::singleShot(0, this, SLOT(slot_startPinning()));
 	} else {
 		context.info("");
-		context.info("> All pinnings have been tested");
-		context.info("> Applying best pinning: " + QString::number(best_pinning + 1));
-		CHECK_ERRORV(refreshTasks());
+		context.info("All pinnings have been tested");
+		context.info("Applying best pinning: " + QString::number(best_pinning + 1));
+		refreshTasks();
 		applyPinning(pinnings[best_pinning]);
-		context.biginfo("> Control strategy autopin1 has finished");
+		context.info("Control strategy autopin1 has finished");
 		if (history != nullptr) history->deinit();
 	}
-
-	context.disableIndentation();
 }
 
 void Main::slot_TaskCreated(int tid) {
@@ -295,14 +282,14 @@ void Main::slot_TaskCreated(int tid) {
 				context.info("  :: Not pinning task " + QString::number(tid) + " (icc thread)");
 			} else {
 				context.info("  :: Pinning task " + QString::number(tid) + " to core " + QString::number(pinning[i]));
-				CHECK_ERRORV(service.setAffinity(tid, pinning[i]));
+				service.setAffinity(tid, pinning[i]);
 
 				pinned_task new_entry;
 				new_entry.tid = tid;
 
 				// Start monitor if measurement is already running
 				if (measure_timer.isActive()) {
-					CHECK_ERRORV(monitor->start(tid));
+					monitor->start(tid);
 					new_entry.start = measure_start.elapsed();
 					new_entry.stop = -1;
 				}
@@ -321,7 +308,7 @@ void Main::slot_TaskTerminated(int tid) {
 
 		if (it == pinned_tasks.end()) return;
 
-		CHECK_ERRORV(it->result = monitor->stop(tid));
+		it->result = monitor->stop(tid);
 
 		if (measure_timer.isActive()) {
 			it->stop = measure_start.elapsed();
@@ -343,10 +330,8 @@ void Main::slot_PhaseChanged(int newphase) {
 		// Clear the list of pinned tasks
 		pinned_tasks.clear();
 
-		context.enableIndentation();
 		context.info("");
 		context.info("New execution phase - restart the current pinning");
-		context.disableIndentation();
 
 		notifications = false;
 
@@ -367,7 +352,7 @@ void Main::applyPinning(PinningHistory::autopin_pinning pinning) {
 			pinned_task new_entry;
 			new_entry.tid = tasks[j];
 			context.info("  :: Pinning task " + QString::number(tasks[j]) + " to core " + QString::number(pinning[i]));
-			CHECK_ERRORV(service.setAffinity(tasks[j], pinning[i]));
+			service.setAffinity(tasks[j], pinning[i]);
 			pinned_tasks.push_back(new_entry);
 			i++;
 		}
@@ -384,7 +369,7 @@ void Main::checkPinnedTasks() {
 	ProcessTree::autopin_tid_list running_tasks;
 	QStringList terminated_tasks;
 
-	CHECK_ERRORV(proc_tree = proc.getProcessTree());
+	proc_tree = proc.getProcessTree();
 
 	running_tasks = proc_tree.getAllTasks();
 
@@ -401,9 +386,9 @@ void Main::checkPinnedTasks() {
 
 	pinned_tasks.erase(new_end, pinned_tasks.end());
 
-	if (terminated_tasks.size() > 0) context.info("> Terminated tasks: " + terminated_tasks.join(" "));
+	if (terminated_tasks.size() > 0) context.info("Terminated tasks: " + terminated_tasks.join(" "));
 
-	if (pinned_tasks.empty()) REPORTV(Error::STRATEGY, "no_task", "All pinned tasks have terminated");
+	if (pinned_tasks.empty()) context.report(Error::STRATEGY, "no_task", "All pinned tasks have terminated");
 }
 
 } // namespace Autopin1

@@ -52,7 +52,7 @@ class StandardConfiguration : public Configuration {
 	 * \param[in] path     Path to configuration-file
 	 * \param[in] context  Refernce to the context of the object calling the constructor
 	 */
-	StandardConfiguration(const QString path, const AutopinContext &context);
+	StandardConfiguration(const QString path, AutopinContext &context);
 
 	void init() override;
 	Configuration::configopts getConfigOpts() const override;

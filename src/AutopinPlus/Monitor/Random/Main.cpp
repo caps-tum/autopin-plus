@@ -35,14 +35,13 @@ namespace AutopinPlus {
 namespace Monitor {
 namespace Random {
 
-Main::Main(QString name, const Configuration &config, const AutopinContext &context)
+Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	type = "random";
 }
 
 void Main::init() {
-	context.enableIndentation();
-	context.info("  :: Initializing \"" + name + "\" (random)");
+	context.info("Initializing \"" + name + "\" (random)");
 
 	// Set random seed
 	qsrand(QTime::currentTime().msec());
@@ -68,10 +67,8 @@ void Main::init() {
 		}
 	}
 
-	context.info("     - Minimum random value " + QString::number(rand_min));
-	context.info("     - Maximum random value " + QString::number(rand_max));
-
-	context.disableIndentation();
+	context.info("Minimum random value " + QString::number(rand_min));
+	context.info("Maximum random value " + QString::number(rand_max));
 }
 
 Configuration::configopts Main::getConfigOpts() {
@@ -100,14 +97,16 @@ void Main::start(int tid) { rands[tid] = getRandomValue(); }
 double Main::value(int tid) {
 	if (rands.find(tid) != rands.end()) return rands[tid];
 
-	REPORT(Error::MONITOR, "value", "Could not random result for " + QString::number(tid), 0);
-
+	context.report(Error::MONITOR, "value", "Could not random result for " + QString::number(tid));
 	return 0;
 }
 
 double Main::stop(int tid) {
-	double result;
-	CHECK_ERROR(result = value(tid), 0);
+	double result = value(tid);
+	if (context.isError()) {
+		return 0;
+	}
+
 	rands.erase(tid);
 	return result;
 }

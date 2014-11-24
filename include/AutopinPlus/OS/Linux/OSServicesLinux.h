@@ -53,9 +53,9 @@ class OSServicesLinux : public OSServices {
 	/*!
 	 * \brief Constructor
 	 *
-	 * \param[in]	context	Refernce to the context of the object calling the constructor
+	 * \param[in]	context	Reference to the context of the object calling the constructor
 	 */
-	explicit OSServicesLinux(const AutopinContext &context);
+	explicit OSServicesLinux(AutopinContext &context);
 
 	/*!
 	 * \brief Destructor
@@ -108,11 +108,6 @@ class OSServicesLinux : public OSServices {
 	static QString getHostname_static();
 
 	/*!
-	 * \brief Handles SIGCHL for created processes
-	 */
-	static void chldSignalHandler(int param, siginfo_t *info, void *paramv);
-
-	/*!
 	 * \brief Handles SIGUSR1
 	 *
 	 * If the observed process is started by autopin+ an process tracing is active
@@ -122,11 +117,6 @@ class OSServicesLinux : public OSServices {
 	static void usrSignalHandler(int param);
 
   public slots:
-	/*!
-	 * \brief Qt Signal handler for SIGHLD
-	 */
-	void slot_handleSigChld();
-
 	/*!
 	 * \brief Receives new messages from the communication channel
 	 *
@@ -198,22 +188,6 @@ class OSServicesLinux : public OSServices {
 	 * Mutex for protecting the attachToProcess() method
 	 */
 	QMutex attach;
-
-	/*!
-	 * File descriptor for the QSocketNotifier. Needed
-	 * for signal handling.
-	 */
-	static int sigchldFd[2];
-
-	/*!
-	 * Needed signal handling of SIGCHLD
-	 */
-	QSocketNotifier *snChld;
-
-	/*!
-	 * Stores old values for SIGCHLD
-	 */
-	struct sigaction old_chld;
 
 	/*!
 	 * Monitors the connection to the observed process

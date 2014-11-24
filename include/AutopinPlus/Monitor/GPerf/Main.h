@@ -47,7 +47,7 @@ class Main : public PerformanceMonitor {
 	 * \param[in] config  Reference to the configuration
 	 * \param[in] context Reference to the context
 	 */
-	Main(QString name, const Configuration &config, const AutopinContext &context);
+	Main(QString name, const Configuration &config, AutopinContext &context);
 
 	// Overridden from the base class
 	void init() override;

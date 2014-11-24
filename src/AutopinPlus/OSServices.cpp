@@ -30,11 +30,7 @@
 
 namespace AutopinPlus {
 
-OSServices *OSServices::current_service = nullptr;
-
-OSServices::OSServices(const AutopinContext &context) : context(context) {}
-
-const OSServices *OSServices::getCurrentService() { return current_service; }
+OSServices::OSServices(AutopinContext &context) : context(context) {}
 
 int OSServices::getTaskSortId(int tid) { return tid; }
 

@@ -51,7 +51,7 @@ class Main : public ControlStrategy {
 	 * \param[in] context   Reference to the instance of the AutopinContext class to use
 	 */
 	Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
-		 const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context);
+		 const PerformanceMonitor::monitor_list &monitors, AutopinContext &context);
 
 	// Overridden from base class
 	void init() override;

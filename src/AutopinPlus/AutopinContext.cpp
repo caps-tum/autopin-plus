@@ -27,67 +27,50 @@
  */
 
 #include <AutopinPlus/AutopinContext.h>
+#include <iostream>
 
 namespace AutopinPlus {
 
-AutopinContext::AutopinContext() {}
-
-AutopinContext::AutopinContext(std::shared_ptr<OutputChannel> outchan, std::shared_ptr<Error> err, int layer)
-	: outchan(outchan), err(err), indent(false) {
-	whitespace = "";
-	for (int i = 0; i < layer; i++) whitespace += "  ";
+AutopinContext::AutopinContext(std::string name) : err(), name(name) {
+	try {
+		logger = spdlog::stdout_logger_mt(name);
+	} catch (const spdlog::spdlog_ex &ex) {
+		std::cerr << "Could not initalizes logger. Exiting!";
+		QCoreApplication::exit(-2);
+	}
 }
 
-AutopinContext::AutopinContext(const AutopinContext &context) {
-	outchan = context.outchan;
-	err = context.err;
-	whitespace = context.whitespace + "  ";
-}
+void AutopinContext::info(QString msg) const { logger->info(msg.toStdString()); }
 
-void AutopinContext::info(QString msg) {
-	if (indent) msg = whitespace + msg;
-	outchan->info(msg);
-}
+void AutopinContext::warn(QString msg) const { logger->warn(msg.toStdString()); }
 
-void AutopinContext::biginfo(QString msg) {
-	if (indent) msg = whitespace + msg;
-	outchan->biginfo(msg);
-}
+void AutopinContext::error(QString msg) const { logger->error(msg.toStdString()); }
 
-void AutopinContext::warning(QString msg) {
-	if (indent) msg = whitespace + msg;
-	outchan->warning(msg);
-}
+void AutopinContext::debug(QString msg) const { logger->debug(msg.toStdString()); }
 
-void AutopinContext::error(QString msg) {
-	if (indent) msg = whitespace + msg;
-	outchan->error(msg);
-}
-
-void AutopinContext::debug(QString msg) {
-	if (indent) msg = whitespace + msg;
-	outchan->debug("DEBUG: " + msg);
-}
-
-autopin_estate AutopinContext::report(Error::autopin_errors error, QString opt, QString msg) const {
+autopin_estate AutopinContext::report(Error::autopin_errors error, QString opt, QString msg) {
 	autopin_estate result;
-	result = err->report(error, opt);
-	if (result == AUTOPIN_ERROR)
-		outchan->error("ERROR: " + msg);
-	else {
-		if (indent)
-			outchan->warning(whitespace + "WARNING: " + msg);
-		else
-			outchan->warning("WARNING: " + msg);
+	result = err.report(error, opt);
+	if (isError()) {
+		logger->error(msg.toStdString());
+		// Emit signal to Watchdog
+		emit sig_error();
+	} else {
+		logger->warn(msg.toStdString());
 	}
 
 	return result;
 }
 
-autopin_estate AutopinContext::autopinErrorState() const { return err->autopinErrorState(); }
+void AutopinContext::setPid(int pid) {
+	name = name + " (pid: " + std::to_string(pid) + ")";
+	try {
+		logger = spdlog::stdout_logger_mt(name);
+	} catch (const spdlog::spdlog_ex &ex) {
+		std::cerr << "Could not initalizes logger. Exiting!";
+		emit sig_error();
+	}
+}
 
-void AutopinContext::enableIndentation() { indent = true; }
-
-void AutopinContext::disableIndentation() { indent = false; }
-
+bool AutopinContext::isError() const { return err.autopinErrorState() == AUTOPIN_ERROR; }
 } // namespace AutopinPlus
