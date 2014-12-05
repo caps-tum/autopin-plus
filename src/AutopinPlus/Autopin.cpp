@@ -28,7 +28,7 @@
 
 #include <AutopinPlus/Autopin.h>
 #include <AutopinPlus/Error.h>
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/MQQTClient.h>
 #include <QFileInfo>
 #include <QString>
 #include <QList>
@@ -67,11 +67,18 @@ void Autopin::slot_autopinSetup() {
 	qt_msg = QString("Running with Qt") + qVersion();
 	context.info(qt_msg);
 
+	// Setting up MQQT Communcation
+	context.info("Setting up MQQT communication");
+	if (MQQTClient::getInstance().init() !=0) {
+		context.report(Error::SYSTEM, "mqqt", "Cannot initalize MQQT client");
+		exit(-1);
+	}
+
 	// Setting up signal Handlers
 	context.info("Setting up signal handlers");
 	if (SignalDispatcher::setupSignalHandler() != 0) {
 		context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
-		exit(-1);
+		exit(-2);
 	}
 
 	// Read configuration
