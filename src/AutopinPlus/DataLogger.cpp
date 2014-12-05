@@ -21,8 +21,8 @@
 
 namespace AutopinPlus {
 
-DataLogger::DataLogger(const Configuration &config, PerformanceMonitor::monitor_list const &monitors,
-					   const AutopinContext &context)
+DataLogger::DataLogger(const Configuration &config, const PerformanceMonitor::monitor_list &monitors,
+					   AutopinContext &context)
 	: config(config), monitors(monitors), context(context) {}
 
 QString DataLogger::getName() { return name; }

@@ -37,13 +37,11 @@
 
 namespace AutopinPlus {
 
-XMLPinningHistory::XMLPinningHistory(const Configuration &config, const AutopinContext &context)
+XMLPinningHistory::XMLPinningHistory(const Configuration &config, AutopinContext &context)
 	: PinningHistory(config, context) {}
 
 void XMLPinningHistory::init() {
-	context.enableIndentation();
-
-	context.info("> Initializing xml pinning history");
+	context.info("Initializing xml pinning history");
 
 	/*
 	 * Get the file paths for the pinning history from the configuration.
@@ -66,7 +64,7 @@ void XMLPinningHistory::init() {
 
 		// Try to open and parse the history file
 		if (!hfile.open(QIODevice::ReadWrite))
-			REPORTV(Error::FILE_NOT_FOUND, "file_open", "Could not open file " + history_load_path);
+			context.report(Error::FILE_NOT_FOUND, "file_open", "Could not open file " + history_load_path);
 
 		// Try to parse the contents of the file
 		QXmlStreamReader hreader(&hfile);
@@ -76,7 +74,8 @@ void XMLPinningHistory::init() {
 		while (!hreader.atEnd()) {
 			hreader.readNextStartElement();
 			if (hreader.name() != "XMLPinningHistory") {
-				REPORTV(Error::HISTORY, "bad_file", "File " + history_load_path + " is not a valid pinning history");
+				context.report(Error::HISTORY, "bad_file",
+							   "File " + history_load_path + " is not a valid pinning history");
 			} else
 				break;
 		}
@@ -137,8 +136,8 @@ void XMLPinningHistory::init() {
 			errCol = QString::number(hreader.columnNumber());
 			errMsg = hreader.errorString();
 
-			REPORTV(Error::HISTORY, "bad_syntax",
-					"Error in file " + history_load_path + " (Line " + errLine + ", Column " + errCol + "): " + errMsg);
+			context.report(Error::HISTORY, "bad_syntax", "Error in file " + history_load_path + " (Line " + errLine +
+															 ", Column " + errCol + "): " + errMsg);
 		}
 
 		hfile.close();
@@ -150,19 +149,16 @@ void XMLPinningHistory::init() {
 		context.info("  :: No pinnings found in history file");
 	else
 		history_modified = false;
-
-	context.disableIndentation();
 }
 
 void XMLPinningHistory::deinit() {
-	context.disableIndentation();
-
 	if (history_modified && !history_save_path.isEmpty()) {
 		context.info(":: Storing xml pinning history to file " + history_save_path);
 
 		QFile hfile(history_save_path);
 		if (!hfile.open(QIODevice::Truncate | QIODevice::WriteOnly | QIODevice::Text))
-			REPORTV(Error::FILE_NOT_FOUND, "file_open", "Could not save pinning history to file " + history_save_path);
+			context.report(Error::FILE_NOT_FOUND, "file_open",
+						   "Could not save pinning history to file " + history_save_path);
 
 		QXmlStreamWriter hwriter(&hfile);
 		hwriter.setAutoFormatting(true);

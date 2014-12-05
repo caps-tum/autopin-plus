@@ -70,7 +70,7 @@ class Configuration {
 	 * \param[in] path	    Path to the configuration file
 	 * \param[in] context	Refernce to the context of the object calling the constructor
 	 */
-	Configuration(const QString path, const AutopinContext &context);
+	Configuration(const QString path, AutopinContext &context);
 
 	virtual ~Configuration();
 
@@ -204,9 +204,9 @@ class Configuration {
 	QString path;
 
 	/*!
-	 * The runtime context
+	 * A reference to the runtime context
 	 */
-	AutopinContext context;
+	AutopinContext &context;
 
 	/*!
 	 * The process environment storing the environment variables

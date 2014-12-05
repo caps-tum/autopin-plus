@@ -39,28 +39,26 @@ namespace AutopinPlus {
 namespace Logger {
 namespace External {
 
-Main::Main(const Configuration &config, PerformanceMonitor::monitor_list const &monitors, const AutopinContext &context)
+Main::Main(const Configuration &config, PerformanceMonitor::monitor_list const &monitors, AutopinContext &context)
 	: DataLogger(config, monitors, context) {
 	name = "external";
 }
 
 void Main::init() {
-	context.enableIndentation();
-
-	context.info("  :: Initializing " + name);
+	context.info("Initializing " + name);
 
 	// Read and parse the "command" option.
 	if (config.configOptionExists(name + ".command") > 0) {
 		command = config.getConfigOptionList(name + ".command");
 
-		context.info("     - " + name + ".command = " + command.join(" "));
+		context.info("  - " + name + ".command = " + command.join(" "));
 	}
 
 	// Read and parse the "interval" option.
 	if (config.configOptionExists(name + ".interval") > 0) {
 		try {
 			interval = Tools::readInt(config.getConfigOption(name + ".interval"));
-			context.info("     - " + name + ".interval = " + QString::number(interval));
+			context.info("  - " + name + ".interval = " + QString::number(interval));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'interval' option.");
@@ -71,7 +69,7 @@ void Main::init() {
 	// Read and parse the "systemwide" option.
 	if (config.configOptionExists(name + ".systemwide") > 0) {
 		systemwide = config.getConfigOptionBool(name + ".systemwide");
-		context.info("     - " + name + ".systemwide = " + (systemwide ? "true" : "false"));
+		context.info("  - " + name + ".systemwide = " + (systemwide ? "true" : "false"));
 	}
 
 	// Connect stdout and stderr of the the external data logger to our callbacks...
@@ -97,8 +95,6 @@ void Main::init() {
 
 	// ... and start it.
 	timer.start();
-
-	context.disableIndentation();
 }
 
 Configuration::configopts Main::getConfigOpts() const {
@@ -121,11 +117,11 @@ void Main::slot_logDataPoint() {
 	}
 
 	// Emit data points for all monitors and threads.
-	for (auto monitor : monitors) {
-		for (auto task : monitor->getMonitoredTasks()) {
-			QTextStream(&process) << monitor->getName() << "	" << task << "	" << fixed << running.elapsed() / 1000.0
-								  << "	" << fixed << monitor->value(task) << "	"
-								  << (monitor->getUnit().isEmpty() ? "none" : monitor->getUnit()) << endl;
+	for (auto i = monitors.begin(); i != monitors.end(); i++) {
+		for (auto task : (*i)->getMonitoredTasks()) {
+			QTextStream(&process) << (*i)->getName() << "	" << task << "	" << fixed << running.elapsed() / 1000.0
+								  << "	" << fixed << (*i)->value(task) << "	"
+								  << ((*i)->getUnit().isEmpty() ? "none" : (*i)->getUnit()) << endl;
 
 			// If the user told us, that the performance monitors are system-wide, stop after the first thread.
 			if (systemwide) {

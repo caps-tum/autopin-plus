@@ -27,19 +27,10 @@
  */
 
 #include <AutopinPlus/Autopin.h>
-#include <AutopinPlus/Logger/External/Main.h>
-#include <AutopinPlus/Monitor/ClustSafe/Main.h>
-#include <AutopinPlus/Monitor/GPerf/Main.h>
-#include <AutopinPlus/Monitor/Perf/Main.h>
-#include <AutopinPlus/Monitor/Random/Main.h>
+#include <AutopinPlus/Error.h>
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
-#include <AutopinPlus/Strategy/Autopin1/Main.h>
-#include <AutopinPlus/Strategy/History/Main.h>
-#include <AutopinPlus/Strategy/Noop/Main.h>
-#include <AutopinPlus/XMLPinningHistory.h>
 #include <QFileInfo>
 #include <QString>
-#include <QList>
 #include <memory>
 
 /*
@@ -48,33 +39,37 @@
  * OSServices class is done with a marco (see os_linux).
  */
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
+
+using AutopinPlus::OS::Linux::SignalDispatcher;
+using AutopinPlus::OS::Linux::OSServicesLinux;
 
 namespace AutopinPlus {
 
-Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), service(nullptr) {}
+Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), context(std::string("global")) {}
 
 void Autopin::slot_autopinSetup() {
-	// Create output channel
-	auto outchan = std::make_shared<OutputChannel>();
-	// outchan->enableDebug();
-
-	// Create error handler
-	auto err = std::make_shared<Error>();
-
-	// Create autopin context
-	context = AutopinContext(outchan, err, 0);
-
 	// Start message
-	QString startup_msg, host;
+	QString startup_msg, qt_msg, host;
 
-	host = OS::Linux::OSServicesLinux::getHostname_static();
+	host = OSServicesLinux::getHostname_static();
 
 	startup_msg = applicationName() + " " + applicationVersion() + " started with pid " +
-				  QString::number(applicationPid()) + " on " + host + "!\n" + "Running with Qt " + qVersion();
-	context.biginfo("\n" + startup_msg);
+				  QString::number(applicationPid()) + " on " + host + "!";
+	context.info(startup_msg);
+
+	qt_msg = QString("Running with Qt") + qVersion();
+	context.info(qt_msg);
+
+	// Setting up signal Handlers
+	context.info("Setting up signal handlers");
+	if (SignalDispatcher::setupSignalHandler() != 0) {
+		context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
+		exit(-1);
+	}
 
 	// Read configuration
-	context.biginfo("\nReading configurations ...");
+	context.info("Reading configurations ...");
 
 	std::list<StandardConfiguration *> configs;
 
@@ -83,7 +78,7 @@ void Autopin::slot_autopinSetup() {
 		QString arg = this->argv()[i];
 		if (isConfig) {
 			StandardConfiguration *config = new StandardConfiguration(arg, context);
-			CHECK_ERRORV(config->init());
+			config->init();
 			configs.push_back(config);
 			isConfig = false;
 			continue;
@@ -92,23 +87,31 @@ void Autopin::slot_autopinSetup() {
 			isConfig = true;
 			continue;
 		}
+		if (!isConfig && arg == "-d") {
+			isDaemon = true;
+			continue;
+		}
 	}
 
-	context.biginfo("\nInitializing environment ...");
-
-	// Setup and initialize os services
-	CHECK_ERRORV(createOSServices());
-	CHECK_ERRORV(service->init());
-
 	for (const auto config : configs) {
-		std::unique_ptr<Watchdog> ptr(new Watchdog(std::unique_ptr<const Configuration>(config), *service, context));
-		connect(this, SIGNAL(sig_autopinReady()), ptr.get(), SLOT(slot_watchdogRun()));
-		watchdogs.push_back(std::move(ptr));
+		Watchdog *watchdog = new Watchdog(std::unique_ptr<const Configuration>(config));
+		connect(this, SIGNAL(sig_autopinReady()), watchdog, SLOT(slot_watchdogRun()));
+		connect(watchdog, SIGNAL(sig_watchdogStop()), this, SLOT(slot_watchdogStop()));
+
+		watchdogs.push_back(watchdog);
 	}
 
 	emit sig_autopinReady();
 }
 
-void Autopin::createOSServices() { service = std::unique_ptr<OSServices>(new OS::Linux::OSServicesLinux(context)); }
+void Autopin::slot_watchdogStop() {
+	QObject *ptr = sender();
+	Watchdog *watchdog = static_cast<Watchdog *>(ptr);
 
+	watchdogs.remove(watchdog);
+	watchdog->deleteLater();
+
+	if (!isDaemon && watchdogs.empty())
+		QCoreApplication::exit(0);
+}
 } // namespace AutopinPlus

@@ -32,25 +32,21 @@
 
 namespace AutopinPlus {
 
-StandardConfiguration::StandardConfiguration(const QString path, const AutopinContext &context)
+StandardConfiguration::StandardConfiguration(const QString path, AutopinContext &context)
 	: Configuration(path, context) {
 
 	this->name = "StandardConfiguration";
 }
 
 void StandardConfiguration::init() {
-	context.enableIndentation();
-
 	QFile configFile(path);
 	if (configFile.open(QIODevice::ReadOnly)) {
-		context.info("> Reading user configuration");
+		context.info("Reading user configuration");
 		QTextStream user_stream(&configFile);
-		CHECK_ERRORV(parseConfigurationFile(user_stream));
+		parseConfigurationFile(user_stream);
 	} else {
-		REPORTV(Error::FILE_NOT_FOUND, "config_file", "Could not read configuration \"" + path + "\"");
+		context.report(Error::FILE_NOT_FOUND, "config_file", "Could not read configuration \"" + path + "\"");
 	}
-
-	context.disableIndentation();
 }
 
 Configuration::configopts StandardConfiguration::getConfigOpts() const {
@@ -78,7 +74,7 @@ void StandardConfiguration::parseConfigurationFile(QTextStream &file) {
 
 		if (line[0] == '#') continue;
 
-		CHECK_ERRORV(getArgs(line));
+		getArgs(line);
 	}
 }
 
@@ -120,7 +116,7 @@ void StandardConfiguration::getArgs(QString arg) {
 
 		setOption(opt_pair);
 	} else
-		REPORTV(Error::BAD_CONFIG, "option_format", "Invalid option format: \"" + arg + "\"");
+		context.report(Error::BAD_CONFIG, "option_format", "Invalid option format: \"" + arg + "\"");
 }
 
 void StandardConfiguration::setOption(StandardConfiguration::arg_pair opt) {

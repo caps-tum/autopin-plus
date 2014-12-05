@@ -28,47 +28,12 @@
 
 #pragma once
 
-#include <AutopinPlus/OutputChannel.h>
 #include <list>
 #include <QCoreApplication>
 #include <QMutex>
 #include <QString>
 
 namespace AutopinPlus {
-
-#define CHECK_ERROR(x, y)                                             \
-	do {                                                              \
-		x;                                                            \
-		if (context.autopinErrorState() != AUTOPIN_NOERROR) return y; \
-	} while (0)
-#define CHECK_ERRORV(x)                                                                 \
-	do {                                                                                \
-		x;                                                                              \
-		if (context.autopinErrorState() != AUTOPIN_NOERROR) QCoreApplication::exit(-1); \
-	} while (0)
-#define CHECK_ERRORVA(x, a)                                   \
-	do {                                                      \
-		x;                                                    \
-		if (context.autopinErrorState() != AUTOPIN_NOERROR) { \
-			a;                                                \
-			QCoreApplication::exit(-1);                       \
-		}                                                     \
-	} while (0)
-#define REPORT(x, y, z, r)                                        \
-	do {                                                          \
-		if (context.report(x, y, z) != AUTOPIN_NOERROR) return r; \
-	} while (0)
-#define REPORTV(x, y, z)                                                            \
-	do {                                                                            \
-		if (context.report(x, y, z) != AUTOPIN_NOERROR) QCoreApplication::exit(-1); \
-	} while (0)
-#define REPORTVA(x, y, z, a)                              \
-	do {                                                  \
-		if (context.report(x, y, z) != AUTOPIN_NOERROR) { \
-			a;                                            \
-			QCoreApplication::exit(-1);                   \
-		}                                                 \
-	} while (0)
 
 /*!
  * \brief Return codes when reporting an error (autopin error state)
@@ -121,7 +86,7 @@ class Error {
 	 *
 	 * \return The global error state of autopin
 	 */
-	autopin_estate autopinErrorState();
+	autopin_estate autopinErrorState() const;
 
   private:
 	/*!
@@ -148,9 +113,13 @@ class Error {
 	error_history errors;
 
 	/*!
-	 * Mutex for safe access to the class
+	 * \brief Mutex for safe access to the class
+	 *
+	 * The mutex is mutable, because locking it doesn't change the
+	 * internal state of the object. It must be locked in some const
+	 * methods, such as autopinErrorState().
 	 */
-	QMutex mutex;
+	mutable QMutex mutex;
 
 	/*!
 	 * Global error state of autopin

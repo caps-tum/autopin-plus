@@ -46,9 +46,9 @@ namespace AutopinPlus {
 class PerformanceMonitor {
   public:
 	/*!
-	 * \brief Data structure for storing shared pointers to performance monitors
+	 * \brief Data structure for storing unique pointers to performance monitors
 	 */
-	typedef std::deque<std::shared_ptr<PerformanceMonitor>> monitor_list;
+	typedef std::list<std::unique_ptr<PerformanceMonitor>> monitor_list;
 
 	/*!
 	 * \brief Data structure for assigning performance values to tasks
@@ -68,7 +68,7 @@ class PerformanceMonitor {
 	 * \param[in] config	Reference to the current Configuration instance
 	 * \param[in] context	Reference to the context of the object calling the constructor
 	 */
-	PerformanceMonitor(QString name, const Configuration &config, const AutopinContext &context);
+	PerformanceMonitor(QString name, const Configuration &config, AutopinContext &context);
 
 	virtual ~PerformanceMonitor();
 
@@ -243,7 +243,7 @@ class PerformanceMonitor {
 	/*!
 	 * The runtime context
 	 */
-	AutopinContext context;
+	AutopinContext &context;
 
 	/*!
 	 * Value type of the performance monitor

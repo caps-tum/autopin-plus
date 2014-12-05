@@ -13,7 +13,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   # using Intel C++
   ADD_DEFINITIONS(-g -fast -std=c++11 -Wno-deprecated-register)
-#  ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wno-deprecated-register)
+  #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wno-deprecated-register)
 endif()
 
 # Configuration options
@@ -31,12 +31,15 @@ add_definitions(${QT_DEFINITIONS})
 # Project include path
 include_directories(include)
 
+# Add spdlog
+include_directories(vendor/spdlog/include/spdlog)
+
 # Source files
 # Headers only need to be added for classes containing the Q_OBJECT macro
 
 # Base files
-set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/AutopinPlus/Watchdog.h include/AutopinPlus/ObservedProcess.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Watchdog.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/OutputChannel.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp src/AutopinPlus/Tools.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/AutopinPlus/Watchdog.h include/AutopinPlus/ObservedProcess.h include/AutopinPlus/AutopinContext.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Watchdog.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp src/AutopinPlus/Tools.cpp)
 
 # Abstract base classes
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OSServices.h include/AutopinPlus/ControlStrategy.h include/AutopinPlus/DataLogger.h)
@@ -47,8 +50,8 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.c
 
 # Linux-specific classes
 add_definitions(-Dos_linux)
-set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/Linux/OSServicesLinux.h include/AutopinPlus/OS/Linux/TraceThread.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/Linux/OSServicesLinux.cpp  src/AutopinPlus/OS/Linux/TraceThread.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/Linux/OSServicesLinux.h include/AutopinPlus/OS/Linux/TraceThread.h include/AutopinPlus/OS/Linux/SignalDispatcher.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/Linux/OSServicesLinux.cpp  src/AutopinPlus/OS/Linux/TraceThread.cpp src/AutopinPlus/OS/Linux/SignalDispatcher.cpp)
 
 # Autopin1 control strategy
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Autopin1/Main.h)

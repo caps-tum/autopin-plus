@@ -30,7 +30,7 @@
 
 namespace AutopinPlus {
 
-PinningHistory::PinningHistory(const Configuration &config, const AutopinContext &context)
+PinningHistory::PinningHistory(const Configuration &config, AutopinContext &context)
 	: config(config), context(context), history_modified(false) {}
 
 PinningHistory::~PinningHistory() {}
@@ -66,8 +66,8 @@ PinningHistory::pinning_result PinningHistory::getBestPinning(int phase) const {
 	auto result = bestpinmap.find(phase);
 	if (result != bestpinmap.end()) return result->second;
 
-	REPORTV(Error::UNSUPPORTED, "uncritical",
-			"Could not find best pinning for phase " + QString::number(phase) + ". Keeping original pinning.");
+	context.report(Error::UNSUPPORTED, "uncritical",
+				   "Could not find best pinning for phase " + QString::number(phase) + ". Keeping original pinning.");
 
 	return pinning_result();
 }

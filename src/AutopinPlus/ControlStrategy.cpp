@@ -40,13 +40,12 @@
 namespace AutopinPlus {
 
 ControlStrategy::ControlStrategy(const Configuration &config, const ObservedProcess &proc, OSServices &service,
-								 PerformanceMonitor::monitor_list monitors, const AutopinContext &context)
-	: config(config), proc(proc), service(service), monitors(std::move(monitors)), context(context),
-	  name("ControlStrategy") {}
+								 const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
+	: config(config), proc(proc), service(service), monitors(monitors), context(context), name("ControlStrategy") {}
 
 void ControlStrategy::init() {
 	// Setup pinning history
-	CHECK_ERRORV(createPinningHistory());
+	createPinningHistory();
 
 	// Read environment information for the pinning history
 	if (history != nullptr) setPinningHistoryEnv();
@@ -78,8 +77,10 @@ PinningHistory::pinning_list ControlStrategy::readPinnings(QString opt) {
 	PinningHistory::pinning_list result;
 	QStringList pinnings;
 
-	if (config.configOptionExists(opt) <= 0)
-		REPORT(Error::BAD_CONFIG, "option_missing", "No pinning specified", result);
+	if (config.configOptionExists(opt) <= 0) {
+		context.report(Error::BAD_CONFIG, "option_missing", "No pinning specified");
+		return result;
+	}
 
 	pinnings = config.getConfigOptionList(opt);
 
@@ -92,8 +93,10 @@ PinningHistory::pinning_list ControlStrategy::readPinnings(QString opt) {
 			int cpu = pinning[j].toInt(&ok);
 			if (ok && cpu >= 0)
 				new_pinning.push_back(cpu);
-			else
-				REPORT(Error::BAD_CONFIG, "option_format", pinnings[i] + " is not a valid pinning", result);
+			else {
+				context.report(Error::BAD_CONFIG, "option_format", pinnings[i] + " is not a valid pinning");
+				return result;
+			}
 		}
 
 		result.push_back(new_pinning);
@@ -107,14 +110,14 @@ void ControlStrategy::refreshTasks() {
 
 	struct tasksort sort;
 
-	CHECK_ERRORV(ptree = proc.getProcessTree());
+	ptree = proc.getProcessTree();
 	ProcessTree::autopin_tid_list task_set = ptree.getAllTasks();
 
 	tasks.clear();
 
 	for (const auto &elem : task_set) {
 		tasks.push_back(elem);
-		CHECK_ERRORV(sort.sort_tasks[elem] = service.getTaskSortId(elem));
+		sort.sort_tasks[elem] = service.getTaskSortId(elem);
 	}
 
 	std::sort(tasks.begin(), tasks.end(), sort);
@@ -126,11 +129,11 @@ void ControlStrategy::createPinningHistory() {
 
 	if (optcount_read <= 0 && optcount_write <= 0) return;
 	if (optcount_read > 1)
-		REPORTV(Error::BAD_CONFIG, "inconsistent",
-				"Specified " + QString::number(optcount_read) + " pinning histories as input");
+		context.report(Error::BAD_CONFIG, "inconsistent",
+					   "Specified " + QString::number(optcount_read) + " pinning histories as input");
 	if (optcount_write > 1)
-		REPORTV(Error::BAD_CONFIG, "inconsistent",
-				"Specified " + QString::number(optcount_write) + " pinning histories as output");
+		context.report(Error::BAD_CONFIG, "inconsistent",
+					   "Specified " + QString::number(optcount_write) + " pinning histories as output");
 
 	QString history_config;
 	if (optcount_read > 0)
@@ -145,8 +148,8 @@ void ControlStrategy::createPinningHistory() {
 		return;
 	}
 
-	REPORTV(Error::UNSUPPORTED, "critical",
-			"File type \"." + history_info.suffix() + "\" is not supported by any pinning history");
+	context.report(Error::UNSUPPORTED, "critical",
+				   "File type \"." + history_info.suffix() + "\" is not supported by any pinning history");
 }
 
 void ControlStrategy::setPinningHistoryEnv() {

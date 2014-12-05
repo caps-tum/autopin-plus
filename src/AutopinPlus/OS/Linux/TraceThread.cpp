@@ -39,12 +39,16 @@ namespace AutopinPlus {
 namespace OS {
 namespace Linux {
 
-TraceThread::TraceThread(const AutopinContext &context)
+TraceThread::TraceThread(AutopinContext &context)
 	: context(context), pid(-1), ptrace_opt(PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACECLONE),
 	  exreq(false) {}
 
 QMutex *TraceThread::init(ObservedProcess *observed_process) {
-	CHECK_ERROR(pid = observed_process->getPid(), &trace_mutex);
+	pid = observed_process->getPid();
+	if (context.isError()) {
+		return &trace_mutex;
+	}
+
 	pid_str.setNum(pid);
 	this->observed_process = observed_process;
 	trace_mutex.lock();
@@ -88,10 +92,10 @@ void TraceThread::attach() {
 
 				if (errsave == ESRCH || errsave == EPERM) {
 					no_trace.insert(pid);
-					REPORTV(Error::PROC_TRACE, "cannot_trace", "Not going to trace " + QString::number(pid));
+					context.report(Error::PROC_TRACE, "cannot_trace", "Not going to trace " + QString::number(pid));
 				} else {
-					REPORTV(Error::UNKNOWN, "PTRACE_ATTACH",
-							"Could not attach to process with pid " + QString::number(pid));
+					context.report(Error::UNKNOWN, "PTRACE_ATTACH",
+								   "Could not attach to process with pid " + QString::number(pid));
 				}
 				continue;
 			}
@@ -99,7 +103,8 @@ void TraceThread::attach() {
 			// wait for the process to stop
 			waitpid(pid, &status, __WALL);
 			if (WIFEXITED(status)) {
-				REPORTV(Error::PROC_TRACE, "cannot_trace", "Task " + QString::number(pid) + " has already exited");
+				context.report(Error::PROC_TRACE, "cannot_trace",
+							   "Task " + QString::number(pid) + " has already exited");
 				continue;
 			}
 
@@ -110,10 +115,10 @@ void TraceThread::attach() {
 
 				if (errsave == ESRCH || errsave == EPERM) {
 					no_trace.insert(pid);
-					REPORTV(Error::PROC_TRACE, "cannot_trace", "Not going to trace " + QString::number(pid));
+					context.report(Error::PROC_TRACE, "cannot_trace", "Not going to trace " + QString::number(pid));
 				} else {
-					REPORTV(Error::UNKNOWN, "PTRACE_SETOPTIONS",
-							"Could set ptrace options for process " + QString::number(pid));
+					context.report(Error::UNKNOWN, "PTRACE_SETOPTIONS",
+								   "Could set ptrace options for process " + QString::number(pid));
 				}
 
 				ptrace(PTRACE_DETACH, pid, NULL, NULL);
@@ -138,19 +143,20 @@ void TraceThread::run() {
 	long ret;
 	pid_t trace_pid;
 	unsigned long event_msg;
-	context.enableIndentation();
+
 	setupSignalHandler();
 
 	// attach to processes
-	CHECK_ERRORVA(attach(), trace_mutex.unlock());
+	attach();
 
 	// Check if the observed process is traced
-	if (tasks.find(pid) == tasks.end())
-		REPORTVA(Error::PROC_TRACE, "observed_process", "Cannot trace the observed_process", trace_mutex.unlock());
+	if (tasks.find(pid) == tasks.end()) {
+		trace_mutex.unlock();
+		context.report(Error::PROC_TRACE, "observed_process", "Cannot trace the observed_process");
+	}
 
-	context.info("> Attached to all tasks of process " + QString::number(pid));
+	context.info("Attached to all tasks of process " + QString::number(pid));
 	trace_mutex.unlock();
-	context.disableIndentation();
 
 	// start the loop for tracking process events
 	while (true) {
@@ -171,7 +177,7 @@ void TraceThread::run() {
 		}
 
 		if (trace_pid == -1) {
-			REPORTV(Error::PROC_TRACE, "waitpid", "waitpid failed while tracing the observed process");
+			context.report(Error::PROC_TRACE, "waitpid", "waitpid failed while tracing the observed process");
 			continue;
 		}
 
@@ -190,7 +196,8 @@ void TraceThread::run() {
 			if (WSTOPSIG(status) == SIGTRAP) {
 				ret = ptrace(PTRACE_GETEVENTMSG, trace_pid, NULL, (void *)&event_msg);
 
-				if (ret != 0) REPORTV(Error::PROC_TRACE, "ptrace_eventmsg", "Could not get ptrace event information");
+				if (ret != 0)
+					context.report(Error::PROC_TRACE, "ptrace_eventmsg", "Could not get ptrace event information");
 
 				switch (status >> 16) {
 				case (PTRACE_EVENT_CLONE):
@@ -206,19 +213,19 @@ void TraceThread::run() {
 					break;
 				}
 
-				CHECK_ERRORV(ptraceContinue(trace_pid));
+				ptraceContinue(trace_pid);
 
 			} else if (WSTOPSIG(status) == SIGSTOP) {
 				context.debug("Received stop signal!");
 
 				if (tasks.find(trace_pid) != tasks.end()) {
-					CHECK_ERRORV(ptraceContinue(trace_pid));
+					ptraceContinue(trace_pid);
 				} else
 					newTask(trace_pid);
 
 			} else {
 				context.debug("Received unhandled signal!");
-				CHECK_ERRORV(ptraceContinue(trace_pid, WSTOPSIG(status)));
+				ptraceContinue(trace_pid, WSTOPSIG(status));
 			}
 
 		} else {
@@ -231,7 +238,7 @@ void TraceThread::ptraceContinue(pid_t pid, unsigned long sig) {
 	long ret;
 	ret = ptrace(PTRACE_CONT, pid, NULL, (void *)sig);
 
-	if (ret == -1) REPORTV(Error::PROC_TRACE, "cont_failed", "Could not continue task " + QString::number(pid));
+	if (ret == -1) context.report(Error::PROC_TRACE, "cont_failed", "Could not continue task " + QString::number(pid));
 }
 
 void TraceThread::newTask(int pid) {
@@ -248,7 +255,7 @@ void TraceThread::newTask(int pid) {
 		new_tasks.erase(pid);
 		tasks.insert(pid);
 
-		CHECK_ERRORV(ptraceContinue(pid));
+		ptraceContinue(pid);
 
 	} else
 		new_tasks.insert(pid);
@@ -263,7 +270,7 @@ void TraceThread::setupSignalHandler() {
 	ret |= sigaddset(&sigset, SIGALRM);
 	ret |= pthread_sigmask(SIG_UNBLOCK, &sigset, nullptr);
 
-	if (ret != 0) REPORTV(Error::SYSTEM, "sigset", "Could not setup signal mask for SIGALRM");
+	if (ret != 0) context.report(Error::SYSTEM, "sigset", "Could not setup signal mask for SIGALRM");
 
 	// Set signal handler
 
@@ -278,7 +285,7 @@ void TraceThread::setupSignalHandler() {
 
 	ret = sigaction(SIGALRM, &sigact, nullptr);
 
-	if (ret != 0) REPORTV(Error::SYSTEM, "sigset", "Could not setup signal handler for SIGALRM");
+	if (ret != 0) context.report(Error::SYSTEM, "sigset", "Could not setup signal handler for SIGALRM");
 }
 
 bool TraceThread::alarm_occured = false;

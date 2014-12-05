@@ -33,7 +33,7 @@ namespace Strategy {
 namespace History {
 
 Main::Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
-		   const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context)
+		   const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: ControlStrategy(config, proc, service, monitors, context), current_pinning(0), best_pinning(-1),
 	  notifications(false) {
 
@@ -45,12 +45,9 @@ Main::Main(const Configuration &config, const ObservedProcess &proc, OSServices 
 }
 
 void Main::init() {
-
 	ControlStrategy::init();
 
-	context.enableIndentation();
-
-	context.info("> Initializing control strategy history");
+	context.info("Initializing control strategy history");
 
 	// Set standard values
 	init_time = 15;
@@ -61,7 +58,7 @@ void Main::init() {
 	// get data from history
 	// check if generated from autopin1
 	if (history->getStrategy() != "autopin1")
-		REPORTV(Error::BAD_CONFIG, "invalid_value", "Invalid strategy in history file");
+		context.report(Error::BAD_CONFIG, "invalid_value", "Invalid strategy in history file");
 
 	// Read user values from the configuration
 	auto it = history->getStrategyOption("init_time");
@@ -80,22 +77,21 @@ void Main::init() {
 		QString entry = skip_str[i];
 		bool ok;
 		int entry_int = entry.toInt(&ok);
-		if (!ok) REPORTV(Error::BAD_CONFIG, "invalid_value", "Invalid id for skipped thread: " + entry);
+		if (!ok) context.report(Error::BAD_CONFIG, "invalid_value", "Invalid id for skipped thread: " + entry);
 		skip.insert(entry_int);
 	}
 
-	if (init_time < 0) REPORTV(Error::BAD_CONFIG, "invalid_value", "Invalid init time: " + QString::number(init_time));
+	if (init_time < 0)
+		context.report(Error::BAD_CONFIG, "invalid_value", "Invalid init time: " + QString::number(init_time));
 
-	context.info("  :: Init time: " + QString::number(init_time));
-	if (openmp_icc) context.info("  :: OpenMP/ICC support is enabled");
-	if (!skip.empty()) context.info("  :: These tasks will be skipped: " + skip_str.join(" "));
+	context.info("  - Init time: " + QString::number(init_time));
+	if (openmp_icc) context.info("  - OpenMP/ICC support is enabled");
+	if (!skip.empty()) context.info("  - These tasks will be skipped: " + skip_str.join(" "));
 
 	if (proc.getCommChanAddr() != "")
-		context.info("  :: Minimum phase notification interval: " + QString::number(notification_interval));
+		context.info("  - Minimum phase notification interval: " + QString::number(notification_interval));
 
 	init_timer.setInterval(init_time * 1000);
-
-	context.disableIndentation();
 }
 
 Configuration::configopts Main::getConfigOpts() {
@@ -117,24 +113,21 @@ Configuration::configopts Main::getConfigOpts() {
 }
 
 void Main::slot_autopinReady() {
-	context.enableIndentation();
-	context.info("> Set phase notification interval");
-	CHECK_ERRORV(proc.setPhaseNotificationInterval(notification_interval));
+	context.info("Set phase notification interval");
+	proc.setPhaseNotificationInterval(notification_interval);
 
-	context.info("> Waiting " + QString::number(init_time) + " seconds (init time)");
+	context.info("Waiting " + QString::number(init_time) + " seconds (init time)");
 
 	// Start timer
 	init_timer.start();
-	context.disableIndentation();
 }
 
 void Main::slot_startPinning() {
 	// Refresh the list with tasks
-	CHECK_ERRORV(refreshTasks());
+	refreshTasks();
 
-	context.enableIndentation();
 	context.info("");
-	context.info("> Apply pinning.");
+	context.info("Apply pinning.");
 
 	applyPinning(history->getBestPinning(0).first);
 }
@@ -157,7 +150,7 @@ void Main::slot_TaskCreated(int tid) {
 				context.info("  :: Not pinning task " + QString::number(tid) + " (icc thread)");
 			} else {
 				context.info("  :: Pinning task " + QString::number(tid) + " to core " + QString::number(pinning[i]));
-				CHECK_ERRORV(service.setAffinity(tid, pinning[i]));
+				service.setAffinity(tid, pinning[i]);
 
 				pinned_task new_entry;
 				new_entry.tid = tid;
@@ -188,10 +181,8 @@ void Main::slot_PhaseChanged(int newphase) {
 		// Clear the list of pinned tasks
 		pinned_tasks.clear();
 
-		context.enableIndentation();
 		context.info("");
 		context.info("New execution phase - restart the current pinning");
-		context.disableIndentation();
 
 		notifications = false;
 
@@ -212,7 +203,7 @@ void Main::applyPinning(PinningHistory::autopin_pinning pinning) {
 			pinned_task new_entry;
 			new_entry.tid = tasks[j];
 			context.info("  :: Pinning task " + QString::number(tasks[j]) + " to core " + QString::number(pinning[i]));
-			CHECK_ERRORV(service.setAffinity(tasks[j], pinning[i]));
+			service.setAffinity(tasks[j], pinning[i]);
 			pinned_tasks.push_back(new_entry);
 			i++;
 		}
@@ -229,7 +220,7 @@ void Main::checkPinnedTasks() {
 	ProcessTree::autopin_tid_list running_tasks;
 	QStringList terminated_tasks;
 
-	CHECK_ERRORV(proc_tree = proc.getProcessTree());
+	proc_tree = proc.getProcessTree();
 
 	running_tasks = proc_tree.getAllTasks();
 
@@ -245,9 +236,9 @@ void Main::checkPinnedTasks() {
 
 	pinned_tasks.erase(new_end, pinned_tasks.end());
 
-	if (terminated_tasks.size() > 0) context.info("> Terminated tasks: " + terminated_tasks.join(" "));
+	if (terminated_tasks.size() > 0) context.info("Terminated tasks: " + terminated_tasks.join(" "));
 
-	if (pinned_tasks.empty()) REPORTV(Error::STRATEGY, "no_task", "All pinned tasks have terminated");
+	if (pinned_tasks.empty()) context.report(Error::STRATEGY, "no_task", "All pinned tasks have terminated");
 }
 
 } // namespace History

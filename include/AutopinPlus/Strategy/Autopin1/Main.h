@@ -56,7 +56,7 @@ class Main : public ControlStrategy {
 	 * \param[in] context	Refernce to the context of the object calling the constructor
 	 */
 	Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
-		 const PerformanceMonitor::monitor_list &monitors, const AutopinContext &context);
+		 const PerformanceMonitor::monitor_list &monitors, AutopinContext &context);
 
 	void init() override;
 	Configuration::configopts getConfigOpts() override;
@@ -198,8 +198,10 @@ class Main : public ControlStrategy {
 
 	/*!
 	 * The performance monitor used by the strategy
+	 *
+	 * TODO: Replace raw pointer, with something more suitable
 	 */
-	std::shared_ptr<PerformanceMonitor> monitor;
+	PerformanceMonitor *monitor;
 
 	/*!
 	 * The type of the performance monitor

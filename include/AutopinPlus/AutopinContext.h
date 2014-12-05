@@ -29,64 +29,38 @@
 #pragma once
 
 #include <AutopinPlus/Error.h>
-#include <AutopinPlus/OutputChannel.h>
+#include <spdlog.h>
 #include <QString>
 #include <memory>
 
 namespace AutopinPlus {
 
 /*!
- * \brief Class encapsulating all runtime information for each class
+ * \brief Class encapsulating logging and error handling
  *
- * This class is a wrapper for accessing the current runtime instances of
- * the classes OutputChannel and Error. Every autopin class
- * relying on the services provided by these classes gets an own instance of
- * AutopinContext.
+ * This class is used by various components in autopinplus for logging
+ * and error handling. Every seperated component should have exactly
+ * one AutopinContext. There is exactly one AutopinContext per
+ * Watchdog. There is also one global context used by Autopin.
  *
- * \sa OutputChannel, Error, Configuration
+ * \sa Error, Configuration
  */
-class AutopinContext {
+class AutopinContext : public QObject {
+	Q_OBJECT
   public:
 	/*!
 	 * \brief Constructor
+	 *
+	 * \param[in] name Name for the AutopinContext, which is logged
 	 */
-	AutopinContext();
-
-	/*!
-	 * \brief Constructor
-	 *
-	 * This constructor should only be used to create the first instance of the class. All other
-	 * instances should be created from an exising AutopinContext object.
-	 *
-	 * \param[in] outchan	The OutputChannel providing access to the terminal
-	 * \param[in]	err 	Shared pointer to the runtime instance of the Error class
-	 * \param[in] layer	The initial amount of leading whitespace
-	 */
-	AutopinContext(std::shared_ptr<OutputChannel> outchan, std::shared_ptr<Error> err, int layer);
-
-	/*!
-	 * \brief Constructor
-	 *
-	 * Creates a new instance based on an exisiting object of the AutopinContext class.
-	 * The leading whitespace for the new object ist extended.
-	 *
-	 * \param[in] context	Refernce to an instance of AutopinContext
-	 */
-	explicit AutopinContext(const AutopinContext &context);
+	AutopinContext(std::string name);
 
 	/*!
 	 * \brief Prints a message
 	 *
 	 * \param[in] msg	The message which will be printed
 	 */
-	void info(QString msg);
-
-	/*!
-	 * \brief Prints a message with bold letters
-	 *
-	 * \param[in] msg	The message which will be printed
-	 */
-	void biginfo(QString msg);
+	void info(QString msg) const;
 
 	/*!
 	 * \brief Prints a debug message
@@ -94,78 +68,68 @@ class AutopinContext {
 	 * The message is only printed if the debug option of the OutputChannel is enabled.
 	 *
 	 * \param[in] msg	The message which will be printed
-	 *
-	 * \sa OutputChannel::enableDebug()
 	 */
-	void debug(QString msg);
+	void debug(QString msg) const;
 
 	/*!
-	 * \brief Enables the indentation of all output
+	 * \brief Prints an warning Message
 	 *
-	 * \sa disableIndentation()
+	 * \param[in] msg	The message which will be printed
 	 */
-	void enableIndentation();
-
-	/*!
-	 * \brief Disables the indentation of all output
-	 *
-	 * \sa enableIndentation()
-	 */
-	void disableIndentation();
+	void warn(QString msg) const;
 
 	/*!
 	 * \brief Reports an error
 	 *
 	 * The error is reported via the Error class. Depending on the resulting
-	 * error state a warining or an error message will be displayed.
+	 * error state a warning or an error message will be displayed.
 	 *
 	 * \param[in] error	Type of the error
 	 * \param[in] opt	Additional information about the error
 	 * \param[in] msg	Message which will be printed
 	 */
-	autopin_estate report(Error::autopin_errors error, QString opt, QString msg) const;
+	autopin_estate report(Error::autopin_errors error, QString opt, QString msg);
 
 	/*!
 	 * \brief Get the global error state
 	 *
-	 * \return The global error state of autopin
+	 * \return true, if the there was an error, otherwise false
 	 */
-	autopin_estate autopinErrorState() const;
+	bool isError() const;
+
+	/*!
+	 * \brief Sets the pid, so it can be logged
+	 */
+	void setPid(int pid);
+
+signals:
+	/*
+	 * Gets emmitted, when context encounters a critical error
+	 */
+	void sig_error();
 
   private:
-	/*!
-	 * \brief Prints an error message
-	 *
-	 * \param[in] msg	The message which will be printed
-	 */
-	void warning(QString msg);
-
 	/*!
 	 * \brief Prints a warning message
 	 *
 	 * \param[in] msg	The message which will be printed
 	 */
-	void error(QString msg);
+	void error(QString msg) const;
 
 	/*!
-	 * Stores a shared pointer to the current runtime instance of OutputChannel
+	 * \brief Stores a shared pointer to the logger of the current context
 	 */
-	std::shared_ptr<OutputChannel> outchan;
+	std::shared_ptr<spdlog::logger> logger;
 
 	/*!
-	 * Stores a shared pointer to the current runtime instance of Error
+	 * \brief Stores an instance of the class Error
 	 */
-	std::shared_ptr<Error> err;
+	Error err;
 
 	/*!
-	 * Stores the leading whitespace used for indentation
+	 * \brief Stores the name of the current context
 	 */
-	QString whitespace;
-
-	/*!
-	 * Stores if indentation of output is currently enabled
-	 */
-	bool indent;
+	std::string name;
 };
 
 } // namespace AutopinPlus

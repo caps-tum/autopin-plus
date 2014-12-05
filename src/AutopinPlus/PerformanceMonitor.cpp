@@ -28,13 +28,13 @@
 
 #include <AutopinPlus/PerformanceMonitor.h>
 
-#include <AutopinPlus/Error.h>	 // for CHECK_ERROR, CHECK_ERRORV
+#include <AutopinPlus/Error.h>
 #include <AutopinPlus/Exception.h> // for Exception
 #include <utility>				   // for pair
 
 namespace AutopinPlus {
 
-PerformanceMonitor::PerformanceMonitor(QString name, const Configuration &config, const AutopinContext &context)
+PerformanceMonitor::PerformanceMonitor(QString name, const Configuration &config, AutopinContext &context)
 	: config(config), context(context), valtype(UNKNOWN), name(name) {}
 
 PerformanceMonitor::~PerformanceMonitor() {}
@@ -49,7 +49,7 @@ QString PerformanceMonitor::getUnit() { return ""; }
 
 void PerformanceMonitor::start(ProcessTree::autopin_tid_list tasks) {
 	for (const auto &task : tasks) {
-		CHECK_ERRORV(start(task));
+		start(task);
 	}
 }
 
@@ -59,7 +59,11 @@ PerformanceMonitor::autopin_measurements PerformanceMonitor::value(ProcessTree::
 	for (const auto &task : tasks) {
 		std::pair<int, double> respair;
 		respair.first = task;
-		CHECK_ERROR(respair.second = value(task), result);
+		respair.second = value(task);
+		if (context.isError()) {
+			return result;
+		}
+
 		result.insert(respair);
 	}
 
@@ -72,7 +76,11 @@ PerformanceMonitor::autopin_measurements PerformanceMonitor::stop(ProcessTree::a
 	for (const auto &task : tasks) {
 		std::pair<int, double> respair;
 		respair.first = task;
-		CHECK_ERROR(respair.second = stop(task), result);
+		respair.second = stop(task);
+		if (context.isError()) {
+			return result;
+		}
+
 		result.insert(respair);
 	}
 
@@ -88,7 +96,10 @@ PerformanceMonitor::autopin_measurements PerformanceMonitor::stop() {
 	autopin_measurements result;
 
 	tasks = getMonitoredTasks();
-	CHECK_ERROR(result = stop(tasks), result);
+	result = stop(tasks);
+	if (context.isError()) {
+		return result;
+	}
 
 	return result;
 }

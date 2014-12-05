@@ -71,9 +71,7 @@ autopin_estate Error::report(Error::autopin_errors error, QString opt) {
 
 		break;
 	case SYSTEM:
-		if (opt == "already_initialized")
-			break;
-		else if (opt == "create_socket")
+		if (opt == "create_socket")
 			setError();
 		else if (opt == "sigset")
 			setError();
@@ -159,15 +157,12 @@ autopin_estate Error::report(Error::autopin_errors error, QString opt) {
 	return global_estate;
 }
 
-autopin_estate Error::autopinErrorState() {
+autopin_estate Error::autopinErrorState() const {
 	QMutexLocker locker(&mutex);
 
 	return global_estate;
 }
 
-void Error::setError() {
-	global_estate = AUTOPIN_ERROR;
-	QCoreApplication::exit(-1);
-}
+void Error::setError() { global_estate = AUTOPIN_ERROR; }
 
 } // namespace AutopinPlus

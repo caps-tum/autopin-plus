@@ -49,7 +49,7 @@ namespace AutopinPlus {
 namespace Monitor {
 namespace GPerf {
 
-Main::Main(QString name, const Configuration &config, const AutopinContext &context)
+Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	// Set the "type" field of the base class to the name of our monitor.
 	type = "gperf";
@@ -59,15 +59,13 @@ Main::Main(QString name, const Configuration &config, const AutopinContext &cont
 }
 
 void Main::init() {
-	context.enableIndentation();
-
-	context.info("  :: Initializing " + name + " (" + type + ")");
+	context.info("Initializing " + name + " (" + type + ")");
 
 	// Read and parse the "processors" option
 	if (config.configOptionExists(name + ".processors") > 0) {
 		try {
 			processors = Tools::readInts(config.getConfigOptionList(name + ".processors"));
-			context.info("     - " + name + ".processors = " + Tools::showInts(processors).join(" "));
+			context.info("  - " + name + ".processors = " + Tools::showInts(processors).join(" "));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'processors' option (" + QString(e.what()) +
@@ -80,7 +78,7 @@ void Main::init() {
 	if (config.configOptionExists(name + ".sensor") > 0) {
 		try {
 			sensor = readSensor(config.getConfigOption(name + ".sensor"));
-			context.info("     - " + name + ".sensor = " + showSensor(sensor));
+			context.info("  - " + name + ".sensor = " + showSensor(sensor));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'sensor' option (" + QString(e.what()) + ").");
@@ -96,15 +94,13 @@ void Main::init() {
 	if (config.configOptionExists(name + ".valtype") > 0) {
 		try {
 			valtype = readMontype(config.getConfigOption(name + ".valtype"));
-			context.info("     - " + name + ".valtype = " + showMontype(valtype));
+			context.info("  - " + name + ".valtype = " + showMontype(valtype));
 		} catch (Exception e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init(): Could not parse the 'valtype' option (" + QString(e.what()) + ").");
 			return;
 		}
 	}
-
-	context.disableIndentation();
 }
 
 Configuration::configopts Main::getConfigOpts() {
@@ -156,8 +152,8 @@ void Main::start(int thread) {
 	} else {
 		// Create a new monitor on all the processors specified either by the user or by the sensor itself. If none are
 		// specified, monitor all processors.
-		for (auto processor :
-			 !processors.isEmpty() ? processors : !sensor.processors.isEmpty() ? sensor.processors : QList<int>{-1}) {
+		for (auto processor : !processors.isEmpty() ? processors : !sensor.processors.isEmpty() ? sensor.processors
+																								: QList<int>() << -1) {
 			int fd;
 
 			/*
@@ -273,18 +269,16 @@ double Main::value(int thread) {
 }
 
 double Main::stop(int thread) {
-	double result = value(thread);
-
 	// Before stopping the counter, get its value one last time...
-	if (context.autopinErrorState() != autopin_estate::AUTOPIN_NOERROR) {
+	double result = value(thread);
+	if (context.isError()) {
 		context.report(Error::MONITOR, "stop", name + ".stop(" + QString::number(thread) + ") failed: value() failed.");
 		return 0;
 	}
 
 	// ... and then clear it.
 	clear(thread);
-
-	if (context.autopinErrorState() != autopin_estate::AUTOPIN_NOERROR) {
+	if (context.isError()) {
 		context.report(Error::MONITOR, "stop", name + ".stop(" + QString::number(thread) + ") failed: clear() failed.");
 		return 0;
 	}

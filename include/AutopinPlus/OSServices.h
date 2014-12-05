@@ -60,7 +60,7 @@ class OSServices : public QObject {
 	 *
 	 * \param[in]	context	Refernce to the context of the object calling the constructor
 	 */
-	explicit OSServices(const AutopinContext &context);
+	explicit OSServices(AutopinContext &context);
 
 	virtual ~OSServices() {}
 
@@ -74,14 +74,6 @@ class OSServices : public QObject {
 	 * The initialization will fail if another OSServices instance is currently in use.
 	 */
 	virtual void init() = 0;
-
-	/*!
-	 * \brief Returns a pointer to the current instance of a subclass
-	 *
-	 * \return A pointer to an instance of a subclass of OSServices which is currently
-	 * 	initialized. If there is no such an instance the method will return 0.
-	 */
-	const OSServices *getCurrentService();
 
 	/*!
 	 * \brief Returns the hostname of the host running autopin+
@@ -270,12 +262,7 @@ signals:
 	/*!
 	 * The runtime context
 	 */
-	AutopinContext context;
-
-	/*!
-	 * Stores a pointer to the acitve instance.
-	 */
-	static OSServices *current_service;
+	AutopinContext &context;
 };
 
 } // namespace AutopinPlus
