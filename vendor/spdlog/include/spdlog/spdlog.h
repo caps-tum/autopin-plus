@@ -42,6 +42,10 @@ namespace spdlog
 // logger.info() << "This is another message" << x << y << z;
 std::shared_ptr<logger> get(const std::string& name);
 
+//
+// Drop the reference to this logger.
+//
+void drop(const std::string &name);
 
 //
 // Set global formatting
@@ -70,14 +74,14 @@ void set_sync_mode();
 //
 // Create multi/single threaded rotating file logger
 //
-std::shared_ptr<logger> rotating_logger_mt(const std::string& logger_name, const std::string& filename, size_t max_file_size, size_t max_files, size_t flush_inverval = 0);
-std::shared_ptr<logger> rotating_logger_st(const std::string& logger_name, const std::string& filename, size_t max_file_size, size_t max_files, size_t flush_inverval = 0);
+std::shared_ptr<logger> rotating_logger_mt(const std::string& logger_name, const std::string& filename, size_t max_file_size, size_t max_files, bool auto_flush = false);
+std::shared_ptr<logger> rotating_logger_st(const std::string& logger_name, const std::string& filename, size_t max_file_size, size_t max_files, bool auto_flush = false);
 
 //
 // Create file logger which creates new file at midnight):
 //
-std::shared_ptr<logger> daily_logger_mt(const std::string& logger_name, const std::string& filename, size_t flush_inverval = 0);
-std::shared_ptr<logger> daily_logger_st(const std::string& logger_name, const std::string& filename, size_t flush_inverval = 0);
+std::shared_ptr<logger> daily_logger_mt(const std::string& logger_name, const std::string& filename, bool auto_flush = false);
+std::shared_ptr<logger> daily_logger_st(const std::string& logger_name, const std::string& filename, bool auto_flush = false);
 
 
 //
