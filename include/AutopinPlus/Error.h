@@ -113,7 +113,11 @@ class Error {
 	error_history errors;
 
 	/*!
-	 * Mutex for safe access to the class
+	 * \brief Mutex for safe access to the class
+	 *
+	 * The mutex is mutable, because locking it doesn't change the
+	 * internal state of the object. It must be locked in some const
+	 * methods, such as autopinErrorState().
 	 */
 	mutable QMutex mutex;
 

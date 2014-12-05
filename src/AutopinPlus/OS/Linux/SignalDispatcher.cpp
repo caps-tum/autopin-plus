@@ -37,6 +37,13 @@ namespace Linux {
 
 int SignalDispatcher::sigchldFd[2];
 
+SignalDispatcher& SignalDispatcher::getInstance() {
+	static SignalDispatcher instance;
+	return instance;
+}
+
+SignalDispatcher::SignalDispatcher() {};
+
 int SignalDispatcher::setupSignalHandler() {
 	// Setup signal handler
 	int ret = 0;

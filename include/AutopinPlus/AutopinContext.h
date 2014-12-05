@@ -36,14 +36,14 @@
 namespace AutopinPlus {
 
 /*!
- * \brief Class encapsulating all runtime information for each class
+ * \brief Class encapsulating logging and error handling
  *
- * This class is a wrapper for accessing the current runtime instances of
- * the classes OutputChannel and Error. Every autopin class
- * relying on the services provided by these classes gets an own instance of
- * AutopinContext.
+ * This class is used by various components in autopinplus for logging
+ * and error handling. Every seperated component should have exactly
+ * one AutopinContext. There is exactly one AutopinContext per
+ * Watchdog. There is also one global context used by Autopin.
  *
- * \sa OutputChannel, Error, Configuration
+ * \sa Error, Configuration
  */
 class AutopinContext : public QObject {
 	Q_OBJECT

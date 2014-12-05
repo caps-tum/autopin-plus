@@ -198,6 +198,8 @@ class Main : public ControlStrategy {
 
 	/*!
 	 * The performance monitor used by the strategy
+	 *
+	 * TODO: Replace raw pointer, with something more suitable
 	 */
 	PerformanceMonitor *monitor;
 

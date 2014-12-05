@@ -48,10 +48,7 @@ class SignalDispatcher : public QObject {
 	/*!
 	 * \brief Get the instance of the SignalDispatcher
 	 */
-	static SignalDispatcher &getInstance() {
-		static SignalDispatcher instance;
-		return instance;
-	}
+	static SignalDispatcher &getInstance();
 
 	/*!
 	 * Must be called before using the SignalDispatcher.
@@ -59,6 +56,13 @@ class SignalDispatcher : public QObject {
 	 * the lifetime of the application.
 	 */
 	static int setupSignalHandler();
+
+	/*!
+	 * Delete functions, so we don't accidently end up with another
+	 * instance of SignalDispatcher
+	 */
+	SignalDispatcher(SignalDispatcher const &) = delete;
+	void operator=(SignalDispatcher const &) = delete;
 
   public slots:
 	/*!
@@ -77,11 +81,9 @@ signals:
 
   private:
 	/*!
-	 * Singleton overwrites
+	 * \brief Constructor
 	 */
-	SignalDispatcher(){};
-	SignalDispatcher(SignalDispatcher const &);
-	void operator=(SignalDispatcher const &);
+	SignalDispatcher();
 
 	/*
 	 * \brief fieldescriptor for the socketpair

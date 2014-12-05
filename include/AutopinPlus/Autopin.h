@@ -60,13 +60,6 @@ class Autopin : public QCoreApplication {
 	 */
 	Autopin(int &argc, char **argv);
 
-	/*!
-	 * \brief Gets the current instance of Autopin
-	 *
-	 * \return the current instance
-	 */
-	static Autopin *instance();
-
   public slots:
 	/*!
 	 * \brief Procedure for initializing the environment
