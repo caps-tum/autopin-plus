@@ -41,7 +41,7 @@ SignalDispatcher &SignalDispatcher::getInstance() {
 	return instance;
 }
 
-SignalDispatcher::SignalDispatcher() {};
+SignalDispatcher::SignalDispatcher(){};
 
 int SignalDispatcher::setupSignalHandler() {
 	// Setup signal handler

@@ -100,8 +100,7 @@ void Main::init() {
 		try {
 			port = Tools::readULong(config.getConfigOption(name + ".port"));
 			context.info("  - " + name + ".port = " + QString::number(port));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'port' option (" + QString(e.what()) + ").");
 			return;
@@ -125,8 +124,7 @@ void Main::init() {
 		try {
 			outlets = Tools::readInts(config.getConfigOptionList(name + ".outlets"));
 			context.info("     - " + name + ".outlets = " + Tools::showInts(outlets).join(" "));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'outlets' option (" + QString(e.what()) + ").");
 			return;
@@ -142,8 +140,7 @@ void Main::init() {
 		try {
 			timeout = Tools::readULong(config.getConfigOption(name + ".timeout"));
 			context.info("  - " + name + ".timeout = " + QString::number(timeout));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'timeout' option (" + QString(e.what()) + ").");
 			return;
@@ -155,8 +152,7 @@ void Main::init() {
 		try {
 			ttl = Tools::readULong(config.getConfigOption(name + ".ttl"));
 			context.info("  - " + name + ".ttl = " + QString::number(ttl));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'ttl' option (" + QString(e.what()) + ").");
 			return;
@@ -189,8 +185,7 @@ void Main::start(int thread) {
 			// Set the command to 0x010F which means "get the current energy consumption on all outlets".
 			// Set the data to "0x01" which means "reset all counters after the response is sent".
 			sendCommand(0x010F, QByteArray(1, 1));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::MONITOR, "start", name + ".start(" + QString::number(thread) +
 														") failed: Could not reset the ClustSafe device (" +
 														QString(e.what()) + ")");
@@ -221,8 +216,7 @@ double Main::value(int thread) {
 			// Set the command to 0x010F which means "get the current energy consumption on all outlets".
 			// Set the data to "0x01" which means "reset all counters after the response is sent".
 			payload = sendCommand(0x010F, QByteArray(1, 1));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::MONITOR, "value", name + ".value(" + QString::number(thread) +
 														") failed: Could not read from the ClustSafe device (" +
 														QString(e.what()) + ")");

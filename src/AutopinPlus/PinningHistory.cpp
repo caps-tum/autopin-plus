@@ -95,10 +95,7 @@ Configuration::configopts::const_iterator PinningHistory::getStrategyOption(QStr
 
 void PinningHistory::setHostname(QString hostname) { this->hostname = hostname; }
 
-void PinningHistory::setConfiguration(QString type, Configuration::configopts opts) {
-	configuration = type;
-	configuration_options = opts;
-}
+void PinningHistory::setConfiguration(QString type) { configuration = type; }
 
 void PinningHistory::setObservedProcess(QString cmd, QString trace, QString comm, QString comm_timeout) {
 	this->cmd = cmd;

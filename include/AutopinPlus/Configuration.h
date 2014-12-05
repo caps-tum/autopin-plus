@@ -67,10 +67,9 @@ class Configuration {
 	 *
 	 * The configuration should not be read here but in the the method readConfiguration().
 	 *
-	 * \param[in] path	    Path to the configuration file
 	 * \param[in] context	Refernce to the context of the object calling the constructor
 	 */
-	Configuration(const QString path, AutopinContext &context);
+	Configuration(AutopinContext &context);
 
 	virtual ~Configuration();
 
@@ -85,13 +84,6 @@ class Configuration {
 	 * \return The name of the configuration
    */
 	QString getName() const;
-
-	/*!
-	 * \brief Returns properties of the configuration
-	 *
-	 * \return A list with the properties of the configuration
-	 */
-	virtual configopts getConfigOpts() const = 0;
 
 	/*!
 	 * \brief Reads an option from the configuration
@@ -198,11 +190,6 @@ class Configuration {
 	virtual QString getEnvVariable(QString name);
 
   protected:
-	/*!
-	 * Stores the path to the configuration file
-	 */
-	QString path;
-
 	/*!
 	 * A reference to the runtime context
 	 */

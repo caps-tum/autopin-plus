@@ -73,6 +73,8 @@ autopin_estate Error::report(Error::autopin_errors error, QString opt) {
 	case SYSTEM:
 		if (opt == "create_socket")
 			setError();
+		else if (opt == "mqqt")
+			setError();
 		else if (opt == "sigset")
 			setError();
 		else if (opt == "get_threads")

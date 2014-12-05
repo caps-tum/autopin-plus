@@ -32,10 +32,12 @@
 #include <AutopinPlus/Error.h>
 #include <list>
 #include <map>
+#include <memory>
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
 #include <utility>
+#include <QFile>
 
 namespace AutopinPlus {
 
@@ -47,15 +49,12 @@ class StandardConfiguration : public Configuration {
 	/*!
 	 * \brief Constructor
 	 *
-	 * The configuration should not be read here but in the the method readConfiguration().
-	 *
-	 * \param[in] path     Path to configuration-file
-	 * \param[in] context  Refernce to the context of the object calling the constructor
+	 * \param[in] configText   QString, which contains the configuration
+	 * \param[in] context      Reference to the context of the object calling the constructor
 	 */
-	StandardConfiguration(const QString path, AutopinContext &context);
+	StandardConfiguration(const QString configText, AutopinContext &context);
 
 	void init() override;
-	Configuration::configopts getConfigOpts() const override;
 	QStringList getConfigOptionList(QString opt) const override;
 
   private:
@@ -79,10 +78,8 @@ class StandardConfiguration : public Configuration {
 	 *
 	 * Reads a configuration file line by line and adds the options in the file
 	 * to the configuration.
-	 *
-	 * \param[in] file Reference to a Textstream containing the configuration.
 	 */
-	void parseConfigurationFile(QTextStream &file);
+	void parseConfigurationFile();
 
 	/*!
 	 * \brief Simple method for parsing configuration options
@@ -115,6 +112,11 @@ class StandardConfiguration : public Configuration {
 	 * \param[in] opt   Pair of a configuration variable and options
 	 */
 	void delOption(arg_pair opt);
+
+	/*!
+	 * \brief QString, which contains the configuration
+	 */
+	QString configText;
 };
 
 } // namespace AutopinPlus
