@@ -82,7 +82,7 @@ signals:
 	/*!
 	 * Counts the instances of Watchdog
 	 */
-	static int counter;
+	static std::atomic_int counter;
 
 	/*!
 	 * \brief Factory function for creating the runtime context

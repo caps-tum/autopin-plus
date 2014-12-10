@@ -31,7 +31,6 @@
 #include <AutopinPlus/MQQTClient.h>
 #include <QFileInfo>
 #include <QString>
-#include <QList>
 #include <memory>
 
 #define EXIT(x) exit(x); return;
@@ -50,11 +49,6 @@ using AutopinPlus::OS::Linux::OSServicesLinux;
 namespace AutopinPlus {
 
 Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), context(std::string("global")) {}
-
-Autopin *Autopin::instance() {
-	QCoreApplication *ptr = QCoreApplication::instance();
-	return static_cast<Autopin *>(ptr);
-}
 
 void Autopin::slot_autopinSetup() {
 	// Start message
@@ -134,13 +128,7 @@ void Autopin::slot_watchdogStop() {
 	QObject *ptr = sender();
 	Watchdog *watchdog = static_cast<Watchdog *>(ptr);
 
-	for (auto i = watchdogs.begin(); i != watchdogs.end();) {
-		if (*i == ptr)
-			i = watchdogs.erase(i);
-		else
-			i++;
-	}
-
+	watchdogs.remove(watchdog);
 	watchdog->deleteLater();
 
 	if (!isDaemon && watchdogs.empty())

@@ -53,7 +53,7 @@ using AutopinPlus::OS::Linux::SignalDispatcher;
 
 namespace AutopinPlus {
 
-int Watchdog::counter = 0;
+std::atomic_int Watchdog::counter(0);
 
 Watchdog::Watchdog(std::unique_ptr<const Configuration> config)
 	: config(std::move(config)), service(nullptr), process(nullptr), strategy(nullptr), context(nullptr) {}
