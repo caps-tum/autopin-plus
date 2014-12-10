@@ -1,8 +1,0 @@
-<map id="G" name="G">
-<area shape="rect" id="node4" href="$d4/d41/classAutopinContext.html" title="Class encapsulating all runtime information for each class." alt="" coords="192,493,339,747"/>
-<area shape="rect" id="node12" href="$d2/dfa/classObservedProcess.html" title="This class implements the internal representation of the process observed by autopin+." alt="" coords="227,1157,433,1587"/>
-<area shape="rect" id="node14" href="$d7/d48/classOSServices.html" title="Abstracts all resources of the underlying operating system needed by autopin+." alt="" coords="287,840,461,1064"/>
-<area shape="rect" id="node19" href="$d4/da7/classConfiguration.html" title="Abstract base class for the general handling of configuration files." alt="" coords="603,811,780,1093"/>
-<area shape="rect" id="node6" href="$da/d72/classOutputChannel.html" title="Class for printing output on the terminal." alt="" coords="139,147,272,429"/>
-<area shape="rect" id="node8" href="$d9/dd6/classError.html" title="Class for error handling." alt="" coords="297,220,439,356"/>
-</map>
