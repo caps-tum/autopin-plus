@@ -1,6 +1,0 @@
-<map id="G" name="G">
-<area shape="rect" id="node1" href="$d5/daa/classPerformanceMonitor.html" title="Base class for performance monitors." alt="" coords="5,56,144,83"/>
-<area shape="rect" id="node3" href="$df/d72/classMonitor__perf.html" title="Implements a performance monitor based on the Linux Performance Counter subsystem." alt="" coords="205,5,299,32"/>
-<area shape="rect" id="node5" href="$dc/d72/classMonitor__perfmon.html" title="This class implements the support for perfmon." alt="" coords="193,56,311,83"/>
-<area shape="rect" id="node7" href="$de/d9c/classMonitor__random.html" title="Random performance counter." alt="" coords="195,107,309,133"/>
-</map>
