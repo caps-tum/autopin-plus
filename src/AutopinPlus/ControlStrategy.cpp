@@ -154,7 +154,7 @@ void ControlStrategy::createPinningHistory() {
 
 void ControlStrategy::setPinningHistoryEnv() {
 	history->setHostname(OS::Linux::OSServicesLinux::getHostname_static());
-	history->setConfiguration(config.getName(), config.getConfigOpts());
+	history->setConfiguration(config.getName());
 	QString comm = (proc.getCommChanAddr() == "") ? "Inactive" : "Active";
 	QString trace = (proc.getTrace()) ? "Active" : "Inactive";
 	history->setObservedProcess(proc.getCmd(), trace, comm, QString::number(proc.getCommTimeout()));
