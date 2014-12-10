@@ -28,3 +28,6 @@
 
 # Build directory
 build
+
+# doxygen directory
+doc/
