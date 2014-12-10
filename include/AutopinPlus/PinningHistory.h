@@ -149,9 +149,8 @@ class PinningHistory {
 	 * \brief Sets the information about the configuration
 	 *
 	 * \param[in] type   Type of the configuration
-	 * \param[in] opts   Options of the configuration
 	 */
-	void setConfiguration(QString type, Configuration::configopts opts);
+	void setConfiguration(QString type);
 
 	/*!
 	 * \brief Sets the information about the observed process

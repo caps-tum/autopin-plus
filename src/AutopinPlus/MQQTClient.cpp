@@ -33,6 +33,8 @@ using AutopinPlus::OS::Linux::OSServicesLinux;
 
 namespace AutopinPlus {
 
+MQQTClient::MQQTClient() {};
+
 int MQQTClient::init() {
 	int ret = MOSQ_ERR_SUCCESS;
 
@@ -61,6 +63,19 @@ int MQQTClient::init() {
 	return 0;
 }
 
-void MQQTClient::
+void MQQTClient::messageCallback(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message) {
+	QString text = "";
+	char* ptr = static_cast<char*>(message->payload);
+
+	for (int i = 0; i <message->payloadlen; i++) {
+		text += ptr[i];
+	}
+
+	getInstance().emitSignalReceivedProcessConfig(text);
+}
+
+void MQQTClient::emitSignalReceivedProcessConfig(const QString config) {
+	emit sig_receivedProcessConfig(config);
+}	
 
 } //Namespace AutopinPlus

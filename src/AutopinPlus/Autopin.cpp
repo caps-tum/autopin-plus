@@ -34,6 +34,8 @@
 #include <QList>
 #include <memory>
 
+#define EXIT(x) exit(x); return;
+
 /*
  * Every implementation of OSServices must provide a static method
  * for reading the hostname of the system. The mapping to the right
@@ -71,28 +73,37 @@ void Autopin::slot_autopinSetup() {
 	context.info("Setting up MQQT communication");
 	if (MQQTClient::getInstance().init() !=0) {
 		context.report(Error::SYSTEM, "mqqt", "Cannot initalize MQQT client");
-		exit(-1);
+		EXIT(1);
 	}
+	connect(&MQQTClient::getInstance(), SIGNAL(sig_receivedProcessConfig(QString)),
+			this, SLOT(slot_runProcess(QString)));
 
 	// Setting up signal Handlers
 	context.info("Setting up signal handlers");
 	if (SignalDispatcher::setupSignalHandler() != 0) {
 		context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
-		exit(-2);
+		EXIT(2);
 	}
 
 	// Read configuration
 	context.info("Reading configurations ...");
 
-	std::list<StandardConfiguration *> configs;
+	std::list<std::unique_ptr<Configuration>> configs;
 
 	bool isConfig = false;
 	for (int i = 1; i < this->argc(); i++) {
 		QString arg = this->argv()[i];
 		if (isConfig) {
-			StandardConfiguration *config = new StandardConfiguration(arg, context);
-			config->init();
-			configs.push_back(config);
+			QFile configFile(arg);
+			if(configFile.open(QIODevice::ReadOnly)) {
+				QTextStream stream(&configFile);
+				std::unique_ptr<Configuration> config(new StandardConfiguration(stream.readAll(), context));
+				config->init();
+				configs.push_back(std::move(config));
+			} else {
+				context.report(Error::FILE_NOT_FOUND, "config_file",
+							   "Could not read configuration \"" + arg + "\"");
+			}
 			isConfig = false;
 			continue;
 		}
@@ -106,14 +117,16 @@ void Autopin::slot_autopinSetup() {
 		}
 	}
 
-	for (const auto config : configs) {
-		Watchdog *watchdog = new Watchdog(std::unique_ptr<const Configuration>(config));
+	for (auto& config : configs) {
+		Watchdog *watchdog = new Watchdog(std::move(config));
 		connect(this, SIGNAL(sig_autopinReady()), watchdog, SLOT(slot_watchdogRun()));
 		connect(watchdog, SIGNAL(sig_watchdogStop()), this, SLOT(slot_watchdogStop()));
 
 		watchdogs.push_back(watchdog);
 	}
 
+	configs.clear();
+	
 	emit sig_autopinReady();
 }
 
@@ -130,6 +143,19 @@ void Autopin::slot_watchdogStop() {
 
 	watchdog->deleteLater();
 
-	if (!isDaemon && watchdogs.empty()) exit(0);
+	if (!isDaemon && watchdogs.empty())
+		EXIT(0);
+}
+
+void Autopin::slot_runProcess(const QString configText) {
+	std::unique_ptr<Configuration> config(new StandardConfiguration(configText, context));
+	config->init();
+
+	Watchdog *watchdog = new Watchdog(std::move(config));
+	connect(watchdog, SIGNAL(sig_watchdogStop()), this, SLOT(slot_watchdogStop()));
+
+	watchdogs.push_back(watchdog);
+
+	watchdog->slot_watchdogRun();
 }
 } // namespace AutopinPlus

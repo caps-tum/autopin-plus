@@ -28,15 +28,19 @@
 
 #pragma once
 
-#include <mosquitto.h>
+#include <QObject>
+#include <mosquittopp.h>
+#include <AutopinPlus/Configuration.h>
+#include <AutopinPlus/StandardConfiguration.h>
 
 namespace AutopinPlus {
 
 /*!
  * \brief Singleton, which handles the MQQT Communication
  */
-
-class MQQTClient  {
+	
+class MQQTClient : public QObject  {
+	Q_OBJECT
  public:
 	/*!
 	 * \brief Get the instance of the MQQTClient
@@ -51,11 +55,20 @@ class MQQTClient  {
 	 */
 	int init();
 
+ signals:
+	/*!
+	 * Is emitted when the MQQTClient receives a message to a add a
+	 * process.
+	 *
+	 * \param[in] text  QString, which contains the configuration
+	 */
+	void sig_receivedProcessConfig(const QString config);
+
  private:
 	/*!
 	 * Singleton overwrites
 	 */
-	MQQTClient(){};
+	MQQTClient();
 	MQQTClient(MQQTClient const &);
 	void operator=(MQQTClient const &);
 
@@ -65,9 +78,14 @@ class MQQTClient  {
 	struct mosquitto *mosq;
 
 	/*!
-	 * Gets called by mosquitto, when a message is received
+	 * Callback for mosquitto, when a message is received
 	 */
 	static void messageCallback(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message);
+
+	/*!
+	 * \brief Helper function to emit the signal sig_receivedProcessConfig
+	 */
+	void emitSignalReceivedProcessConfig(const QString config);
 };
 
 } // namespace AutopinPlus

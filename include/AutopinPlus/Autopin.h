@@ -85,6 +85,11 @@ class Autopin : public QCoreApplication {
 	 */
 	void slot_watchdogStop();
 
+	/*!
+	 * \brief Setup new Watchdog and run the process
+	 */
+	void slot_runProcess(const QString configText);
+
 signals:
 	/*!
 	 * \brief Used for signaling that the Qt event loop is running
