@@ -57,7 +57,7 @@ class Watchdog : public QObject {
 	 *
 	 * \param[in] config  Config of the process, which is run by this class
 	 */
-	Watchdog(std::unique_ptr<const Configuration> config);
+	explicit Watchdog(std::unique_ptr<const Configuration> config);
 
 	/*!
 	 * \brief Destructor of Watchdog

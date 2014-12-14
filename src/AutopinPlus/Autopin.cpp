@@ -111,7 +111,6 @@ void Autopin::slot_watchdogStop() {
 	watchdogs.remove(watchdog);
 	watchdog->deleteLater();
 
-	if (!isDaemon && watchdogs.empty())
-		QCoreApplication::exit(0);
+	if (!isDaemon && watchdogs.empty()) QCoreApplication::exit(0);
 }
 } // namespace AutopinPlus

@@ -53,7 +53,7 @@ class AutopinContext : public QObject {
 	 *
 	 * \param[in] name Name for the AutopinContext, which is logged
 	 */
-	AutopinContext(std::string name);
+	explicit AutopinContext(std::string name);
 
 	/*!
 	 * \brief Prints a message

@@ -37,7 +37,7 @@ namespace Linux {
 
 int SignalDispatcher::sigchldFd[2];
 
-SignalDispatcher& SignalDispatcher::getInstance() {
+SignalDispatcher &SignalDispatcher::getInstance() {
 	static SignalDispatcher instance;
 	return instance;
 }

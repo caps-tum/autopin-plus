@@ -85,7 +85,7 @@ void TraceThread::attach() {
 			long ret;
 			pid_t pid = attach_task;
 
-			ret = ptrace(PTRACE_ATTACH, pid, NULL, NULL);
+			ret = ptrace(PTRACE_ATTACH, pid, nullptr, nullptr);
 
 			if (ret == -1) {
 				errsave = errno;
@@ -109,7 +109,7 @@ void TraceThread::attach() {
 			}
 
 			// set ptrace options
-			ret = ptrace(PTRACE_SETOPTIONS, pid, NULL, ptrace_opt);
+			ret = ptrace(PTRACE_SETOPTIONS, pid, nullptr, ptrace_opt);
 			if (ret == -1) {
 				errsave = errno;
 
@@ -121,7 +121,7 @@ void TraceThread::attach() {
 								   "Could set ptrace options for process " + QString::number(pid));
 				}
 
-				ptrace(PTRACE_DETACH, pid, NULL, NULL);
+				ptrace(PTRACE_DETACH, pid, nullptr, nullptr);
 
 				continue;
 			} else {
@@ -194,17 +194,17 @@ void TraceThread::run() {
 		} else if (WIFSTOPPED(status)) {
 
 			if (WSTOPSIG(status) == SIGTRAP) {
-				ret = ptrace(PTRACE_GETEVENTMSG, trace_pid, NULL, (void *)&event_msg);
+				ret = ptrace(PTRACE_GETEVENTMSG, trace_pid, nullptr, (void *)&event_msg);
 
 				if (ret != 0)
 					context.report(Error::PROC_TRACE, "ptrace_eventmsg", "Could not get ptrace event information");
 
 				switch (status >> 16) {
-				case (PTRACE_EVENT_CLONE):
+				case(PTRACE_EVENT_CLONE) :
 
-				case (PTRACE_EVENT_FORK):
+				case(PTRACE_EVENT_FORK) :
 
-				case (PTRACE_EVENT_VFORK):
+				case(PTRACE_EVENT_VFORK) :
 					newTask(event_msg);
 					break;
 
@@ -236,7 +236,7 @@ void TraceThread::run() {
 
 void TraceThread::ptraceContinue(pid_t pid, unsigned long sig) {
 	long ret;
-	ret = ptrace(PTRACE_CONT, pid, NULL, (void *)sig);
+	ret = ptrace(PTRACE_CONT, pid, nullptr, (void *)sig);
 
 	if (ret == -1) context.report(Error::PROC_TRACE, "cont_failed", "Could not continue task " + QString::number(pid));
 }
@@ -246,7 +246,7 @@ void TraceThread::newTask(int pid) {
 	if (new_tasks.find(pid) != new_tasks.end()) {
 		emit sig_TaskCreated(pid);
 
-		ret = ptrace(PTRACE_SETOPTIONS, pid, NULL, ptrace_opt);
+		ret = ptrace(PTRACE_SETOPTIONS, pid, nullptr, ptrace_opt);
 
 		if (ret != 0)
 			context.report(Error::PROC_TRACE, "set_options",
