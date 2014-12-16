@@ -93,6 +93,16 @@ signals:
 
   private:
 	/*!
+	 * \brief Prints a help message to stdout
+	 */
+	void printHelp();
+
+	/*!
+	 * \brief Prints the version to stdout
+	 */
+	void printVersion();
+
+	/*!
 	 * Stores a pointer to an instance of the class AutopinContext.
 	 */
 	AutopinContext context;
