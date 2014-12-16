@@ -35,6 +35,9 @@
 #include <iostream>
 #include <iomanip>
 
+// For getopt, GNU getopt only
+#include <getopt.h>
+
 /*
  * Every implementation of OSServices must provide a static method
  * for reading the hostname of the system. The mapping to the right
@@ -43,7 +46,10 @@
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
 #include <AutopinPlus/OS/Linux/SignalDispatcher.h>
 
-// Macro for exiting the application
+/* Macro for exiting the application.
+ * The return is needed as QApplication::exit() does return
+ * from its invokation.
+ */
 #define EXIT(x) \
 	exit(x);    \
 	return;
@@ -53,14 +59,18 @@ using AutopinPlus::OS::Linux::OSServicesLinux;
 
 namespace AutopinPlus {
 
-Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), context(std::string("global")){};
+Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), context(std::string("global")) {}
 
 void Autopin::slot_autopinSetup() {
+
+	struct option long_options[] = {
+		{"conf", 1, NULL, 'c'}, {"daemon", 0, NULL, 'd'}, {"version", 0, NULL, 'v'}, {"help", 0, NULL, 'h'}};
+
 	// Parsing commandline arguments
 	std::list<QString> configFiles;
 
 	int opt;
-	while ((opt = getopt_long(this->argc(), this->argv(), "vhdc:", Autopin::long_options, NULL)) != -1) {
+	while ((opt = getopt_long(this->argc(), this->argv(), "vhdc:", long_options, NULL)) != -1) {
 		switch (opt) {
 		case ('v'):
 			printVersion();
@@ -129,9 +139,6 @@ void Autopin::slot_watchdogStop() {
 	if (!isDaemon && watchdogs.empty()) QCoreApplication::exit(0);
 }
 
-struct option Autopin::long_options[] = {
-	{"conf", 1, NULL, 'c'}, {"daemon", 0, NULL, 'd'}, {"version", 0, NULL, 'v'}, {"help", 0, NULL, 'h'}};
-
 void Autopin::printHelp() {
 	printVersion();
 	std::cout << "\nUsage: " << applicationName().toStdString() << " [OPTION]\n";
@@ -147,5 +154,5 @@ void Autopin::printHelp() {
 void Autopin::printVersion() {
 	std::cout << applicationName().toStdString() << " " << applicationVersion().toStdString() << std::endl;
 	std::cout << "QT Version: " << qVersion() << std::endl;
-};
+}
 } // namespace AutopinPlus

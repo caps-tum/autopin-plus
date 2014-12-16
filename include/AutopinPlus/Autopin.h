@@ -35,9 +35,6 @@
 #include <list>
 #include <memory>
 
-// For getopt, GNU getopt only
-#include <getopt.h>
-
 namespace AutopinPlus {
 
 /*!
@@ -104,11 +101,6 @@ signals:
 	 * \brief Prints the version to stdout
 	 */
 	void printVersion();
-
-	/*!
-	 * \brief Getopt struct for commandline argument parsing
-	 */
-	static struct option long_options[];
 
 	/*!
 	 * Stores a pointer to an instance of the class AutopinContext.
