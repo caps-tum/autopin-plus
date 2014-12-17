@@ -30,7 +30,8 @@
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/OS/SignalDispatcher.h>
-#include <AutopinPlus/MQQTClient.h>
+#include <AutopinPlus/MQTTClient.h>
+>>>>>>> Rename MQQT -> MQTT
 #include <QFileInfo>
 #include <QString>
 #include <memory>
@@ -122,20 +123,20 @@ void Autopin::slot_autopinSetup() {
 
 		// Setting up MQQT Communcation
 		context.info("Setting up MQQT communication");
-		MQQTClient::MQQT_STATUS status = MQQTClient::init(mqqtHostname, mqqtPort);
+		MQTTClient::MQTT_STATUS status = MQTTClient::init(mqqtHostname, mqqtPort);
 		QString error_message = "";
 		switch (status) {
-		case MQQTClient::MOSQUITTO:
+		case MQTTClient::MOSQUITTO:
 			error_message = "Cannot initalize MQQT client";
 			break;
-		case MQQTClient::CONNECT:
+		case MQTTClient::CONNECT:
 			error_message = "Cannot connect to MQQT broker on host " + QString::fromStdString(mqqtHostname) +
 							" on port " + QString::number(mqqtPort);
 			break;
-		case MQQTClient::LOOP:
+		case MQTTClient::LOOP:
 			error_message = "Cannot initalize MQQT loop";
 			break;
-		case MQQTClient::SUSCRIBE:
+		case MQTTClient::SUSCRIBE:
 			error_message = "Cannot suscripe to MQQT topics";
 			break;
 		}
@@ -145,7 +146,7 @@ void Autopin::slot_autopinSetup() {
 			EXIT(1);
 		}
 
-		connect(&MQQTClient::getInstance(), SIGNAL(sig_receivedProcessConfig(QString)), this,
+		connect(&MQTTClient::getInstance(), SIGNAL(sig_receivedProcessConfig(QString)), this,
 				SLOT(slot_runProcess(QString)));
 	}
 

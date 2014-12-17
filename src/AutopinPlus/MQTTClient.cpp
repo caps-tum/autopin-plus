@@ -26,20 +26,20 @@
  * http://autopin.in.tum.de
  */
 
-#include <AutopinPlus/MQQTClient.h>
+#include <AutopinPlus/MQTTClient.h>
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
 
 using AutopinPlus::OS::Linux::OSServicesLinux;
 
 namespace AutopinPlus {
 
-const std::vector<std::string> MQQTClient::commands = {"AddProcess"};
-const std::string MQQTClient::baseSuscriptionTopic =
+const std::vector<std::string> MQTTClient::commands = {"AddProcess"};
+const std::string MQTTClient::baseSuscriptionTopic =
 	"AutopinPlus/" + OSServicesLinux::getHostname_static().toStdString() + "/";
 
-MQQTClient::MQQTClient(){};
+MQTTClient::MQTTClient(){};
 
-MQQTClient::MQQT_STATUS MQQTClient::init(std::string hostname, int port) {
+MQTTClient::MQTT_STATUS MQTTClient::init(std::string hostname, int port) {
 
 	int ret = MOSQ_ERR_SUCCESS;
 	mosquitto_lib_init();
@@ -67,7 +67,7 @@ MQQTClient::MQQT_STATUS MQQTClient::init(std::string hostname, int port) {
 	return OK;
 }
 
-void MQQTClient::messageCallback(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message) {
+void MQTTClient::messageCallback(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message) {
 	std::string topic(message->topic);
 
 	// AddProcess
@@ -84,6 +84,6 @@ void MQQTClient::messageCallback(struct mosquitto *mosq, void *obj, const struct
 	}
 }
 
-void MQQTClient::emitSignalReceivedProcessConfig(const QString config) { emit sig_receivedProcessConfig(config); }
+void MQTTClient::emitSignalReceivedProcessConfig(const QString config) { emit sig_receivedProcessConfig(config); }
 
 } // Namespace AutopinPlus

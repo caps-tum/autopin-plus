@@ -39,38 +39,38 @@ namespace AutopinPlus {
  * \brief Singleton, which handles the MQQT Communication
  */
 
-class MQQTClient : public QObject {
+class MQTTClient : public QObject {
 	Q_OBJECT
   public:
 	/*!
-	 * \brief Get the instance of the MQQTClient
+	 * \brief Get the instance of the MQTTClient
 	 */
-	static MQQTClient &getInstance() {
-		static MQQTClient instance;
+	static MQTTClient &getInstance() {
+		static MQTTClient instance;
 		return instance;
 	}
 
 	/*!
-	 * \brief Return status of MQQTClient::init()
+	 * \brief Return status of MQTTClient::init()
 	 *
 	 * \sa init
 	 */
-	enum MQQT_STATUS { OK, MOSQUITTO, CONNECT, LOOP, SUSCRIBE };
+	enum MQTT_STATUS { OK, MOSQUITTO, CONNECT, LOOP, SUSCRIBE };
 
 	/*!
-	 * \brief Initalizes the MQQTClient
+	 * \brief Initalizes the MQTTClient
 	 */
-	static MQQTClient::MQQT_STATUS init(std::string hostname, int port);
+	static MQTTClient::MQTT_STATUS init(std::string hostname, int port);
 
 	/*!
 	 * Delete funtions to ensure singleton functionality
 	 */
-	MQQTClient(MQQTClient const &) = delete;
-	void operator=(MQQTClient const &) = delete;
+	MQTTClient(MQTTClient const &) = delete;
+	void operator=(MQTTClient const &) = delete;
 
 signals:
 	/*!
-	 * Is emitted when the MQQTClient receives a message to a add a
+	 * Is emitted when the MQTTClient receives a message to a add a
 	 * process.
 	 *
 	 * \param[in] text  QString, which contains the configuration
@@ -81,7 +81,7 @@ signals:
 	/*!
 	 * \brief Constructor
 	 */
-	MQQTClient();
+	MQTTClient();
 
 	/*!
 	 * \brief Strings, which this client suscripes to
