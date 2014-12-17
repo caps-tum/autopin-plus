@@ -29,7 +29,7 @@
 #pragma once
 
 #include <QObject>
-#include <mosquittopp.h>
+#include <mosquitto.h>
 #include <AutopinPlus/Configuration.h>
 #include <AutopinPlus/StandardConfiguration.h>
 

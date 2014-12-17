@@ -14,7 +14,7 @@ if(MOSQUITTO_INCLUDE_DIR)
   set(MOSQUITTO_FIND_QUIETLY TRUE)
 endif(MOSQUITTO_INCLUDE_DIR)
 
-find_path(MOSQUITTO_INCLUDE_DIR mosquittopp.h)
+find_path(MOSQUITTO_INCLUDE_DIR mosquitto.h)
 find_library(MOSQUITTO_LIBRARY NAMES libmosquitto mosquitto)
 
 # Handle the QUIETLY and REQUIRED arguments and set MOSQUITTO_FOUND to TRUE if
