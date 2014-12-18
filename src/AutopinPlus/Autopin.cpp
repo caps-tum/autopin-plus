@@ -121,23 +121,23 @@ void Autopin::slot_autopinSetup() {
 			EXIT(1);
 		}
 
-		// Setting up MQQT Communcation
-		context.info("Setting up MQQT communication");
+		// Setting up MQTT Communcation
+		context.info("Setting up MQTT communication");
 		MQTTClient::MQTT_STATUS status = MQTTClient::init(mqqtHostname, mqqtPort);
 		QString error_message = "";
 		switch (status) {
 		case MQTTClient::MOSQUITTO:
-			error_message = "Cannot initalize MQQT client";
+			error_message = "Cannot initalize MQTT client";
 			break;
 		case MQTTClient::CONNECT:
-			error_message = "Cannot connect to MQQT broker on host " + QString::fromStdString(mqqtHostname) +
+			error_message = "Cannot connect to MQTT broker on host " + QString::fromStdString(mqqtHostname) +
 							" on port " + QString::number(mqqtPort);
 			break;
 		case MQTTClient::LOOP:
-			error_message = "Cannot initalize MQQT loop";
+			error_message = "Cannot initalize MQTT loop";
 			break;
 		case MQTTClient::SUSCRIBE:
-			error_message = "Cannot suscripe to MQQT topics";
+			error_message = "Cannot suscripe to MQTT topics";
 			break;
 		}
 
