@@ -31,25 +31,16 @@
 #include <AutopinPlus/Logger/External/Main.h>
 #include <AutopinPlus/Monitor/ClustSafe/Main.h>
 #include <AutopinPlus/Monitor/GPerf/Main.h>
-#include <AutopinPlus/Monitor/Perf/Main.h>
 #include <AutopinPlus/Monitor/Random/Main.h>
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
-#include <AutopinPlus/Strategy/History/Main.h>
 #include <AutopinPlus/Strategy/Noop/Main.h>
+#include <AutopinPlus/OS/OSServices.h>
+#include <AutopinPlus/OS/SignalDispatcher.h>
 #include <QString>
 #include <QTimer>
 #include <QList>
 #include <memory>
 
-/*
- * Every implementation of OSServices must provide a static method
- * for reading the hostname of the system. The mapping to the right
- * OSServices class is done with a macro (see os_linux).
- */
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
-#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
-
-using AutopinPlus::OS::Linux::SignalDispatcher;
 
 namespace AutopinPlus {
 
@@ -161,12 +152,6 @@ void Watchdog::createPerformanceMonitors() {
 			continue;
 		}
 
-		if (current_type == "perf") {
-			monitors.push_back(
-				std::unique_ptr<Monitor::Perf::Main>(new Monitor::Perf::Main(current_monitor, *config, *context)));
-			continue;
-		}
-
 		if (current_type == "random") {
 			monitors.push_back(
 				std::unique_ptr<Monitor::Random::Main>(new Monitor::Random::Main(current_monitor, *config, *context)));
@@ -194,12 +179,6 @@ void Watchdog::createControlStrategy() {
 		return;
 	}
 
-	if (strategy_config == "history") {
-		strategy = std::unique_ptr<ControlStrategy>(
-			new Strategy::History::Main(*config, *process, *service, monitors, *context));
-		return;
-	}
-
 	if (strategy_config == "noop") {
 		strategy =
 			std::unique_ptr<ControlStrategy>(new Strategy::Noop::Main(*config, *process, *service, monitors, *context));
@@ -221,13 +200,14 @@ void Watchdog::createDataLoggers() {
 	}
 }
 
-void Watchdog::createOSServices() { service = std::unique_ptr<OSServices>(new OS::Linux::OSServicesLinux(*context)); }
+void Watchdog::createOSServices() { service = std::unique_ptr<OS::OSServices>(new OS::OSServices(*context)); }
 
 void Watchdog::createObservedProcess() {
 	process = std::unique_ptr<ObservedProcess>(new ObservedProcess(*config, *service, *context));
 }
 
 void Watchdog::createComponentConnections() {
+	using AutopinPlus::OS::SignalDispatcher;
 	// Connection between SignalDispatcher and ObservedProcess
 	connect(&SignalDispatcher::getInstance(), SIGNAL(sig_ProcTerminated(int, int)), process.get(),
 			SLOT(slot_ProcTerminated(int, int)));

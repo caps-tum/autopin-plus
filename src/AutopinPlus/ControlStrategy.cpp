@@ -29,7 +29,7 @@
 #include <AutopinPlus/ControlStrategy.h>
 #include <AutopinPlus/XMLPinningHistory.h>
 
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/OSServices.h>
 
 #include <algorithm>
 #include <QChar>
@@ -39,7 +39,7 @@
 
 namespace AutopinPlus {
 
-ControlStrategy::ControlStrategy(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+ControlStrategy::ControlStrategy(const Configuration &config, const ObservedProcess &proc, OS::OSServices &service,
 								 const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: config(config), proc(proc), service(service), monitors(monitors), context(context), name("ControlStrategy") {}
 
@@ -153,7 +153,7 @@ void ControlStrategy::createPinningHistory() {
 }
 
 void ControlStrategy::setPinningHistoryEnv() {
-	history->setHostname(OS::Linux::OSServicesLinux::getHostname_static());
+	history->setHostname(OS::OSServices::getHostname_static());
 	history->setConfiguration(config.getName(), config.getConfigOpts());
 	QString comm = (proc.getCommChanAddr() == "") ? "Inactive" : "Active";
 	QString trace = (proc.getTrace()) ? "Active" : "Inactive";

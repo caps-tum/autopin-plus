@@ -26,9 +26,8 @@
  * http://autopin.in.tum.de
  */
 
-#include <AutopinPlus/OS/Linux/TraceThread.h>
-
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/TraceThread.h>
+#include <AutopinPlus/OS/OSServices.h>
 #include <errno.h>
 #include <signal.h>
 #include <sys/ptrace.h>
@@ -37,7 +36,6 @@
 
 namespace AutopinPlus {
 namespace OS {
-namespace Linux {
 
 TraceThread::TraceThread(AutopinContext &context)
 	: context(context), pid(-1), ptrace_opt(PTRACE_O_TRACEFORK | PTRACE_O_TRACEVFORK | PTRACE_O_TRACECLONE),
@@ -292,6 +290,5 @@ bool TraceThread::alarm_occured = false;
 
 void TraceThread::alrmSignalHandler(int param) { alarm_occured = true; }
 
-} // namespace Linux
 } // namespace OS
 } // namespace AutopinPlus

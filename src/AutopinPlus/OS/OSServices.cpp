@@ -26,7 +26,7 @@
  * http://autopin.in.tum.de
  */
 
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/OSServices.h>
 
 #include <AutopinPlus/ObservedProcess.h>
 #include <errno.h>
@@ -57,17 +57,16 @@
 
 namespace AutopinPlus {
 namespace OS {
-namespace Linux {
 
-OSServicesLinux::OSServicesLinux(AutopinContext &context)
-	: OSServices(context), tracer(context), comm_notifier(nullptr), server_socket(-1), client_socket(-1) {
+OSServices::OSServices(AutopinContext &context)
+	: context(context), tracer(context), comm_notifier(nullptr), server_socket(-1), client_socket(-1) {
 	integer = QRegExp("\\d+");
 
 	connect(&tracer, SIGNAL(sig_TaskCreated(int)), this, SIGNAL(sig_TaskCreated(int)));
 	connect(&tracer, SIGNAL(sig_TaskTerminated(int)), this, SIGNAL(sig_TaskTerminated(int)));
 }
 
-OSServicesLinux::~OSServicesLinux() {
+OSServices::~OSServices() {
 	detachFromProcess();
 	deinitCommChannel();
 
@@ -76,13 +75,13 @@ OSServicesLinux::~OSServicesLinux() {
 	if (comm_notifier != nullptr) delete comm_notifier;
 }
 
-bool OSServicesLinux::autopin_attached = false;
+bool OSServices::autopin_attached = false;
 
-void OSServicesLinux::init() { context.info("Initializing OS services"); }
+void OSServices::init() { context.info("Initializing OS services"); }
 
-QString OSServicesLinux::getHostname() { return getHostname_static(); }
+QString OSServices::getHostname() { return getHostname_static(); }
 
-QString OSServicesLinux::getCommDefaultAddr() {
+QString OSServices::getCommDefaultAddr() {
 	QString result;
 	const char *homedir = getenv("HOME");
 
@@ -97,7 +96,7 @@ QString OSServicesLinux::getCommDefaultAddr() {
 	return result;
 }
 
-QString OSServicesLinux::getHostname_static() {
+QString OSServices::getHostname_static() {
 	QString qhostname;
 
 	char hostname[30];
@@ -107,7 +106,7 @@ QString OSServicesLinux::getHostname_static() {
 	return qhostname;
 }
 
-int OSServicesLinux::createProcess(QString cmd, bool wait) {
+int OSServices::createProcess(QString cmd, bool wait) {
 	pid_t pid;
 
 	struct sigaction old_usr;
@@ -181,7 +180,7 @@ int OSServicesLinux::createProcess(QString cmd, bool wait) {
 	return -1;
 }
 
-void OSServicesLinux::attachToProcess(ObservedProcess *observed_process) {
+void OSServices::attachToProcess(ObservedProcess *observed_process) {
 	QMutexLocker locker(&attach);
 	int ret = 0;
 
@@ -201,19 +200,19 @@ void OSServicesLinux::attachToProcess(ObservedProcess *observed_process) {
 	traceattach = tracer.init(observed_process);
 
 	// Wait until the thread has attached to all tasks
-	context.debug("OSServicesLinux is waiting until the thread has attached");
+	context.debug("OSServices is waiting until the thread has attached");
 	traceattach->lock();
 	traceattach->unlock();
 }
 
-void OSServicesLinux::detachFromProcess() {
+void OSServices::detachFromProcess() {
 	if (!tracer.isRunning()) return;
 
 	context.info("Detaching from the observed process");
 	tracer.deinit();
 }
 
-void OSServicesLinux::initCommChannel(ObservedProcess *proc) {
+void OSServices::initCommChannel(ObservedProcess *proc) {
 	if (server_socket != -1)
 		context.report(Error::COMM, "already_initialized", "The communication channel is already initialized");
 
@@ -264,7 +263,7 @@ void OSServicesLinux::initCommChannel(ObservedProcess *proc) {
 	}
 }
 
-void OSServicesLinux::deinitCommChannel() {
+void OSServices::deinitCommChannel() {
 	if (comm_notifier != nullptr) {
 		delete comm_notifier;
 		comm_notifier = nullptr;
@@ -276,7 +275,7 @@ void OSServicesLinux::deinitCommChannel() {
 	}
 }
 
-void OSServicesLinux::connectCommChannel(int timeout) {
+void OSServices::connectCommChannel(int timeout) {
 	int result;
 
 	if (server_socket == -1) {
@@ -336,7 +335,7 @@ void OSServicesLinux::connectCommChannel(int timeout) {
 	}
 }
 
-void OSServicesLinux::sendMsg(int event_id, int arg, double val) {
+void OSServices::sendMsg(int event_id, int arg, double val) {
 
 	if (client_socket == -1) context.report(Error::COMM, "not_initialized", "The communication channel is not active");
 
@@ -350,7 +349,7 @@ void OSServicesLinux::sendMsg(int event_id, int arg, double val) {
 	if (result == -1) context.report(Error::COMM, "send", "Cannot send data to the observed process");
 }
 
-void OSServicesLinux::slot_msgReceived(int socket) {
+void OSServices::slot_msgReceived(int socket) {
 	comm_notifier->setEnabled(false);
 
 	struct autopin_msg msg;
@@ -365,7 +364,7 @@ void OSServicesLinux::slot_msgReceived(int socket) {
 	comm_notifier->setEnabled(true);
 }
 
-ProcessTree::autopin_tid_list OSServicesLinux::getProcessThreads(int pid) {
+ProcessTree::autopin_tid_list OSServices::getProcessThreads(int pid) {
 	QMutexLocker locker(&mutex);
 
 	ProcessTree::autopin_tid_list result;
@@ -397,7 +396,7 @@ ProcessTree::autopin_tid_list OSServicesLinux::getProcessThreads(int pid) {
 	return result;
 }
 
-ProcessTree::autopin_tid_list OSServicesLinux::getChildProcesses(int pid) {
+ProcessTree::autopin_tid_list OSServices::getChildProcesses(int pid) {
 	QMutexLocker locker(&mutex);
 
 	ProcessTree::autopin_tid_list result;
@@ -442,7 +441,7 @@ ProcessTree::autopin_tid_list OSServicesLinux::getChildProcesses(int pid) {
 	return result;
 }
 
-int OSServicesLinux::getTaskSortId(int tid) {
+int OSServices::getTaskSortId(int tid) {
 	QMutexLocker locker(&mutex);
 
 	QString str_result = getProcEntry(tid, 21);
@@ -453,7 +452,7 @@ int OSServicesLinux::getTaskSortId(int tid) {
 	return str_result.toInt();
 }
 
-void OSServicesLinux::setAffinity(int tid, int cpu) {
+void OSServices::setAffinity(int tid, int cpu) {
 	cpu_set_t cores;
 	pid_t linux_tid = tid;
 	int ret = 0;
@@ -470,7 +469,7 @@ void OSServicesLinux::setAffinity(int tid, int cpu) {
 					   "Could not pin thread " + QString::number(tid) + " to cpu " + QString::number(cpu));
 }
 
-ProcessTree::autopin_tid_list OSServicesLinux::getPid(QString proc) {
+ProcessTree::autopin_tid_list OSServices::getPid(QString proc) {
 	QMutexLocker locker(&mutex);
 
 	ProcessTree::autopin_tid_list result;
@@ -508,7 +507,7 @@ ProcessTree::autopin_tid_list OSServicesLinux::getPid(QString proc) {
 	return result;
 }
 
-QString OSServicesLinux::getCmd(int pid) {
+QString OSServices::getCmd(int pid) {
 	QMutexLocker locker(&mutex);
 	QString result;
 
@@ -532,7 +531,7 @@ QString OSServicesLinux::getCmd(int pid) {
 	return result;
 }
 
-QString OSServicesLinux::getProcEntry(int tid, int index, bool error) {
+QString OSServices::getProcEntry(int tid, int index, bool error) {
 	QString result = "";
 
 	if (index < 0 || index > 43) {
@@ -609,9 +608,9 @@ QString OSServicesLinux::getProcEntry(int tid, int index, bool error) {
 	return result;
 }
 
-void OSServicesLinux::usrSignalHandler(int param) { autopin_attached = true; }
+void OSServices::usrSignalHandler(int param) { autopin_attached = true; }
 
-QStringList OSServicesLinux::getArguments(QString cmd) {
+QStringList OSServices::getArguments(QString cmd) {
 	QStringList result;
 	QString token = "";
 	int state = 0;
@@ -661,7 +660,7 @@ QStringList OSServicesLinux::getArguments(QString cmd) {
 	return result;
 }
 
-ProcessTree::autopin_tid_list OSServicesLinux::convertQStringList(QStringList &qlist) {
+ProcessTree::autopin_tid_list OSServices::convertQStringList(QStringList &qlist) {
 	ProcessTree::autopin_tid_list result;
 
 	for (int i = 0; i < qlist.size(); i++) {
@@ -672,6 +671,5 @@ ProcessTree::autopin_tid_list OSServicesLinux::convertQStringList(QStringList &q
 	return result;
 }
 
-} // namespace Linux
 } // namespace OS
 } // namespace AutopinPlus

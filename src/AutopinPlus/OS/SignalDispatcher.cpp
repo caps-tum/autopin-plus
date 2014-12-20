@@ -26,14 +26,13 @@
  * http://autopin.in.tum.de
  */
 
-#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
+#include <AutopinPlus/OS/SignalDispatcher.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <unistd.h>
 
 namespace AutopinPlus {
 namespace OS {
-namespace Linux {
 
 int SignalDispatcher::sigchldFd[2];
 
@@ -83,6 +82,5 @@ void SignalDispatcher::chldSignalHandler(int param, siginfo_t *info, void *param
 	write(sigchldFd[0], info, sizeof(siginfo_t));
 }
 
-} // namespace Linux
 } // namespace OS
 } // namespace AutopinPlus

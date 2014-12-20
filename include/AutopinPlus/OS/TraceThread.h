@@ -38,14 +38,13 @@
 
 namespace AutopinPlus {
 namespace OS {
-namespace Linux {
 
 /*!
- * \brief Realizes the process tracing for OSServicesLinux
+ * \brief Realizes the process tracing for OSServices
  *
  * This class implements a thread which traces processes using ptrace.
  *
- * \sa OSServicesLinux
+ * \sa OSServices
  */
 class TraceThread : public QThread {
 	Q_OBJECT
@@ -67,7 +66,7 @@ class TraceThread : public QThread {
 	 * 	going to trace
 	 * \return A pointer to a locked mutex. This mutex will be unlocked when
 	 * 	the thread has attached to all tasks and is used by
-	 * 	OSServicesLinux::attachToProcess() to wait until the thread has
+	 * 	OSServices::attachToProcess() to wait until the thread has
 	 * 	finished attaching to all tasks.
 	 */
 	QMutex *init(ObservedProcess *observed_process);
@@ -157,7 +156,7 @@ signals:
 	 * Unmasks SIGALRM and sets the handler for SIGALRM
 	 * to alrmSignalHandler(). To ensure that SIGALRM is
 	 * always catched by the thread SIGALRM is masked before
-	 * starting the thread in OSServicesLinux::attachToProcess().
+	 * starting the thread in OSServices::attachToProcess().
 	 */
 	void setupSignalHandler();
 
@@ -199,6 +198,5 @@ signals:
 	static bool alarm_occured;
 };
 
-} // namespace Linux
 } // namespace OS
 } // namespace AutopinPlus

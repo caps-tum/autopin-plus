@@ -28,7 +28,7 @@
 
 #include <AutopinPlus/ObservedProcess.h>
 
-#include <AutopinPlus/OSServices.h>
+#include <AutopinPlus/OS/OSServices.h>
 #include <deque>
 #include <QFileInfo>
 #include <QString>
@@ -37,7 +37,7 @@
 
 namespace AutopinPlus {
 
-ObservedProcess::ObservedProcess(const Configuration &config, OSServices &service, AutopinContext &context)
+ObservedProcess::ObservedProcess(const Configuration &config, OS::OSServices &service, AutopinContext &context)
 	: config(config), service(service), context(context), pid(-1), cmd(""), trace(false), running(false), phase(0),
 	  comm_addr(""), comm_timeout(60) {
 	integer = QRegExp("\\d+");

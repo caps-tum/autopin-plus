@@ -55,7 +55,7 @@ class Main : public ControlStrategy {
 	 * \param[in] monitors	Reference to a list of available instances of PerformanceMonitor
 	 * \param[in] context	Refernce to the context of the object calling the constructor
 	 */
-	Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+	Main(const Configuration &config, const ObservedProcess &proc, OS::OSServices &service,
 		 const PerformanceMonitor::monitor_list &monitors, AutopinContext &context);
 
 	void init() override;

@@ -32,7 +32,7 @@ namespace AutopinPlus {
 namespace Strategy {
 namespace Autopin1 {
 
-Main::Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+Main::Main(const Configuration &config, const ObservedProcess &proc, OS::OSServices &service,
 		   const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: ControlStrategy(config, proc, service, monitors, context), current_pinning(0), best_pinning(-1), monitor(nullptr),
 	  notifications(false) {

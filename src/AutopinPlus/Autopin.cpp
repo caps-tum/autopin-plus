@@ -28,7 +28,8 @@
 
 #include <AutopinPlus/Autopin.h>
 #include <AutopinPlus/Error.h>
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/OSServices.h>
+#include <AutopinPlus/OS/SignalDispatcher.h>
 #include <QFileInfo>
 #include <QString>
 #include <memory>
@@ -38,14 +39,6 @@
 // For getopt, GNU getopt only
 #include <getopt.h>
 
-/*
- * Every implementation of OSServices must provide a static method
- * for reading the hostname of the system. The mapping to the right
- * OSServices class is done with a marco (see os_linux).
- */
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
-#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
-
 /* Macro for exiting the application.
  * The return is needed as QApplication::exit() does return
  * from its invokation.
@@ -54,8 +47,8 @@
 	exit(x);    \
 	return;
 
-using AutopinPlus::OS::Linux::SignalDispatcher;
-using AutopinPlus::OS::Linux::OSServicesLinux;
+using AutopinPlus::OS::SignalDispatcher;
+using AutopinPlus::OS::OSServices;
 
 namespace AutopinPlus {
 
@@ -96,7 +89,7 @@ void Autopin::slot_autopinSetup() {
 	// Start message
 	QString startup_msg, qt_msg, host;
 
-	host = OSServicesLinux::getHostname_static();
+	host = OSServices::getHostname_static();
 
 	startup_msg = applicationName() + " " + applicationVersion() + " started with pid " +
 				  QString::number(applicationPid()) + " on " + host + "!";

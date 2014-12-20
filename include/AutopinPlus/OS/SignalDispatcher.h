@@ -33,7 +33,6 @@
 
 namespace AutopinPlus {
 namespace OS {
-namespace Linux {
 
 /*!
  * \brief Singleton, which dispatches unix signals
@@ -106,6 +105,5 @@ signals:
 	static void chldSignalHandler(int param, siginfo_t *info, void *paramv);
 };
 
-} // namespace Linux
 } // namespace OS
 } // namespace AutopinPlus

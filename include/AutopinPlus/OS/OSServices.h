@@ -28,41 +28,37 @@
 
 #pragma once
 
-#include <AutopinPlus/AutopinContext.h>
-#include <AutopinPlus/Error.h>
-#include <AutopinPlus/ObservedProcess.h>
+#include <AutopinPlus/OS/TraceThread.h>
 #include <deque>
-#include <map>
-#include <QObject>
-#include <QString>
+#include <QMutex>
+#include <QRegExp>
+#include <QSocketNotifier>
+#include <QStringList>
+#include <signal.h>
 #include <string>
 
-extern "C" {
-#include <AutopinPlus/libautopin+_msg.h>
-}
-
 namespace AutopinPlus {
+namespace OS {
 
 /*!
- * \brief Abstracts all resources of the underlying operating system needed by autopin+
+ * \brief Implementation of the OSServices for Linux
  *
- * This is an abstract base class defining the view of autopin+ on the services of the
- * operating system. An implementation of this class is needed for every operating system
- * autopin+ is intended to run on.
- *
+ * The tracing of a process is implemented separately in TraceThread.
  */
 class OSServices : public QObject {
 	Q_OBJECT
-
   public:
 	/*!
 	 * \brief Constructor
 	 *
-	 * \param[in]	context	Refernce to the context of the object calling the constructor
+	 * \param[in]	context	Reference to the context of the object calling the constructor
 	 */
 	explicit OSServices(AutopinContext &context);
 
-	virtual ~OSServices() {}
+	/*!
+	 * \brief Destructor
+	 */
+	virtual ~OSServices();
 
 	/*!
 	 * \brief Executes initialization procedures if necessary
@@ -73,14 +69,14 @@ class OSServices : public QObject {
 	 *
 	 * The initialization will fail if another OSServices instance is currently in use.
 	 */
-	virtual void init() = 0;
+	void init();
 
 	/*!
 	 * \brief Returns the hostname of the host running autopin+
 	 *
 	 * \return The Hostname as a QString
 	 */
-	virtual QString getHostname() = 0;
+	QString getHostname();
 
 	/*!
 	 * \brief Returns a default address for the communication channel
@@ -88,7 +84,7 @@ class OSServices : public QObject {
 	 * \return A string representation of the default address of the
 	 * 	communication channel
 	 */
-	virtual QString getCommDefaultAddr() = 0;
+	QString getCommDefaultAddr();
 
 	/*!
 	 * \brief Creates a new process
@@ -100,7 +96,7 @@ class OSServices : public QObject {
 	 * \return The pid of the new process. If no process could be created the return value
 	 * 	will be -1
 	 */
-	virtual int createProcess(QString cmd, bool wait) = 0;
+	int createProcess(QString cmd, bool wait);
 
 	/*!
 	 * \brief Assigns a task to a certain core
@@ -109,7 +105,7 @@ class OSServices : public QObject {
 	 * \param[in] cpu	The number of the core the task will be assigned to
 	 *
 	 */
-	virtual void setAffinity(int tid, int cpu) = 0;
+	void setAffinity(int tid, int cpu);
 
 	/*!
 	 * \brief Attaches autopin+ to a process
@@ -120,7 +116,7 @@ class OSServices : public QObject {
 	 *
 	 * \param[in] observed_process The process which shall be watched
 	 */
-	virtual void attachToProcess(ObservedProcess *observed_process) = 0;
+	void attachToProcess(ObservedProcess *observed_process);
 
 	/*!
 	 * \brief Detaches autopin+ from a process
@@ -128,18 +124,15 @@ class OSServices : public QObject {
 	 * If autopin+ is currently not attached to a process this method
 	 * won't do anything.
 	 */
-	virtual void detachFromProcess() = 0;
+	void detachFromProcess();
 
 	/*!
-	 * \brief Initializes the communication channel
+	 * \brief Detaches autopin+ from a process
 	 *
-	 * This method has to be called before connection requests from an
-	 * observed process can be accepted.
-	 *
-	 * \param[in] proc The observed process to which autopin+ will connect
-	 *
+	 * If autopin+ is currently not attached to a process this method
+	 * won't do anything.
 	 */
-	virtual void initCommChannel(ObservedProcess *proc) = 0;
+	void initCommChannel(ObservedProcess *proc);
 
 	/*!
 	 * \brief Accepts connection requests
@@ -149,15 +142,13 @@ class OSServices : public QObject {
 	 * passed.
 	 *
 	 * \param[in] timeout Timeout for the connection in seconds
-	 *
 	 */
-	virtual void connectCommChannel(int timeout) = 0;
+	void connectCommChannel(int timeout);
 
 	/*!
 	 * \brief Deletes all data for the communication channel
-	 *
 	 */
-	virtual void deinitCommChannel() = 0;
+	void deinitCommChannel();
 
 	/*!
 	 * \brief Sends a message to the observed process
@@ -168,9 +159,8 @@ class OSServices : public QObject {
 	 * \param[in] event_id The event_id of the message
 	 * \param[in] arg The argument of the message
 	 * \param[in] val The value of the message
-	 *
 	 */
-	virtual void sendMsg(int event_id, int arg, double val) = 0;
+	void sendMsg(int event_id, int arg, double val);
 
 	/*!
 	 * \brief Returns the pid of a process with a certain name
@@ -180,7 +170,7 @@ class OSServices : public QObject {
 	 * \return A list of pids of all processes with the name proc. If no such process
 	 * 	exits or an error has occured the list will be empty.
 	 */
-	virtual ProcessTree::autopin_tid_list getPid(QString proc) = 0;
+	ProcessTree::autopin_tid_list getPid(QString proc);
 
 	/*!
 	 * \brief Returns the command a process has been started with
@@ -190,9 +180,8 @@ class OSServices : public QObject {
 	 * \return The command the process with the specified pid has been started with. If
 	 * 	no process with the given pid exists or an error has occured the result will
 	 * 	be empty.
-	 *
 	 */
-	virtual QString getCmd(int pid) = 0;
+	QString getCmd(int pid);
 
 	/*!
 	 * \brief Determines all threads of a process
@@ -202,7 +191,7 @@ class OSServices : public QObject {
 	 * \return A list containing the pids of all threads of the process. If no process
 	 * 	with the given pid exists or an error has occured an empty list will be returned.
 	 */
-	virtual ProcessTree::autopin_tid_list getProcessThreads(int pid) = 0;
+	ProcessTree::autopin_tid_list getProcessThreads(int pid);
 
 	/*!
 	 * \brief Returns all direct child processes of a process
@@ -212,7 +201,7 @@ class OSServices : public QObject {
 	 * \return A list with the pids of all child processes of the process. If no process
 	 * 	with the given pid exists or an error has occured the list will be empty.
 	 */
-	virtual ProcessTree::autopin_tid_list getChildProcesses(int pid) = 0;
+	ProcessTree::autopin_tid_list getChildProcesses(int pid);
 
 	/*!
 	 * \brief Returns an id for a process which can be used for consistent sorting
@@ -222,13 +211,34 @@ class OSServices : public QObject {
 	 * is important for pinning strategies which allow the user to select certain threads
 	 * in the configuration.
 	 *
-	 * The standard implementation returns the tid provided in the argument of the method.
+	 * This implementation returns the creation time of the task with the given pid.
 	 *
 	 * \param[in] tid	tid of the task for which an sorting id is requested
 	 *
-	 * \return The input pid
+	 * \return On success the creation time of the task with the given input pid is returned.
+	 * 	Otherwise, the method returns -1.
 	 */
-	virtual int getTaskSortId(int tid);
+	int getTaskSortId(int tid);
+
+	/*!
+	 * \brief Returns the hostname of the host running autopin+
+	 *
+	 * This is the static version of the getHostname method which
+	 * is used by the class Autopin before the OSServices are
+	 * initialized.
+	 *
+	 * \return The Hostname as a QString
+	 */
+	static QString getHostname_static();
+
+	/*!
+	 * \brief Handles SIGUSR1
+	 *
+	 * If the observed process is started by autopin+ an process tracing is active
+	 * the new process is blocked until autopin+ has attached. This is signaled
+	 * via SIGUSR1.
+	 */
+	static void usrSignalHandler(int param);
 
 signals:
 	/*!
@@ -258,11 +268,109 @@ signals:
 	*/
 	void sig_CommChannel(struct autopin_msg msg);
 
-  protected:
+  public slots:
+	/*!
+	 * \brief Receives new messages from the communication channel
+	 *
+	 * \param[in] socket The descriptor of the socket
+	 *
+	 */
+	void slot_msgReceived(int socket);
+
+  private:
+	/*!
+	 * \brief Data type for storing a list of tids
+	 */
+	typedef std::list<int> thread_list;
+
+	/*!
+	 * Regular expression for integer values
+	 */
+	QRegExp integer;
+
+	/*!
+	 * Thread uses for tracing the process when calling attachToProcess()
+	 *
+	 * \sa TraceThread
+	 */
+	TraceThread tracer;
+
+	/*!
+	 * \brief Returns an entry from /proc/pid/stat
+	 *
+	 * This method is not thread-safe!
+	 *
+	 * \param[in] tid The tid of the process/thread
+	 * \param[in] index The index of the desired entry. The counting starts at 0.
+	 * \param[in] error Can be used to block errors
+	 *
+	 * \return The desires value as a string. If an error has occured the string
+	 * 	is empty
+	 */
+	QString getProcEntry(int tid, int index, bool error = true);
+
+	/*!
+	 * \brief Extracts all arguments from a command line expression
+	 *
+	 * This method is used to convert an expression of the form <I>cmd -arg</I>
+	 * to a list of strings containing the elements <I>cmd</I> and <I>-arg</I>
+	 *
+	 * \param[in] cmd The command which will be converted into a list of strings
+	 *
+	 * \return A list of strings containing all parts of cmd in the same order as
+	 * 	they appear in the command (from left to right)
+	 */
+	static QStringList getArguments(QString cmd);
+
+	/*!
+	 * \brief Converts a list of QStrings to a list of integers
+	 *
+	 * \param[in] qlist A list of integers represented as QStrings
+	 *
+	 * \return A list of integers
+	 */
+	static ProcessTree::autopin_tid_list convertQStringList(QStringList &qlist);
+
+	/*!
+	 * Mutex for thread-safe access
+	 */
+	QMutex mutex;
+
+	/*!
+	 * Mutex for protecting the attachToProcess() method
+	 */
+	QMutex attach;
+
+	/*!
+	 * Monitors the connection to the observed process
+	 */
+	QSocketNotifier *comm_notifier;
+
+	/*!
+	 * The path of the UNIX domain socket
+	 */
+	QString socket_path;
+
+	/*!
+	 * Server socket
+	 */
+	int server_socket;
+
+	/*!
+	 * Socket for the communication with the observed process
+	 */
+	int client_socket;
+
+	/*!
+	 * Stores if autopin+ has already attached
+	 */
+	static bool autopin_attached;
+
 	/*!
 	 * The runtime context
 	 */
 	AutopinContext &context;
 };
 
+} // namespace OS
 } // namespace AutopinPlus

@@ -25,7 +25,7 @@
 #include <AutopinPlus/Error.h>				// for Error, Error::::BAD_CONFIG, etc
 #include <AutopinPlus/Exception.h>			// for Exception
 #include <AutopinPlus/ObservedProcess.h>	// for ObservedProcess
-#include <AutopinPlus/OSServices.h>			// for OSServices
+#include <AutopinPlus/OS/OSServices.h>		// for OSServices
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
 #include <AutopinPlus/PinningHistory.h>		// fo PinningHistory
 #include <AutopinPlus/Tools.h>				// for Tools
@@ -41,7 +41,7 @@ namespace AutopinPlus {
 namespace Strategy {
 namespace Noop {
 
-Main::Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+Main::Main(const Configuration &config, const ObservedProcess &proc, OS::OSServices &service,
 		   const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: ControlStrategy(config, proc, service, monitors, context) {
 	name = "noop";
