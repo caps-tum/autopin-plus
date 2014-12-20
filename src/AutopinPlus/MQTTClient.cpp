@@ -71,7 +71,7 @@ void MQTTClient::messageCallback(struct mosquitto *mosq, void *obj, const struct
 	std::string topic(message->topic);
 
 	// AddProcess
-	std::string command = commands[0];
+	const std::string &command = commands[0];
 	if (topic.length() >= command.length() &&
 		topic.compare(topic.length() - command.length(), command.length(), command) == 0) {
 		QString text(static_cast<char *>(message->payload));
