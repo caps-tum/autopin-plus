@@ -16,9 +16,18 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wno-deprecated-register)
 endif()
 
+option(OS_LINUX "Build autopin+ for Linux" ON)
+
+# Module path
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
 # Find Qt 4 installation
 find_package(Qt4 4.7.3 REQUIRED QtCore)
 find_package(Qt4 4.7.3 REQUIRED QtNetwork)
+
+# Find mosquitto
+find_package (Mosquitto 1.0.0 REQUIRED)
+include(${MOSQUITTO_INCLUDE_DIR})
 
 # Disable QtGui module and setup Qt
 set(QT_DONT_USE_QTGUI TRUE)
@@ -35,8 +44,8 @@ include_directories(vendor/spdlog/include/spdlog)
 # Headers only need to be added for classes containing the Q_OBJECT macro
 
 # Base files
-set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/AutopinPlus/Watchdog.h include/AutopinPlus/ObservedProcess.h include/AutopinPlus/AutopinContext.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Watchdog.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp src/AutopinPlus/Tools.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/AutopinPlus/Watchdog.h include/AutopinPlus/ObservedProcess.h include/AutopinPlus/AutopinContext.h include/AutopinPlus/MQTTClient.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Watchdog.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp src/AutopinPlus/Tools.cpp src/AutopinPlus/MQTTClient.cpp)
 
 # Abstract base classes
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/ControlStrategy.h include/AutopinPlus/DataLogger.h)
@@ -95,4 +104,4 @@ endif (DOXYGEN_FOUND)
 # Compiling
 QT4_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC})
-target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
+target_link_libraries(autopin+ ${MOSQUITTO_LIBRARIES} ${QT_LIBRARIES} ${linklibs} -lpthread)

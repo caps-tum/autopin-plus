@@ -34,8 +34,7 @@ namespace AutopinPlus {
 AutopinContext::AutopinContext(std::string name) : err(), name(name) {
 	try {
 		logger = spdlog::stdout_logger_mt(name);
-	}
-	catch (const spdlog::spdlog_ex &ex) {
+	} catch (const spdlog::spdlog_ex &ex) {
 		std::cerr << "Could not initalizes logger. Exiting!";
 		QCoreApplication::exit(-2);
 	}
@@ -67,8 +66,7 @@ void AutopinContext::setPid(int pid) {
 	name = name + " (pid: " + std::to_string(pid) + ")";
 	try {
 		logger = spdlog::stdout_logger_mt(name);
-	}
-	catch (const spdlog::spdlog_ex &ex) {
+	} catch (const spdlog::spdlog_ex &ex) {
 		std::cerr << "Could not initalizes logger. Exiting!";
 		emit sig_error();
 	}

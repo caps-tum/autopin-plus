@@ -79,6 +79,13 @@ class AutopinContext : public QObject {
 	void warn(QString msg) const;
 
 	/*!
+	 * \brief Prints a warning message
+	 *
+	 * \param[in] msg	The message which will be printed
+	 */
+	void error(QString msg) const;
+
+	/*!
 	 * \brief Reports an error
 	 *
 	 * The error is reported via the Error class. Depending on the resulting
@@ -109,13 +116,6 @@ signals:
 	void sig_error();
 
   private:
-	/*!
-	 * \brief Prints a warning message
-	 *
-	 * \param[in] msg	The message which will be printed
-	 */
-	void error(QString msg) const;
-
 	/*!
 	 * \brief Stores a shared pointer to the logger of the current context
 	 */

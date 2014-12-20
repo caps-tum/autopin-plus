@@ -57,8 +57,7 @@ void Main::init() {
 		try {
 			interval = Tools::readInt(config.getConfigOption(name + ".interval"));
 			context.info("  - " + name + ".interval = " + QString::number(interval));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'interval' option.");
 			return;
