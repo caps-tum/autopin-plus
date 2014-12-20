@@ -32,6 +32,7 @@
 #include <AutopinPlus/Configuration.h>
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/ProcessTree.h>
+//#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
 #include <list>
 #include <QObject>
 #include <QRegExp>
@@ -43,7 +44,11 @@ extern "C" {
 #include "libautopin+_msg.h"
 }
 
-class OSServices;
+namespace OS {
+namespace Linux {
+class OSServicesLinux;
+}
+}
 
 /*!
  * \brief This class implements the internal representation of the process observed by autopin+
@@ -62,7 +67,7 @@ class ObservedProcess : public QObject {
 	 * \param[in] service	Reference to the current instance of a subclass of OSServices
 	 * \param[in] context	Reference to the context of the object calling the constructor
 	 */
-	ObservedProcess(const Configuration &config, OSServices &service, AutopinContext &context);
+	ObservedProcess(const Configuration &config, OS::Linux::OSServicesLinux &service, AutopinContext &context);
 
 	/*!
 	 * \brief Initializes the observed process
@@ -244,7 +249,7 @@ signals:
 	 * Member variable referencing the current instance of the (sub-)class. This variable is set in the constructor.
 	 */
 	const Configuration &config;
-	OSServices &service;
+	OS::Linux::OSServicesLinux &service;
 	//@}
 
 	/*!

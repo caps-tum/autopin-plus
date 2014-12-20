@@ -19,16 +19,16 @@
 
 #pragma once
 
-#include <AutopinPlus/AutopinContext.h>		// for AutopinContext
-#include <AutopinPlus/Configuration.h>		// for Configuration, etc
-#include <AutopinPlus/ControlStrategy.h>	// for ControlStrategy
-#include <AutopinPlus/ObservedProcess.h>	// for ObservedProcess
-#include <AutopinPlus/OSServices.h>			// for OSServices
-#include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
-#include <AutopinPlus/PinningHistory.h>		// fo PinningHistory
-#include <qmutex.h>							// for QMutex
-#include <qobjectdefs.h>					// for slots, Q_OBJECT
-#include <qtimer.h>							// for QTimer
+#include <AutopinPlus/AutopinContext.h>				// for AutopinContext
+#include <AutopinPlus/Configuration.h>				// for Configuration, etc
+#include <AutopinPlus/ControlStrategy.h>			// for ControlStrategy
+#include <AutopinPlus/ObservedProcess.h>			// for ObservedProcess
+#include <AutopinPlus/OS/Linux/OSServicesLinux.h>	// for OSServices
+#include <AutopinPlus/PerformanceMonitor.h>			// for PerformanceMonitor, etc
+#include <AutopinPlus/PinningHistory.h>				// fo PinningHistory
+#include <qmutex.h>									// for QMutex
+#include <qobjectdefs.h>							// for slots, Q_OBJECT
+#include <qtimer.h>									// for QTimer
 
 namespace AutopinPlus {
 namespace Strategy {
@@ -50,7 +50,7 @@ class Main : public ControlStrategy {
 	 * \param[in] monitors  Reference to the list of performance monitors to use
 	 * \param[in] context   Reference to the instance of the AutopinContext class to use
 	 */
-	Main(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+	Main(const Configuration &config, const ObservedProcess &proc, OS::Linux::OSServicesLinux &service,
 		 const PerformanceMonitor::monitor_list &monitors, AutopinContext &context);
 
 	// Overridden from base class

@@ -29,6 +29,7 @@
 #include <AutopinPlus/Autopin.h>
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
 #include <QFileInfo>
 #include <QString>
 #include <memory>
@@ -37,14 +38,6 @@
 
 // For getopt, GNU getopt only
 #include <getopt.h>
-
-/*
- * Every implementation of OSServices must provide a static method
- * for reading the hostname of the system. The mapping to the right
- * OSServices class is done with a marco (see os_linux).
- */
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
-#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
 
 /* Macro for exiting the application.
  * The return is needed as QApplication::exit() does return

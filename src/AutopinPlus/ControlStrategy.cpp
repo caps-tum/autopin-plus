@@ -39,7 +39,7 @@
 
 namespace AutopinPlus {
 
-ControlStrategy::ControlStrategy(const Configuration &config, const ObservedProcess &proc, OSServices &service,
+ControlStrategy::ControlStrategy(const Configuration &config, const ObservedProcess &proc, OS::Linux::OSServicesLinux &service,
 								 const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: config(config), proc(proc), service(service), monitors(monitors), context(context), name("ControlStrategy") {}
 

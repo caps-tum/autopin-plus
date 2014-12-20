@@ -34,6 +34,7 @@
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/ObservedProcess.h>
 #include <AutopinPlus/StandardConfiguration.h>
+#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
 #include <QCoreApplication>
 #include <QTimer>
 #include <list>
@@ -146,7 +147,7 @@ signals:
 	/*!
 	 * Stores a unique pointer to an instance of a subclass of OSServices.
 	 */
-	std::unique_ptr<OSServices> service;
+	std::unique_ptr<OS::Linux::OSServicesLinux> service;
 
 	/*!
 	 * Stores a unique pointer to an instance of ObservedProcess.

@@ -60,7 +60,7 @@ namespace OS {
 namespace Linux {
 
 OSServicesLinux::OSServicesLinux(AutopinContext &context)
-	: OSServices(context), tracer(context), comm_notifier(nullptr), server_socket(-1), client_socket(-1) {
+	: context(context), tracer(context), comm_notifier(nullptr), server_socket(-1), client_socket(-1) {
 	integer = QRegExp("\\d+");
 
 	connect(&tracer, SIGNAL(sig_TaskCreated(int)), this, SIGNAL(sig_TaskCreated(int)));

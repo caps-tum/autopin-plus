@@ -34,18 +34,13 @@
 #include <AutopinPlus/Monitor/Random/Main.h>
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
 #include <AutopinPlus/Strategy/Noop/Main.h>
+#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
 #include <QString>
 #include <QTimer>
 #include <QList>
 #include <memory>
 
-/*
- * Every implementation of OSServices must provide a static method
- * for reading the hostname of the system. The mapping to the right
- * OSServices class is done with a macro (see os_linux).
- */
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
-#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
 
 using AutopinPlus::OS::Linux::SignalDispatcher;
 
@@ -207,7 +202,7 @@ void Watchdog::createDataLoggers() {
 	}
 }
 
-void Watchdog::createOSServices() { service = std::unique_ptr<OSServices>(new OS::Linux::OSServicesLinux(*context)); }
+void Watchdog::createOSServices() { service = std::unique_ptr<OS::Linux::OSServicesLinux>(new OS::Linux::OSServicesLinux(*context)); }
 
 void Watchdog::createObservedProcess() {
 	process = std::unique_ptr<ObservedProcess>(new ObservedProcess(*config, *service, *context));

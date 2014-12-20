@@ -42,14 +42,13 @@ set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/A
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Watchdog.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp src/AutopinPlus/Tools.cpp)
 
 # Abstract base classes
-set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OSServices.h include/AutopinPlus/ControlStrategy.h include/AutopinPlus/DataLogger.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Configuration.cpp src/AutopinPlus/PinningHistory.cpp src/AutopinPlus/OSServices.cpp src/AutopinPlus/ControlStrategy.cpp src/AutopinPlus/PerformanceMonitor.cpp src/AutopinPlus/DataLogger.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/ControlStrategy.h include/AutopinPlus/DataLogger.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Configuration.cpp src/AutopinPlus/PinningHistory.cpp src/AutopinPlus/ControlStrategy.cpp src/AutopinPlus/PerformanceMonitor.cpp src/AutopinPlus/DataLogger.cpp)
 
 # OS independent classes
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.cpp src/AutopinPlus/XMLPinningHistory.cpp)
 
-# Linux-specific classes
-add_definitions(-Dos_linux)
+# OS-Service related classes
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/Linux/OSServicesLinux.h include/AutopinPlus/OS/Linux/TraceThread.h include/AutopinPlus/OS/Linux/SignalDispatcher.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/Linux/OSServicesLinux.cpp  src/AutopinPlus/OS/Linux/TraceThread.cpp src/AutopinPlus/OS/Linux/SignalDispatcher.cpp)
 
