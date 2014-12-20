@@ -16,9 +16,6 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wno-deprecated-register)
 endif()
 
-# Configuration options
-option(OS_LINUX "Build autopin+ for Linux" ON)
-
 # Find Qt 4 installation
 find_package(Qt4 4.7.3 REQUIRED QtCore)
 find_package(Qt4 4.7.3 REQUIRED QtNetwork)
@@ -49,8 +46,8 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Configuration.cpp src/A
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.cpp src/AutopinPlus/XMLPinningHistory.cpp)
 
 # OS-Service related classes
-set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/Linux/OSServicesLinux.h include/AutopinPlus/OS/Linux/TraceThread.h include/AutopinPlus/OS/Linux/SignalDispatcher.h)
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/Linux/OSServicesLinux.cpp  src/AutopinPlus/OS/Linux/TraceThread.cpp src/AutopinPlus/OS/Linux/SignalDispatcher.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/OSServices.h include/AutopinPlus/OS/TraceThread.h include/AutopinPlus/OS/SignalDispatcher.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/OSServices.cpp  src/AutopinPlus/OS/TraceThread.cpp src/AutopinPlus/OS/SignalDispatcher.cpp)
 
 # Autopin1 control strategy
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Autopin1/Main.h)

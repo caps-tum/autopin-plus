@@ -32,7 +32,7 @@
 #include <AutopinPlus/Configuration.h>
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/ObservedProcess.h>
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/PerformanceMonitor.h>
 #include <AutopinPlus/PinningHistory.h>
 #include <deque>
@@ -60,7 +60,7 @@ class ControlStrategy : public QObject {
 	 * \param[in] monitors	Reference to a list of available instances of PerformanceMonitor
 	 * \param[in] context	Refernnce to the context of the object calling the constructor
 	 */
-	ControlStrategy(const Configuration &config, const ObservedProcess &proc, OS::Linux::OSServicesLinux &service,
+	ControlStrategy(const Configuration &config, const ObservedProcess &proc, OS::OSServices &service,
 					const PerformanceMonitor::monitor_list &monitors, AutopinContext &context);
 
 	/*!
@@ -180,7 +180,7 @@ class ControlStrategy : public QObject {
 	 */
 	const Configuration &config;
 	const ObservedProcess &proc;
-	OS::Linux::OSServicesLinux &service;
+	OS::OSServices &service;
 	const PerformanceMonitor::monitor_list &monitors;
 	std::unique_ptr<PinningHistory> history;
 	//@}

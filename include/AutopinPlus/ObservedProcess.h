@@ -32,7 +32,6 @@
 #include <AutopinPlus/Configuration.h>
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/ProcessTree.h>
-//#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
 #include <list>
 #include <QObject>
 #include <QRegExp>
@@ -45,9 +44,7 @@ extern "C" {
 }
 
 namespace OS {
-namespace Linux {
-class OSServicesLinux;
-}
+class OSServices;
 }
 
 /*!
@@ -67,7 +64,7 @@ class ObservedProcess : public QObject {
 	 * \param[in] service	Reference to the current instance of a subclass of OSServices
 	 * \param[in] context	Reference to the context of the object calling the constructor
 	 */
-	ObservedProcess(const Configuration &config, OS::Linux::OSServicesLinux &service, AutopinContext &context);
+	ObservedProcess(const Configuration &config, OS::OSServices &service, AutopinContext &context);
 
 	/*!
 	 * \brief Initializes the observed process
@@ -150,8 +147,7 @@ class ObservedProcess : public QObject {
 	/*!
 	 * \brief Returns the desired address for the communication channel
 	 *
-	 * The return value depends on the operating system. The value is requested by the corresponding
-	 * subclass of OSServices. On Linux this method returns a file path for a UNIX domain socket
+     * This method returns a file path for a UNIX domain socket
 	 *
 	 * \return String representation for the address of the communication channel. If the user has enabled
 	 * 	the communication channel without specifying an address the method returns a default address which
@@ -249,7 +245,7 @@ signals:
 	 * Member variable referencing the current instance of the (sub-)class. This variable is set in the constructor.
 	 */
 	const Configuration &config;
-	OS::Linux::OSServicesLinux &service;
+	OS::OSServices &service;
 	//@}
 
 	/*!

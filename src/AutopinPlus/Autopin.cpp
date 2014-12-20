@@ -28,8 +28,8 @@
 
 #include <AutopinPlus/Autopin.h>
 #include <AutopinPlus/Error.h>
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
-#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
+#include <AutopinPlus/OS/OSServices.h>
+#include <AutopinPlus/OS/SignalDispatcher.h>
 #include <QFileInfo>
 #include <QString>
 #include <memory>
@@ -47,8 +47,8 @@
 	exit(x);    \
 	return;
 
-using AutopinPlus::OS::Linux::SignalDispatcher;
-using AutopinPlus::OS::Linux::OSServicesLinux;
+using AutopinPlus::OS::SignalDispatcher;
+using AutopinPlus::OS::OSServices;
 
 namespace AutopinPlus {
 
@@ -89,7 +89,7 @@ void Autopin::slot_autopinSetup() {
 	// Start message
 	QString startup_msg, qt_msg, host;
 
-	host = OSServicesLinux::getHostname_static();
+	host = OSServices::getHostname_static();
 
 	startup_msg = applicationName() + " " + applicationVersion() + " started with pid " +
 				  QString::number(applicationPid()) + " on " + host + "!";

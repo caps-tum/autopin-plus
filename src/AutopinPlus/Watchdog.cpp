@@ -34,15 +34,13 @@
 #include <AutopinPlus/Monitor/Random/Main.h>
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
 #include <AutopinPlus/Strategy/Noop/Main.h>
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
-#include <AutopinPlus/OS/Linux/SignalDispatcher.h>
+#include <AutopinPlus/OS/OSServices.h>
+#include <AutopinPlus/OS/SignalDispatcher.h>
 #include <QString>
 #include <QTimer>
 #include <QList>
 #include <memory>
 
-
-using AutopinPlus::OS::Linux::SignalDispatcher;
 
 namespace AutopinPlus {
 
@@ -202,13 +200,14 @@ void Watchdog::createDataLoggers() {
 	}
 }
 
-void Watchdog::createOSServices() { service = std::unique_ptr<OS::Linux::OSServicesLinux>(new OS::Linux::OSServicesLinux(*context)); }
+void Watchdog::createOSServices() { service = std::unique_ptr<OS::OSServices>(new OS::OSServices(*context)); }
 
 void Watchdog::createObservedProcess() {
 	process = std::unique_ptr<ObservedProcess>(new ObservedProcess(*config, *service, *context));
 }
 
 void Watchdog::createComponentConnections() {
+	using AutopinPlus::OS::SignalDispatcher;
 	// Connection between SignalDispatcher and ObservedProcess
 	connect(&SignalDispatcher::getInstance(), SIGNAL(sig_ProcTerminated(int, int)), process.get(),
 			SLOT(slot_ProcTerminated(int, int)));
