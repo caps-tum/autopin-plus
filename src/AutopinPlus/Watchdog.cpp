@@ -33,7 +33,6 @@
 #include <AutopinPlus/Monitor/GPerf/Main.h>
 #include <AutopinPlus/Monitor/Random/Main.h>
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
-#include <AutopinPlus/Strategy/History/Main.h>
 #include <AutopinPlus/Strategy/Noop/Main.h>
 #include <QString>
 #include <QTimer>
@@ -184,12 +183,6 @@ void Watchdog::createControlStrategy() {
 	if (strategy_config == "autopin1") {
 		strategy = std::unique_ptr<ControlStrategy>(
 			new Strategy::Autopin1::Main(*config, *process, *service, monitors, *context));
-		return;
-	}
-
-	if (strategy_config == "history") {
-		strategy = std::unique_ptr<ControlStrategy>(
-			new Strategy::History::Main(*config, *process, *service, monitors, *context));
 		return;
 	}
 
