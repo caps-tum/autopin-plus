@@ -10,13 +10,14 @@ branches:
 before_install:
     - travis_retry sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     - travis_retry sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ trusty main"
+    - travis_retry sudo add-apt-repository -y ppa:mosquitto-dev/mosquitto-ppa
     - travis_retry sudo apt-get update -qq
 
 install:
     - travis_retry sudo apt-get install -qq libqt4-dev cmake
     - travis_retry sudo apt-get install -qq gcc-4.8 g++-4.8
     - travis_retry sudo apt-get install -qq linux-libc-dev
-    - travis_retry sudo apt-get install -qq libmosquitto0-dev
+    - travis_retry sudo apt-get install -qq libmosquitto-dev
     
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20

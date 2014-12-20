@@ -26,7 +26,7 @@ find_package(Qt4 4.7.3 REQUIRED QtCore)
 find_package(Qt4 4.7.3 REQUIRED QtNetwork)
 
 # Find mosquitto
-find_package (Mosquitto REQUIRED)
+find_package (Mosquitto 1.0.0 REQUIRED)
 include(${MOSQUITTO_INCLUDE_DIR})
 
 # Disable QtGui module and setup Qt
