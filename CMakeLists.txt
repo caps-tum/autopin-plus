@@ -4,11 +4,11 @@ cmake_minimum_required(VERSION 2.6)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # using Clang
-  ADD_DEFINITIONS(-g -Ofast -std=c++11 -Wno-deprecated-register)
+  ADD_DEFINITIONS(-g -Ofast -march=native -std=c++11 -Wno-deprecated-register)
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Weverything -Wno-c++98-compat -Wno-padded -Wno-deprecated-register)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # using GCC
-  ADD_DEFINITIONS(-g -O2 -std=c++11)
+  ADD_DEFINITIONS(-g -O2 -std=c++11 -march=native)
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wunused)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   # using Intel C++
