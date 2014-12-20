@@ -75,9 +75,6 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/ClustSafe/Main.
 # GPerf performance monitor
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/GPerf/Main.cpp)
 
-# Perf performance monitor
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Perf/Main.cpp)
-
 # Random performance monitor
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Random/Main.cpp)
 

@@ -31,7 +31,6 @@
 #include <AutopinPlus/Logger/External/Main.h>
 #include <AutopinPlus/Monitor/ClustSafe/Main.h>
 #include <AutopinPlus/Monitor/GPerf/Main.h>
-#include <AutopinPlus/Monitor/Perf/Main.h>
 #include <AutopinPlus/Monitor/Random/Main.h>
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
 #include <AutopinPlus/Strategy/History/Main.h>
@@ -158,12 +157,6 @@ void Watchdog::createPerformanceMonitors() {
 		if (current_type == "gperf") {
 			monitors.push_back(
 				std::unique_ptr<Monitor::GPerf::Main>(new Monitor::GPerf::Main(current_monitor, *config, *context)));
-			continue;
-		}
-
-		if (current_type == "perf") {
-			monitors.push_back(
-				std::unique_ptr<Monitor::Perf::Main>(new Monitor::Perf::Main(current_monitor, *config, *context)));
 			continue;
 		}
 
