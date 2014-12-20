@@ -31,7 +31,6 @@
 #include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/OS/SignalDispatcher.h>
 #include <AutopinPlus/MQTTClient.h>
->>>>>>> Rename MQQT -> MQTT
 #include <QFileInfo>
 #include <QString>
 #include <memory>

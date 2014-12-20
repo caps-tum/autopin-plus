@@ -27,15 +27,15 @@
  */
 
 #include <AutopinPlus/MQTTClient.h>
-#include <AutopinPlus/OS/Linux/OSServicesLinux.h>
+#include <AutopinPlus/OS/OSServices.h>
 
-using AutopinPlus::OS::Linux::OSServicesLinux;
+using AutopinPlus::OS::OSServices;
 
 namespace AutopinPlus {
 
 const std::vector<std::string> MQTTClient::commands = {"AddProcess"};
 const std::string MQTTClient::baseSuscriptionTopic =
-	"AutopinPlus/" + OSServicesLinux::getHostname_static().toStdString() + "/";
+	"AutopinPlus/" + OSServices::getHostname_static().toStdString() + "/";
 
 MQTTClient::MQTTClient(){};
 
