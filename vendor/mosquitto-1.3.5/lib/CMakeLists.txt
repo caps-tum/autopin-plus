@@ -20,7 +20,7 @@ include_directories(${mosquitto_SOURCE_DIR} ${mosquitto_SOURCE_DIR}/lib
 			${OPENSSL_INCLUDE_DIR} ${PTHREAD_INCLUDE_DIR})
 link_directories(${mosquitto_SOURCE_DIR}/lib)
 
-add_library(libmosquitto SHARED
+add_library(libmosquitto STATIC
 	logging_mosq.c logging_mosq.h
 	memory_mosq.c memory_mosq.h
 	messages_mosq.c messages_mosq.h
@@ -63,7 +63,7 @@ set_target_properties(libmosquitto PROPERTIES
 	SOVERSION 1
 )
 
-install(TARGETS libmosquitto RUNTIME DESTINATION ${BINDIR} LIBRARY DESTINATION ${LIBDIR})
+install(TARGETS libmosquitto RUNTIME DESTINATION ${BINDIR} LIBRARY DESTINATION ${LIBDIR} ARCHIVE DESTINATION ${LIBDIR})
 install(FILES mosquitto.h DESTINATION ${INCLUDEDIR})
 
 if (UNIX)
