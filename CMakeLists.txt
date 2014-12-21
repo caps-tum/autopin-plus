@@ -135,7 +135,6 @@ target_link_libraries(autopin+ ${libcares_path}/lib/libcares.a)
 
 # Make sure auotpin+ depends on libmosquitto and link with it
 add_dependencies (autopin+ libmosquitto)
-ExternalProject_Get_Property(libmosquitto install_dir)
 target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a)
 ########
 
