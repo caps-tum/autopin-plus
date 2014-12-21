@@ -10,7 +10,7 @@ include(ExternalProject)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Using Clang
   ADD_DEFINITIONS(-g -Ofast -march=native -std=c++11 -Wno-deprecated-register)
-  
+
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Weverything -Wno-c++98-compat -Wno-padded -Wno-deprecated-register)
   # Options required to reduce the noise of spdlog
   #ADD_DEFINITIONS(-Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-switch-enum)
@@ -89,33 +89,6 @@ QT4_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 ########
 
 ########
-# Compiling
-add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC} ${autopin+_HEADERS})
-target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
-########
-
-########
-# Mosquitto related stuff
-ExternalProject_Add(libmosquitto
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
-    CONFIGURE_COMMAND cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
-    BUILD_IN_SOURCE 0
-    BUILD_COMMAND ${MAKE})
-
-# Make sure auotpin+ depends on libmosquitto
-add_dependencies (autopin+ libmosquitto)
-
-# Get the libmosquitto install path
-ExternalProject_Get_Property(libmosquitto install_dir)
-
-# Add mosquitto include directory
-include_directories(${install_dir}/include)
-
-# Add static version of libmosquitto to autopin+
-target_link_libraries(autopin+ ${install_dir}/lib/libmosquitto.a)
-########
-
-########
 # C-ares related stuff
 ExternalProject_Add(libcares
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0
@@ -123,17 +96,41 @@ ExternalProject_Add(libcares
     BUILD_IN_SOURCE 0
     BUILD_COMMAND ${MAKE})
 
-# Make sure auotpin+ depends on libmosquitto
-add_dependencies (autopin+ libcares)
-
-# Get the libmosquitto install path
-ExternalProject_Get_Property(libcares install_dir)
-
 # Add c-ares include directory
+ExternalProject_Get_Property(libcares install_dir)
 include_directories(${install_dir}/include)
+########
 
-# Add static version c-ares to autopin+
+########
+# Mosquitto related stuff
+ExternalProject_Add(libmosquitto
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
+    CONFIGURE_COMMAND cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DARES_PATH=${install_dir} ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
+    BUILD_IN_SOURCE 0
+    BUILD_COMMAND ${MAKE})
+
+# Make sure mosquitto depends on libcares
+add_dependencies (libmosquitto libcares)
+
+# Add mosquitto include directory
+ExternalProject_Get_Property(libmosquitto install_dir)
+include_directories(${install_dir}/include)
+########
+
+########
+# Compiling
+add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC} ${autopin+_HEADERS})
+target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
+
+# Make sure auotpin+ depends on libcares and link with it
+add_dependencies (autopin+ libcares)
+ExternalProject_Get_Property(libcares install_dir)
 target_link_libraries(autopin+ ${install_dir}/lib/libcares.a)
+
+# Make sure auotpin+ depends on libmosquitto and link with it
+add_dependencies (autopin+ libmosquitto)
+ExternalProject_Get_Property(libmosquitto install_dir)
+target_link_libraries(autopin+ ${install_dir}/lib/libmosquitto.a)
 ########
 
 

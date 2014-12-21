@@ -42,6 +42,9 @@ else (WIN32)
 	set (DATAROOTDIR share)
 	set (MANDIR ${DATAROOTDIR}/man)
 	set (SHAREDIR ${DATAROOTDIR}/mosquitto)
+
+	include_directories( ${ARES_PATH}/include )
+	link_directories( ${LINK_DIRECTORIES} ${ARES_PATH}/lib)
 endif (WIN32)
 
 option(WITH_TLS
