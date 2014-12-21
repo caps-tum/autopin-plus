@@ -1,39 +1,34 @@
 # General project settings
 project(autopin+)
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8)
 
+# Enable support for external projects
+include(ExternalProject)
+
+########
+# Compiler options based on the different compilers
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-  # using Clang
+  # Using Clang
   ADD_DEFINITIONS(-g -Ofast -march=native -std=c++11 -Wno-deprecated-register)
+  
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Weverything -Wno-c++98-compat -Wno-padded -Wno-deprecated-register)
+  # Options required to reduce the noise of spdlog
+  #ADD_DEFINITIONS(-Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-switch-enum)
+  #ADD_DEFINITIONS(-Wno-old-style-cast -Wno-undef -Wno-documentation-unknown-command)
+  #ADD_DEFINITIONS(-Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  # using GCC
+  # Using GCC
   ADD_DEFINITIONS(-g -O2 -std=c++11 -march=native)
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wunused)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-  # using Intel C++
+  # Using Intel C++
   ADD_DEFINITIONS(-g -fast -std=c++11 -Wno-deprecated-register)
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wno-deprecated-register)
 endif()
+########
 
-# Find Qt 4 installation
-find_package(Qt4 4.7.3 REQUIRED QtCore)
-find_package(Qt4 4.7.3 REQUIRED QtNetwork)
-
-# Disable QtGui module and setup Qt
-set(QT_DONT_USE_QTGUI TRUE)
-include(${QT_USE_FILE})
-add_definitions(${QT_DEFINITIONS})
-
-# Project include path
-include_directories(include)
-
-# Add spdlog
-include_directories(vendor/spdlog/include/spdlog)
-
+########
 # Source files
-# Headers only need to be added for classes containing the Q_OBJECT macro
-
 # Base files
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Autopin.h include/AutopinPlus/Watchdog.h include/AutopinPlus/ObservedProcess.h include/AutopinPlus/AutopinContext.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/main.cpp src/AutopinPlus/Autopin.cpp src/AutopinPlus/Watchdog.cpp src/AutopinPlus/Error.cpp src/AutopinPlus/AutopinContext.cpp src/AutopinPlus/ObservedProcess.cpp src/AutopinPlus/ProcessTree.cpp src/AutopinPlus/Exception.cpp src/AutopinPlus/Tools.cpp)
@@ -69,7 +64,81 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/GPerf/Main.cpp)
 
 # Random performance monitor
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Random/Main.cpp)
+########
 
+########
+# Include path
+include_directories(include)
+
+# Add spdlog
+include_directories(vendor/spdlog/include/spdlog)
+########
+
+########
+# Qt related stuff
+# Find Qt 4 installation
+find_package(Qt4 4.7.3 REQUIRED QtCore)
+find_package(Qt4 4.7.3 REQUIRED QtNetwork)
+
+# Disable QtGui module and setup Qt
+set(QT_DONT_USE_QTGUI TRUE)
+include(${QT_USE_FILE})
+add_definitions(${QT_DEFINITIONS})
+
+QT4_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
+########
+
+########
+# Compiling
+add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC} ${autopin+_HEADERS})
+target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
+########
+
+########
+# Mosquitto related stuff
+ExternalProject_Add(libmosquitto
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
+    CONFIGURE_COMMAND cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
+    BUILD_IN_SOURCE 0
+    BUILD_COMMAND ${MAKE})
+
+# Make sure auotpin+ depends on libmosquitto
+add_dependencies (autopin+ libmosquitto)
+
+# Get the libmosquitto install path
+ExternalProject_Get_Property(libmosquitto install_dir)
+
+# Add mosquitto include directory
+include_directories(${install_dir}/include)
+
+# Add static version of libmosquitto to autopin+
+target_link_libraries(autopin+ ${install_dir}/lib/libmosquitto.a)
+########
+
+########
+# C-ares related stuff
+ExternalProject_Add(libcares
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0/configure --prefix=<INSTALL_DIR>
+    BUILD_IN_SOURCE 0
+    BUILD_COMMAND ${MAKE})
+
+# Make sure auotpin+ depends on libmosquitto
+add_dependencies (autopin+ libcares)
+
+# Get the libmosquitto install path
+ExternalProject_Get_Property(libcares install_dir)
+
+# Add c-ares include directory
+include_directories(${install_dir}/include)
+
+# Add static version c-ares to autopin+
+target_link_libraries(autopin+ ${install_dir}/lib/libcares.a)
+########
+
+
+########
+# Doxygen related stuff
 # Generating the Documentation
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
@@ -91,8 +160,5 @@ if (DOXYGEN_FOUND)
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 endif (DOXYGEN_FOUND)
+########
 
-# Compiling
-QT4_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
-add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC})
-target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
