@@ -67,14 +67,6 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Random/Main.cpp
 ########
 
 ########
-# Include path
-include_directories(include)
-
-# Add spdlog
-include_directories(vendor/spdlog/include/spdlog)
-########
-
-########
 # Qt related stuff
 # Find Qt 4 installation
 find_package(Qt4 4.7.3 REQUIRED QtCore)
@@ -98,14 +90,14 @@ ExternalProject_Add(libcares
 
 # Add c-ares include directory
 ExternalProject_Get_Property(libcares install_dir)
-include_directories(${install_dir}/include)
+set (libcares_path ${install_dir})
 ########
 
 ########
 # Mosquitto related stuff
 ExternalProject_Add(libmosquitto
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
-    CONFIGURE_COMMAND cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DARES_PATH=${install_dir} ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
+    CONFIGURE_COMMAND cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DARES_PATH=${libcares_path} ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
     BUILD_IN_SOURCE 0
     BUILD_COMMAND ${MAKE})
 
@@ -114,7 +106,22 @@ add_dependencies (libmosquitto libcares)
 
 # Add mosquitto include directory
 ExternalProject_Get_Property(libmosquitto install_dir)
-include_directories(${install_dir}/include)
+set (libmosquitto_path ${install_dir})
+########
+
+########
+# Includes
+# autopin+ include path
+include_directories(include)
+
+# spdlog
+include_directories(vendor/spdlog/include/spdlog)
+
+# libcares
+include_directories(${libcares_path}/include)
+
+# libmosquitto
+include_directories(${libmosquitto_path}/include)
 ########
 
 ########
@@ -124,13 +131,12 @@ target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
 
 # Make sure auotpin+ depends on libcares and link with it
 add_dependencies (autopin+ libcares)
-ExternalProject_Get_Property(libcares install_dir)
-target_link_libraries(autopin+ ${install_dir}/lib/libcares.a)
+target_link_libraries(autopin+ ${libcares_path}/lib/libcares.a)
 
 # Make sure auotpin+ depends on libmosquitto and link with it
 add_dependencies (autopin+ libmosquitto)
 ExternalProject_Get_Property(libmosquitto install_dir)
-target_link_libraries(autopin+ ${install_dir}/lib/libmosquitto.a)
+target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a)
 ########
 
 
