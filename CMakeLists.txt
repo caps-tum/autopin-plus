@@ -67,7 +67,7 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Random/Main.cpp
 ########
 
 ########
-# Qt related stuff
+# Qt
 # Find Qt 4 installation
 find_package(Qt4 4.7.3 REQUIRED QtCore)
 find_package(Qt4 4.7.3 REQUIRED QtNetwork)
@@ -81,20 +81,20 @@ QT4_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 ########
 
 ########
-# C-ares related stuff
+# C-ares
 ExternalProject_Add(libcares
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0
     CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0/configure --prefix=<INSTALL_DIR>
     BUILD_IN_SOURCE 0
     BUILD_COMMAND ${MAKE})
 
-# Add c-ares include directory
+# Store c-ares install directory in variable
 ExternalProject_Get_Property(libcares install_dir)
 set (libcares_path ${install_dir})
 ########
 
 ########
-# Mosquitto related stuff
+# Mosquitto
 ExternalProject_Add(libmosquitto
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
     CONFIGURE_COMMAND cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DARES_PATH=${libcares_path} ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
@@ -104,7 +104,7 @@ ExternalProject_Add(libmosquitto
 # Make sure mosquitto depends on libcares
 add_dependencies (libmosquitto libcares)
 
-# Add mosquitto include directory
+# Store libmosquitto variable in directory
 ExternalProject_Get_Property(libmosquitto install_dir)
 set (libmosquitto_path ${install_dir})
 ########
@@ -125,7 +125,7 @@ include_directories(${libmosquitto_path}/include)
 ########
 
 ########
-# Compiling
+# Compiling and linking
 add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC} ${autopin+_HEADERS})
 target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
 
@@ -140,7 +140,7 @@ target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a)
 
 
 ########
-# Doxygen related stuff
+# Doxygen
 # Generating the Documentation
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
