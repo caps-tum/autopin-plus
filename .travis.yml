@@ -13,7 +13,7 @@ before_install:
     - travis_retry sudo apt-get update -qq
 
 install:
-    - travis_retry sudo apt-get install -qq libqt4-dev cmake
+    - travis_retry sudo apt-get install -qq qtbase5-dev cmake
     - travis_retry sudo apt-get install -qq gcc-4.8 g++-4.8
     - travis_retry sudo apt-get install -qq linux-libc-dev
 

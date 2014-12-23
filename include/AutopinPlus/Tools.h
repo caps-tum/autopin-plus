@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include <qlist.h>		 // for QList
 #include <qstring.h>	 // for QString
 #include <qstringlist.h> // for QStringList
 #include <utility>		 // for pair

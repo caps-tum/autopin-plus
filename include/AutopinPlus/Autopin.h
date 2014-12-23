@@ -58,7 +58,7 @@ class Autopin : public QCoreApplication {
 	 * \param[in] argv	String array with command line arguments
 	 *
 	 */
-	Autopin(int &argc, char **argv);
+	Autopin(int &argc, char *const *argv);
 
   public slots:
 	/*!
@@ -116,6 +116,16 @@ signals:
 	 * \brief True, if the application runs in daemon mode, otherwise false.
 	 */
 	bool isDaemon = false;
+
+	/*!
+	 * Command line's argc
+	 */
+	const int argc;
+
+	/*!
+	 * Command line's argv
+	 */
+	char *const *argv;
 };
 
 } // namespace AutopinPlus

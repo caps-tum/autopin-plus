@@ -25,7 +25,6 @@
 #include <AutopinPlus/ProcessTree.h>		// for ProcessTree, etc
 #include <qbytearray.h>						// for QByteArray
 #include <qelapsedtimer.h>					// for QElapsedTimer
-#include <qglobal.h>						// for qFree
 #include <qlist.h>							// for QList
 #include <qset.h>							// for QSet
 #include <qstring.h>						// for QString

@@ -19,16 +19,16 @@
 
 #pragma once
 
-#include <AutopinPlus/AutopinContext.h>				// for AutopinContext
-#include <AutopinPlus/Configuration.h>				// for Configuration, etc
-#include <AutopinPlus/ControlStrategy.h>			// for ControlStrategy
-#include <AutopinPlus/ObservedProcess.h>			// for ObservedProcess
-#include <AutopinPlus/OS/OSServices.h>				// for OSServices
-#include <AutopinPlus/PerformanceMonitor.h>			// for PerformanceMonitor, etc
-#include <AutopinPlus/PinningHistory.h>				// fo PinningHistory
-#include <qmutex.h>									// for QMutex
-#include <qobjectdefs.h>							// for slots, Q_OBJECT
-#include <qtimer.h>									// for QTimer
+#include <AutopinPlus/AutopinContext.h>		// for AutopinContext
+#include <AutopinPlus/Configuration.h>		// for Configuration, etc
+#include <AutopinPlus/ControlStrategy.h>	// for ControlStrategy
+#include <AutopinPlus/ObservedProcess.h>	// for ObservedProcess
+#include <AutopinPlus/OS/OSServices.h>		// for OSServices
+#include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
+#include <AutopinPlus/PinningHistory.h>		// fo PinningHistory
+#include <qmutex.h>							// for QMutex
+#include <qobjectdefs.h>					// for slots, Q_OBJECT
+#include <qtimer.h>							// for QTimer
 
 namespace AutopinPlus {
 namespace Strategy {

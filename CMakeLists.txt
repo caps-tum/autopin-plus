@@ -69,15 +69,14 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Random/Main.cpp
 ########
 # Qt
 # Find Qt 4 installation
-find_package(Qt4 4.7.3 REQUIRED QtCore)
-find_package(Qt4 4.7.3 REQUIRED QtNetwork)
+find_package(Qt5Core REQUIRED)
+find_package(Qt5Network REQUIRED)
 
 # Disable QtGui module and setup Qt
 set(QT_DONT_USE_QTGUI TRUE)
-include(${QT_USE_FILE})
-add_definitions(${QT_DEFINITIONS})
 
-QT4_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
+# Moc the Qt files
+QT5_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 ########
 
 ########
@@ -126,8 +125,8 @@ include_directories(${libmosquitto_path}/include)
 
 ########
 # Compiling and linking
-add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC} ${autopin+_HEADERS})
-target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
+add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS} ${autopin+_HEADERS_MOC})
+target_link_libraries(autopin+ ${linklibs} -lpthread)
 
 # Make sure auotpin+ depends on libcares and link with it
 add_dependencies (autopin+ libcares)
@@ -136,6 +135,10 @@ target_link_libraries(autopin+ ${libcares_path}/lib/libcares.a)
 # Make sure auotpin+ depends on libmosquitto and link with it
 add_dependencies (autopin+ libmosquitto)
 target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a)
+
+# Add Qt5 libraries
+qt5_use_modules(autopin+ Core)
+qt5_use_modules(autopin+ Network)
 ########
 
 
