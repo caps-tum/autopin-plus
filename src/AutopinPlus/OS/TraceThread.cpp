@@ -198,11 +198,11 @@ void TraceThread::run() {
 					context.report(Error::PROC_TRACE, "ptrace_eventmsg", "Could not get ptrace event information");
 
 				switch (status >> 16) {
-				case(PTRACE_EVENT_CLONE) :
+				case (PTRACE_EVENT_CLONE):
 
-				case(PTRACE_EVENT_FORK) :
+				case (PTRACE_EVENT_FORK):
 
-				case(PTRACE_EVENT_VFORK) :
+				case (PTRACE_EVENT_VFORK):
 					newTask(event_msg);
 					break;
 

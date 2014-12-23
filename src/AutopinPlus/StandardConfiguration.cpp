@@ -28,34 +28,15 @@
 
 #include <AutopinPlus/StandardConfiguration.h>
 
-#include <QFile>
-
 namespace AutopinPlus {
 
-StandardConfiguration::StandardConfiguration(const QString path, AutopinContext &context)
-	: Configuration(path, context) {
+StandardConfiguration::StandardConfiguration(const QString configText, AutopinContext &context)
+	: configText(configText), Configuration(context) {
 
 	this->name = "StandardConfiguration";
 }
 
-void StandardConfiguration::init() {
-	QFile configFile(path);
-	if (configFile.open(QIODevice::ReadOnly)) {
-		context.info("Reading user configuration");
-		QTextStream user_stream(&configFile);
-		parseConfigurationFile(user_stream);
-	} else {
-		context.report(Error::FILE_NOT_FOUND, "config_file", "Could not read configuration \"" + path + "\"");
-	}
-}
-
-Configuration::configopts StandardConfiguration::getConfigOpts() const {
-	Configuration::configopts result;
-
-	result.push_back(Configuration::configopt("default_config", QStringList(path)));
-
-	return result;
-}
+void StandardConfiguration::init() { parseConfigurationFile(); }
 
 QStringList StandardConfiguration::getConfigOptionList(QString opt) const {
 	QStringList result;
@@ -66,11 +47,12 @@ QStringList StandardConfiguration::getConfigOptionList(QString opt) const {
 	return result;
 }
 
-void StandardConfiguration::parseConfigurationFile(QTextStream &file) {
+void StandardConfiguration::parseConfigurationFile() {
 	QString line;
+	QTextStream config(&configText);
 
-	while (!file.atEnd()) {
-		line = file.readLine();
+	while (!config.atEnd()) {
+		line = config.readLine();
 
 		if (line[0] == '#') continue;
 

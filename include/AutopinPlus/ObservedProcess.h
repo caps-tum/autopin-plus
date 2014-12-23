@@ -147,7 +147,7 @@ class ObservedProcess : public QObject {
 	/*!
 	 * \brief Returns the desired address for the communication channel
 	 *
-     * This method returns a file path for a UNIX domain socket
+	 * This method returns a file path for a UNIX domain socket
 	 *
 	 * \return String representation for the address of the communication channel. If the user has enabled
 	 * 	the communication channel without specifying an address the method returns a default address which

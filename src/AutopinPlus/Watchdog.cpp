@@ -41,7 +41,6 @@
 #include <QList>
 #include <memory>
 
-
 namespace AutopinPlus {
 
 std::atomic_int Watchdog::counter(0);

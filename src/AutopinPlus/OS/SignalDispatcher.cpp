@@ -27,6 +27,7 @@
  */
 
 #include <AutopinPlus/OS/SignalDispatcher.h>
+#include <QCoreApplication>
 #include <sys/wait.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -41,7 +42,7 @@ SignalDispatcher &SignalDispatcher::getInstance() {
 	return instance;
 }
 
-SignalDispatcher::SignalDispatcher() {};
+SignalDispatcher::SignalDispatcher() : context(std::string("SignalDispatcher")){};
 
 int SignalDispatcher::setupSignalHandler() {
 	// Setup signal handler
@@ -70,7 +71,11 @@ void SignalDispatcher::slot_handleSigChld() {
 	snChld->setEnabled(false);
 
 	siginfo_t info;
-	read(sigchldFd[1], &info, sizeof(siginfo_t));
+	if (read(sigchldFd[1], &info, sizeof(siginfo_t)) != 0) {
+		context.error("Could not read from socketpair. Bailing out!");
+		QCoreApplication::exit(1);
+	}
+
 	waitpid(info.si_pid, nullptr, WNOHANG);
 
 	emit sig_ProcTerminated(info.si_pid, info.si_status);
@@ -79,7 +84,10 @@ void SignalDispatcher::slot_handleSigChld() {
 }
 
 void SignalDispatcher::chldSignalHandler(int param, siginfo_t *info, void *paramv) {
-	write(sigchldFd[0], info, sizeof(siginfo_t));
+	if (write(sigchldFd[0], info, sizeof(siginfo_t)) != 0) {
+		SignalDispatcher::getInstance().context.error("Could not write to socketpair. Bailing out!");
+		QCoreApplication::exit(1);
+	}
 }
 
 } // namespace OS
