@@ -9,11 +9,12 @@ branches:
 
 before_install:
     - travis_retry sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - travis_retry sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
     - travis_retry sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ trusty main"
     - travis_retry sudo apt-get update -y
 
 install:
-    - travis_retry sudo apt-get install -y qtbase5-dev libqt5gui5 libqt5printsupport5 libqt5widgets5 cmake
+    - travis_retry sudo apt-get install -y cmake qt5-qmake qtbase5-dev 
     - travis_retry sudo apt-get install -y gcc-4.8 g++-4.8
     - travis_retry sudo apt-get install -y linux-libc-dev
 
