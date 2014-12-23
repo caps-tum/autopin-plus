@@ -14,7 +14,9 @@ before_install:
     - travis_retry sudo apt-get update -y
 
 install:
-    - travis_retry sudo apt-get install -y cmake qt5-qmake qtbase5-dev 
+    - travis_retry sudo apt-get install -y cmake
+    - travis_retry sudo apt-get install -y qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev
+    - travis_retry sudo apt-get install -y qt5-default qttools5-dev-tools
     - travis_retry sudo apt-get install -y gcc-4.8 g++-4.8
     - travis_retry sudo apt-get install -y linux-libc-dev
 
