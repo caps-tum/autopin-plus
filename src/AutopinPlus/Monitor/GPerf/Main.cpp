@@ -66,8 +66,7 @@ void Main::init() {
 		try {
 			processors = Tools::readInts(config.getConfigOptionList(name + ".processors"));
 			context.info("  - " + name + ".processors = " + Tools::showInts(processors).join(" "));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'processors' option (" + QString(e.what()) +
 							   ").");
@@ -80,8 +79,7 @@ void Main::init() {
 		try {
 			sensor = readSensor(config.getConfigOption(name + ".sensor"));
 			context.info("  - " + name + ".sensor = " + showSensor(sensor));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'sensor' option (" + QString(e.what()) + ").");
 			return;
@@ -97,8 +95,7 @@ void Main::init() {
 		try {
 			valtype = readMontype(config.getConfigOption(name + ".valtype"));
 			context.info("  - " + name + ".valtype = " + showMontype(valtype));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init(): Could not parse the 'valtype' option (" + QString(e.what()) + ").");
 			return;
@@ -363,8 +360,7 @@ Sensor Main::readSensor(const QString &input) {
 			// that they are just one bit which needs to be set.
 			try {
 				variable_value = Tools::readPair(selector, "=");
-			}
-			catch (const Exception &e) {
+			} catch (const Exception &e) {
 				variable_value.first = selector;
 				variable_value.second = "1";
 			}
@@ -382,8 +378,7 @@ Sensor Main::readSensor(const QString &input) {
 
 			try {
 				lower_upper = Tools::readPair(position, "-");
-			}
-			catch (const Exception &e) {
+			} catch (const Exception &e) {
 				lower_upper.first = position;
 				lower_upper.second = position;
 			}
@@ -417,16 +412,14 @@ Sensor Main::readSensor(const QString &input) {
 		// have a sensible default.
 		try {
 			result.scale = Tools::readDouble(Tools::readLine(input + ".scale"));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 		}
 
 		// Try to set result.unit. If this fails, we just ignore it silently since we
 		// have a sensible default.
 		try {
 			result.unit = Tools::readLine(input + ".unit");
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 		}
 
 		// Try to set result.processors. If this fails, we just ignore it silently
@@ -434,8 +427,7 @@ Sensor Main::readSensor(const QString &input) {
 		try {
 			result.processors =
 				Tools::readInts(Tools::readLine(QFileInfo(input).absolutePath() + "/../cpumask").split(","));
-		}
-		catch (const Exception &e) {
+		} catch (const Exception &e) {
 		}
 	} else if (input.startsWith("hardware/")) {
 		// Support all hardware counters abstracted by the kernel.

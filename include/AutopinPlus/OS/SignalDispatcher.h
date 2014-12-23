@@ -29,6 +29,7 @@
 #pragma once
 
 #include <QSocketNotifier>
+#include <AutopinPlus/AutopinContext.h>
 #include <signal.h>
 
 namespace AutopinPlus {
@@ -83,6 +84,11 @@ signals:
 	 * \brief Constructor
 	 */
 	SignalDispatcher();
+
+	/*!
+	 * \brief AutopinContext used by this class to log error messages
+	 */
+	const AutopinContext context;
 
 	/*
 	 * \brief fieldescriptor for the socketpair

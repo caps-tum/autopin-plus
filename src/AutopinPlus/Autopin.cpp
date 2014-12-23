@@ -30,6 +30,7 @@
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/OS/SignalDispatcher.h>
+#include <AutopinPlus/MQTTClient.h>
 #include <QFileInfo>
 #include <QString>
 #include <memory>
@@ -57,13 +58,14 @@ Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), context
 void Autopin::slot_autopinSetup() {
 
 	struct option long_options[] = {
-		{"conf", 1, NULL, 'c'}, {"daemon", 0, NULL, 'd'}, {"version", 0, NULL, 'v'}, {"help", 0, NULL, 'h'}};
+		{"conf", 1, NULL, 'c'}, {"daemon", 1, NULL, 'd'}, {"version", 0, NULL, 'v'}, {"help", 0, NULL, 'h'}};
 
 	// Parsing commandline arguments
-	std::list<QString> configFiles;
+	std::list<QString> configPaths;
+	QString daemonConfigPath;
 
 	int opt;
-	while ((opt = getopt_long(this->argc(), this->argv(), "vhdc:", long_options, NULL)) != -1) {
+	while ((opt = getopt_long(this->argc(), this->argv(), "vhd:c:", long_options, NULL)) != -1) {
 		switch (opt) {
 		case ('v'):
 			printVersion();
@@ -74,14 +76,16 @@ void Autopin::slot_autopinSetup() {
 			EXIT(0);
 			break;
 		case ('c'):
-			configFiles.push_back(optarg);
+			configPaths.push_back(optarg);
 			break;
 		case ('d'):
+			daemonConfigPath = optarg;
 			isDaemon = true;
 			break;
 		case ('?'):
+			std::cout << "\n";
 			printHelp();
-			EXIT(1);
+			EXIT(2);
 			break;
 		}
 	}
@@ -98,25 +102,78 @@ void Autopin::slot_autopinSetup() {
 	qt_msg = QString("Running with Qt") + qVersion();
 	context.info(qt_msg);
 
+	// Load daemon config file
+	if (isDaemon) {
+		std::string mqqtHostname = "";
+		int mqqtPort = 0;
+
+		QFile daemonConfigFile(daemonConfigPath);
+		if (daemonConfigFile.open(QIODevice::ReadOnly)) {
+			QTextStream stream(&daemonConfigFile);
+			StandardConfiguration daemonConfig(stream.readAll(), context);
+			daemonConfig.init();
+			mqqtHostname = daemonConfig.getConfigOption("mqtt.hostname").toStdString();
+			mqqtPort = daemonConfig.getConfigOptionInt("mqtt.port");
+		} else {
+			context.report(Error::FILE_NOT_FOUND, "config_file",
+						   "Could not read configuration \"" + daemonConfigPath + "\"");
+			EXIT(1);
+		}
+
+		// Setting up MQTT Communcation
+		context.info("Setting up MQTT communication");
+		MQTTClient::MQTT_STATUS status = MQTTClient::init(mqqtHostname, mqqtPort);
+		QString error_message = "";
+		switch (status) {
+		case MQTTClient::MOSQUITTO:
+			error_message = "Cannot initalize MQTT client";
+			break;
+		case MQTTClient::CONNECT:
+			error_message = "Cannot connect to MQTT broker on host " + QString::fromStdString(mqqtHostname) +
+							" on port " + QString::number(mqqtPort);
+			break;
+		case MQTTClient::LOOP:
+			error_message = "Cannot initalize MQTT loop";
+			break;
+		case MQTTClient::SUSCRIBE:
+			error_message = "Cannot suscripe to MQTT topics";
+			break;
+		}
+
+		if (error_message != "") {
+			context.report(Error::SYSTEM, "mqqt", error_message);
+			EXIT(1);
+		}
+
+		connect(&MQTTClient::getInstance(), SIGNAL(sig_receivedProcessConfig(QString)), this,
+				SLOT(slot_runProcess(QString)));
+	}
+
 	// Setting up signal Handlers
 	context.info("Setting up signal handlers");
 	if (SignalDispatcher::setupSignalHandler() != 0) {
 		context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
-		EXIT(2);
+		EXIT(1);
 	}
 
 	// Read configuration
 	context.info("Reading configurations ...");
 
-	for (const auto configFile : configFiles) {
-		std::unique_ptr<Configuration> config(new StandardConfiguration(configFile, context));
-		config->init();
+	for (const auto configPath : configPaths) {
+		QFile configFile(configPath);
+		if (configFile.open(QIODevice::ReadOnly)) {
+			QTextStream stream(&configFile);
+			std::unique_ptr<Configuration> config(new StandardConfiguration(stream.readAll(), context));
+			config->init();
 
-		Watchdog *watchdog = new Watchdog(std::move(config));
-		connect(this, SIGNAL(sig_autopinReady()), watchdog, SLOT(slot_watchdogRun()));
-		connect(watchdog, SIGNAL(sig_watchdogStop()), this, SLOT(slot_watchdogStop()));
+			Watchdog *watchdog = new Watchdog(std::move(config));
+			connect(this, SIGNAL(sig_autopinReady()), watchdog, SLOT(slot_watchdogRun()));
+			connect(watchdog, SIGNAL(sig_watchdogStop()), this, SLOT(slot_watchdogStop()));
 
-		watchdogs.push_back(watchdog);
+			watchdogs.push_back(watchdog);
+		} else {
+			context.report(Error::FILE_NOT_FOUND, "config_file", "Could not read configuration \"" + configPath + "\"");
+		}
 	}
 
 	emit sig_autopinReady();
@@ -129,7 +186,19 @@ void Autopin::slot_watchdogStop() {
 	watchdogs.remove(watchdog);
 	watchdog->deleteLater();
 
-	if (!isDaemon && watchdogs.empty()) QCoreApplication::exit(0);
+	if (!isDaemon && watchdogs.empty()) EXIT(0);
+}
+
+void Autopin::slot_runProcess(const QString configText) {
+	std::unique_ptr<Configuration> config(new StandardConfiguration(configText, context));
+	config->init();
+
+	Watchdog *watchdog = new Watchdog(std::move(config));
+	connect(watchdog, SIGNAL(sig_watchdogStop()), this, SLOT(slot_watchdogStop()));
+
+	watchdogs.push_back(watchdog);
+
+	watchdog->slot_watchdogRun();
 }
 
 void Autopin::printHelp() {
@@ -137,11 +206,17 @@ void Autopin::printHelp() {
 	std::cout << "\nUsage: " << applicationName().toStdString() << " [OPTION]\n";
 	std::cout << "Options:\n";
 	std::cout << std::left << std::setw(30) << "  -c, --config=CONFIG_FILE"
-			  << "Read configuration options from file.\n";
+			  << "Read process-configuration options from file.\n";
 	std::cout << std::left << std::setw(30) << ""
 			  << "There can be multiple occurrences of this option!\n";
-	std::cout << std::left << std::setw(30) << "  -d, --daemon"
-			  << "Run autopin as a daemon.\n";
+	std::cout << std::left << std::setw(30) << "  -d, --daemon=CONFIG_FILE"
+			  << "Run autopin as a daemon and read the\n";
+	std::cout << std::left << std::setw(30) << ""
+			  << "daemon-configuration from file.\n";
+	std::cout << std::left << std::setw(30) << "  -v, --version"
+			  << "Prints version and exit\n";
+	std::cout << std::left << std::setw(30) << "  -h, --help"
+			  << "Prints this help and exit\n";
 }
 
 void Autopin::printVersion() {

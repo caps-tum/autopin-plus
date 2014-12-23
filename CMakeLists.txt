@@ -38,7 +38,8 @@ set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/ControlStrategy.h i
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Configuration.cpp src/AutopinPlus/PinningHistory.cpp src/AutopinPlus/ControlStrategy.cpp src/AutopinPlus/PerformanceMonitor.cpp src/AutopinPlus/DataLogger.cpp)
 
 # OS independent classes
-set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.cpp src/AutopinPlus/XMLPinningHistory.cpp)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/MQTTClient.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.cpp src/AutopinPlus/XMLPinningHistory.cpp src/AutopinPlus/MQTTClient.cpp)
 
 # OS-Service related classes
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/OSServices.h include/AutopinPlus/OS/TraceThread.h include/AutopinPlus/OS/SignalDispatcher.h)
@@ -129,13 +130,9 @@ include_directories(${libmosquitto_path}/include)
 add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC} ${autopin+_HEADERS})
 target_link_libraries(autopin+ ${QT_LIBRARIES} ${linklibs} -lpthread)
 
-# Make sure auotpin+ depends on libcares and link with it
-add_dependencies (autopin+ libcares)
-target_link_libraries(autopin+ ${libcares_path}/lib/libcares.a)
-
-# Make sure auotpin+ depends on libmosquitto and link with it
-add_dependencies (autopin+ libmosquitto)
-target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a)
+# Make sure auotpin+ depends on libcares and libmosquitto and link with it
+add_dependencies (autopin+ libmosquitto libcares)
+target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a ${libcares_path}/lib/libcares.a)
 ########
 
 
