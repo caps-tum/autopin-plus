@@ -27,7 +27,6 @@
 #include <AutopinPlus/ObservedProcess.h>	// for ObservedProcess
 #include <AutopinPlus/OS/OSServices.h>		// for OSServices
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
-#include <AutopinPlus/PinningHistory.h>		// fo PinningHistory
 #include <AutopinPlus/Tools.h>				// for Tools
 #include <qmutex.h>							// for QMutexLocker
 #include <qset.h>							// for QSet

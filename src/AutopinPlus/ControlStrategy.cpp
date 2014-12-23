@@ -27,7 +27,6 @@
  */
 
 #include <AutopinPlus/ControlStrategy.h>
-#include <AutopinPlus/XMLPinningHistory.h>
 
 #include <AutopinPlus/OS/OSServices.h>
 
@@ -46,12 +45,6 @@ ControlStrategy::ControlStrategy(const Configuration &config, const ObservedProc
 void ControlStrategy::init() {
 	// Setup pinning history
 	createPinningHistory();
-
-	// Read environment information for the pinning history
-	if (history != nullptr) setPinningHistoryEnv();
-
-	// Initialize the pinning history
-	if (history != nullptr) history->init();
 }
 
 QString ControlStrategy::getName() { return name; }
@@ -64,17 +57,8 @@ void ControlStrategy::slot_PhaseChanged(int newphase) {}
 
 void ControlStrategy::slot_UserMessage(int arg, double val) {}
 
-bool ControlStrategy::addPinningToHistory(PinningHistory::autopin_pinning pinning, double value) {
-	if (history == nullptr) return false;
-
-	int phase = proc.getExecutionPhase();
-	history->addPinning(phase, pinning, value);
-
-	return true;
-}
-
-PinningHistory::pinning_list ControlStrategy::readPinnings(QString opt) {
-	PinningHistory::pinning_list result;
+ControlStrategy::pinning_list ControlStrategy::readPinnings(QString opt) {
+	pinning_list result;
 	QStringList pinnings;
 
 	if (config.configOptionExists(opt) <= 0) {
@@ -86,7 +70,7 @@ PinningHistory::pinning_list ControlStrategy::readPinnings(QString opt) {
 
 	for (int i = 0; i < pinnings.size(); i++) {
 		QStringList pinning = pinnings[i].split(':', QString::SkipEmptyParts, Qt::CaseSensitive);
-		PinningHistory::autopin_pinning new_pinning;
+		autopin_pinning new_pinning;
 
 		for (int j = 0; j < pinning.size(); j++) {
 			bool ok;
@@ -128,6 +112,7 @@ void ControlStrategy::createPinningHistory() {
 	int optcount_write = config.configOptionExists("PinningHistory.save");
 
 	if (optcount_read <= 0 && optcount_write <= 0) return;
+
 	if (optcount_read > 1)
 		context.report(Error::BAD_CONFIG, "inconsistent",
 					   "Specified " + QString::number(optcount_read) + " pinning histories as input");
@@ -143,30 +128,8 @@ void ControlStrategy::createPinningHistory() {
 
 	QFileInfo history_info(history_config);
 
-	if (history_info.suffix() == "xml") {
-		history = std::unique_ptr<PinningHistory>(new XMLPinningHistory(config, context));
-		return;
-	}
-
 	context.report(Error::UNSUPPORTED, "critical",
 				   "File type \"." + history_info.suffix() + "\" is not supported by any pinning history");
-}
-
-void ControlStrategy::setPinningHistoryEnv() {
-	history->setHostname(OS::OSServices::getHostname_static());
-	history->setConfiguration(config.getName());
-	QString comm = (proc.getCommChanAddr() == "") ? "Inactive" : "Active";
-	QString trace = (proc.getTrace()) ? "Active" : "Inactive";
-	history->setObservedProcess(proc.getCmd(), trace, comm, QString::number(proc.getCommTimeout()));
-	for (auto &elem : monitors) {
-		PinningHistory::monitor_config mconf;
-		mconf.name = (elem)->getName();
-		mconf.type = (elem)->getType();
-		mconf.opts = (elem)->getConfigOpts();
-
-		history->addPerformanceMonitor(mconf);
-	}
-	history->setControlStrategy(this->getName(), this->getConfigOpts());
 }
 
 } // namespace AutopinPlus

@@ -161,7 +161,7 @@ void Main::slot_startPinning() {
 	// Enable notifications for new tasks
 	notifications = true;
 
-	PinningHistory::autopin_pinning &new_pinning = pinnings[current_pinning];
+	autopin_pinning &new_pinning = pinnings[current_pinning];
 	context.info("");
 	QString msg =
 		"Test pinning " + QString::number(current_pinning + 1) + " of " + QString::number(pinnings.size()) + ":";
@@ -247,7 +247,7 @@ void Main::slot_stopPinning() {
 	}
 
 	context.info("Result of pinning " + QString::number(current_pinning + 1) + ": " + QString::number(current_result));
-	addPinningToHistory(pinnings[current_pinning], current_result);
+	// addPinningToHistory(pinnings[current_pinning], current_result);
 	pinned_tasks.clear();
 
 	current_pinning++;
@@ -260,7 +260,7 @@ void Main::slot_stopPinning() {
 		refreshTasks();
 		applyPinning(pinnings[best_pinning]);
 		context.info("Control strategy autopin1 has finished");
-		if (history != nullptr) history->deinit();
+		// if (history != nullptr) history->deinit();
 	}
 }
 
@@ -273,7 +273,7 @@ void Main::slot_TaskCreated(int tid) {
 		if (it != pinned_tasks.end()) return;
 
 		unsigned int i = pinned_tasks.size();
-		PinningHistory::autopin_pinning pinning = pinnings[current_pinning];
+		autopin_pinning pinning = pinnings[current_pinning];
 		if (i < pinning.size()) {
 			int j = tasks.size();
 			if (skip.find(j) != skip.end()) {
@@ -339,7 +339,7 @@ void Main::slot_PhaseChanged(int newphase) {
 	}
 }
 
-void Main::applyPinning(PinningHistory::autopin_pinning pinning) {
+void Main::applyPinning(autopin_pinning pinning) {
 	// i counts the pinnings
 	// j counts the tasks
 	unsigned int i = 0, j = 0;

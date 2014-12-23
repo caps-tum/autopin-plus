@@ -34,7 +34,6 @@
 #include <AutopinPlus/ObservedProcess.h>
 #include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/PerformanceMonitor.h>
-#include <AutopinPlus/PinningHistory.h>
 #include <deque>
 #include <map>
 #include <QObject>
@@ -82,6 +81,21 @@ class ControlStrategy : public QObject {
 	 */
 	virtual Configuration::configopts getConfigOpts() = 0;
 
+	/*!
+	 * \brief Data structure that maps tasks to cores
+	 */
+	using autopin_pinning = std::deque<int>;
+
+	/*!
+	 * \brief Data structure for storing a list of pinnings
+	 */
+	using pinning_list = std::deque<autopin_pinning>;
+
+	/*!
+	 * \brief Data type for storing a pinning with its result
+	 */
+	using pinning_result = std::pair<autopin_pinning, double>;
+
   public slots:
 	/*!
 	 * \brief Starts the strategy when autopin+ has finished initialization
@@ -124,14 +138,14 @@ class ControlStrategy : public QObject {
 	 * In contrast to ProcessTree::autopin_tid_list this data structure
 	 * supports the sorting of tasks.
 	 */
-	typedef std::deque<int> autopin_tasklist;
+	using autopin_tasklist = std::deque<int>;
 
 	/*!
 	 * \brief Data structure which maps tids to the corresponding sortids
 	 *
 	 * sortids are used for sorting tids in a consistent way
 	 */
-	typedef std::map<int, int> sortmap;
+	using sortmap = std::map<int, int>;
 
 	/*!
 	 * \brief Reads pinnings from the configuration
@@ -140,7 +154,7 @@ class ControlStrategy : public QObject {
 	 * 	the pinnings are stored.
 	 * \return A list of pinnings
 	 */
-	PinningHistory::pinning_list readPinnings(QString opt);
+	pinning_list readPinnings(QString opt);
 
 	/*!
 	 * \brief Factory function for the pinning history
@@ -148,31 +162,8 @@ class ControlStrategy : public QObject {
 	 * Reads the configuration and creates the requested
 	 * pinning history. The pinning history which is created
 	 * depends on the suffix of the history file:
-	 *
-	 * - .xml: XMLPinningHistory
-	 *
 	 */
 	void createPinningHistory();
-
-	/*!
-	 * \brief Provide environment options for the pinning history
-	 */
-	void setPinningHistoryEnv();
-
-	/*!
-	 * \brief Adds a pinning to the pinning history
-	 *
-	 * Checks if the pinning history feature is enabled and adds the
-	 * specified pinning to the history. The current execution phase
-	 * if the observed process is determined within this method.
-	 *
-	 * \param[in] pinning	The pinning which will be added to the history
-	 * \param[in] value	The performance value of the pinning
-	 * \return True if the pinning history feature is enabled and false
-	 * 	otherwise.
-	 *
-	 */
-	virtual bool addPinningToHistory(PinningHistory::autopin_pinning pinning, double value);
 
 	//@{
 	/*!
@@ -182,7 +173,6 @@ class ControlStrategy : public QObject {
 	const ObservedProcess &proc;
 	OS::OSServices &service;
 	const PerformanceMonitor::monitor_list &monitors;
-	std::unique_ptr<PinningHistory> history;
 	//@}
 
 	/*!

@@ -97,7 +97,7 @@ class Main : public ControlStrategy {
 	/*!
 	 * \brief List of pinned tasks
 	 */
-	typedef std::deque<pinned_task> autopin_pinned_tasklist;
+	using autopin_pinned_tasklist = std::deque<pinned_task>;
 
 	/*!
 	 * \brief Applies a pinning
@@ -108,7 +108,7 @@ class Main : public ControlStrategy {
 	 * \param [in] pinning The pinning which shall be applied.
 	 *
 	 */
-	void applyPinning(PinningHistory::autopin_pinning pinning);
+	void applyPinning(autopin_pinning pinning);
 
 	/*!
 	 * \brief Determines if all pinned tasks are still running
@@ -123,7 +123,7 @@ class Main : public ControlStrategy {
 	/*!
 	 * Stores the pinnings
 	 */
-	PinningHistory::pinning_list pinnings;
+	pinning_list pinnings;
 
 	/*!
 	 * The pinning which is currently tested
