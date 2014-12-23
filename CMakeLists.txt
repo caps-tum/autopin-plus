@@ -6,27 +6,61 @@ cmake_minimum_required(VERSION 2.8)
 include(ExternalProject)
 
 ########
-# Compiler options based on the different compilers
+# Handle different build types
+IF(NOT CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE Debug
+       CACHE STRING "Choose the type of build : None Debug Release RelWithDebInfo MinSizeRel Coverage."
+       FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+message("* Current build type is : ${CMAKE_BUILD_TYPE}")
+string( TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE )
+########
+
+########
+# Compiler/linker options based on the different compilers
+ADD_DEFINITIONS(-std=c++11 )
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Using Clang
-  ADD_DEFINITIONS(-g -Ofast -march=native -std=c++11 )
+  if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
+    ADD_DEFINITIONS(-g -Ofast -march=native)
+  endif()
+
+  if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
+    ADD_DEFINITIONS(-g3 -O0 -Weverything)
+  endif()
 
   # Reduce the noise coming from Qt5
   ADD_DEFINITIONS(-Wno-inconsistent-missing-override)
 
-  #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Weverything -Wno-c++98-compat -Wno-padded -Wno-deprecated-register)
   # Options required to reduce the noise of spdlog
-  #ADD_DEFINITIONS(-Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-switch-enum)
-  #ADD_DEFINITIONS(-Wno-old-style-cast -Wno-undef -Wno-documentation-unknown-command)
-  #ADD_DEFINITIONS(-Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors)
+  ADD_DEFINITIONS(-Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-switch-enum)
+  ADD_DEFINITIONS(-Wno-old-style-cast -Wno-undef -Wno-documentation-unknown-command)
+  ADD_DEFINITIONS(-Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors)
+
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # Using GCC
-  ADD_DEFINITIONS(-g -O2 -std=c++11 -march=native)
-  #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wunused)
+  if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
+    ADD_DEFINITIONS(-g -O2 -march=native)
+  endif()
+
+  if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
+    ADD_DEFINITIONS(-g3 -O0 -Wall -Wextra -Wunused)
+  endif()
+
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   # Using Intel C++
-  ADD_DEFINITIONS(-g -fast -std=c++11 -Wno-deprecated-register)
-  #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Wall -Wextra -Wno-deprecated-register)
+  if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
+    ADD_DEFINITIONS(-g -fast)
+  endif()
+
+  if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
+    ADD_DEFINITIONS(-g3 -O0 -Wall -Wextra)
+  endif()
+endif()
+
+if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
+  # Strip the binary
+  set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -s")
 endif()
 ########
 
