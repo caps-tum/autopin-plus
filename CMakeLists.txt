@@ -9,7 +9,10 @@ include(ExternalProject)
 # Compiler options based on the different compilers
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Using Clang
-  ADD_DEFINITIONS(-g -Ofast -march=native -std=c++11 -Wno-deprecated-register)
+  ADD_DEFINITIONS(-g -Ofast -march=native -std=c++11 )
+
+  # Reduce the noise coming from Qt5
+  ADD_DEFINITIONS(-Wno-inconsistent-missing-override)
 
   #ADD_DEFINITIONS(-g3 -O0 -std=c++11 -Weverything -Wno-c++98-compat -Wno-padded -Wno-deprecated-register)
   # Options required to reduce the noise of spdlog
