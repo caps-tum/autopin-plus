@@ -30,7 +30,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif()
 
   # Reduce the noise coming from Qt5
-  ADD_DEFINITIONS(-Wno-inconsistent-missing-override)
+  ADD_DEFINITIONS(-Wno-inconsistent-missing-override -Wno-disabled-macro-expansion)
 
   # Options required to reduce the noise of spdlog
   ADD_DEFINITIONS(-Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-switch-enum)
