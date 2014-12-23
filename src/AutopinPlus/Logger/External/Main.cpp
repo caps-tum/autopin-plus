@@ -29,7 +29,6 @@
 #include <AutopinPlus/Tools.h>					 // for Tools
 #include <qelapsedtimer.h>						 // for QElapsedTimer
 #include <qmutex.h>								 // for QMutex
-#include <qobjectdefs.h>						 // for SIGNAL, SLOT
 #include <qstring.h>							 // for operator+, QString
 #include <qstringlist.h>						 // for QStringList
 #include <qtextstream.h>						 // for QTextStream, operator<<, etc

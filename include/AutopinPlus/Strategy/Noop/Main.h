@@ -27,7 +27,6 @@
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
 #include <AutopinPlus/PinningHistory.h>		// fo PinningHistory
 #include <qmutex.h>							// for QMutex
-#include <qobjectdefs.h>					// for slots, Q_OBJECT
 #include <qtimer.h>							// for QTimer
 
 namespace AutopinPlus {
