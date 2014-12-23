@@ -24,8 +24,6 @@
 #include <AutopinPlus/Monitor/GPerf/Sensor.h> // for Sensor
 #include <AutopinPlus/PerformanceMonitor.h>   // for PerformanceMonitor
 #include <AutopinPlus/ProcessTree.h>		  // for ProcessTree, etc
-#include <qatomic_x86_64.h>					  // for QBasicAtomicInt::deref
-#include <qglobal.h>						  // for qFree
 #include <qlist.h>							  // for QList
 #include <qmap.h>							  // for QMap
 #include <qstring.h>						  // for QString

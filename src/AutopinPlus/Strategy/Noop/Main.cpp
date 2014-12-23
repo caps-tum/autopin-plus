@@ -29,9 +29,7 @@
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
 #include <AutopinPlus/PinningHistory.h>		// fo PinningHistory
 #include <AutopinPlus/Tools.h>				// for Tools
-#include <qatomic_x86_64.h>					// for QBasicAtomicInt::deref
 #include <qmutex.h>							// for QMutexLocker
-#include <qobjectdefs.h>					// for SIGNAL, SLOT
 #include <qset.h>							// for QSet
 #include <qstring.h>						// for operator+, QString
 #include <qstringlist.h>					// for QStringList

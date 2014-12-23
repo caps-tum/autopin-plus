@@ -28,7 +28,6 @@
 #include <AutopinPlus/PerformanceMonitor.h>		 // for PerformanceMonitor, etc
 #include <qelapsedtimer.h>						 // for QElapsedTimer
 #include <qmutex.h>								 // for QMutex
-#include <qobjectdefs.h>						 // for Q_OBJECT, slots
 #include <qstringlist.h>						 // for QStringList
 #include <qtimer.h>								 // for QTimer
 

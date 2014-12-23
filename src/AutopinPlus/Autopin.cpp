@@ -53,7 +53,7 @@ using AutopinPlus::OS::OSServices;
 
 namespace AutopinPlus {
 
-Autopin::Autopin(int &argc, char **argv) : QCoreApplication(argc, argv), context(std::string("global")) {}
+Autopin::Autopin(int &_argc, char * const*_argv) : QCoreApplication(_argc, const_cast<char**>(_argv)), context(std::string("global")), argc(_argc), argv(_argv) {}
 
 void Autopin::slot_autopinSetup() {
 
@@ -65,7 +65,7 @@ void Autopin::slot_autopinSetup() {
 	QString daemonConfigPath;
 
 	int opt;
-	while ((opt = getopt_long(this->argc(), this->argv(), "vhd:c:", long_options, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "vhd:c:", long_options, NULL)) != -1) {
 		switch (opt) {
 		case ('v'):
 			printVersion();
