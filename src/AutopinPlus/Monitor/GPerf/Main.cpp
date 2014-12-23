@@ -30,9 +30,7 @@
 #include <errno.h>			   // for errno
 #include <iostream>			   // for cout, operator<<, ostream, etc
 #include <linux/perf_event.h>  // for perf_event_attr, etc
-#include <qatomic_x86_64.h>	// for QBasicAtomicInt::deref
 #include <qfileinfo.h>		   // for QFileInfo
-#include <qglobal.h>		   // for qFree
 #include <qlist.h>			   // for QList
 #include <qmap.h>			   // for QMap
 #include <qstring.h>		   // for QString, operator+
