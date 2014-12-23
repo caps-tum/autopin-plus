@@ -34,7 +34,6 @@
 #include<vector>
 #include<memory>
 #include "sinks/base_sink.h"
-#include "sinks/async_sink.h"
 #include "common.h"
 
 namespace spdlog
@@ -63,31 +62,61 @@ public:
     const std::string& name() const;
     bool should_log(level::level_enum) const;
 
-    //Stop logging
-    void stop();
+    template <typename... Args>
+    details::line_logger trace(const char* fmt, const Args&... args);
 
-    template <typename... Args> details::line_logger log(level::level_enum lvl, const Args&... args);
-    template <typename... Args> details::line_logger log(const Args&... args);
-    template <typename... Args> details::line_logger trace(const Args&... args);
-    template <typename... Args> details::line_logger debug(const Args&... args);
-    template <typename... Args> details::line_logger info(const Args&... args);
-    template <typename... Args> details::line_logger notice(const Args&... args);
-    template <typename... Args> details::line_logger warn(const Args&... args);
-    template <typename... Args> details::line_logger error(const Args&... args);
-    template <typename... Args> details::line_logger critical(const Args&... args);
-    template <typename... Args> details::line_logger alert(const Args&... args);
-    template <typename... Args> details::line_logger emerg(const Args&... args);
+    template <typename... Args>
+    details::line_logger debug(const char* fmt, const Args&... args);
+
+    template <typename... Args>
+    details::line_logger info(const char* fmt, const Args&... args);
+
+    template <typename... Args>
+    details::line_logger notice(const char* fmt, const Args&... args);
+
+    template <typename... Args>
+    details::line_logger warn(const char* fmt, const Args&... args);
+
+    template <typename... Args>details::line_logger error(const char* fmt, const Args&... args);
+
+    template <typename... Args>
+    details::line_logger critical(const char* fmt, const Args&... args);
+
+    template <typename... Args>
+    details::line_logger alert(const char* fmt, const Args&... args);
+
+    template <typename... Args>
+    details::line_logger emerg(const char* fmt, const Args&... args);
 
 
+    //API to support logger.info() << ".." call  style
+    details::line_logger trace();
+    details::line_logger debug();
+    details::line_logger info();
+    details::line_logger notice();
+    details::line_logger warn();
+    details::line_logger error();
+    details::line_logger critical();
+    details::line_logger alert();
+    details::line_logger emerg();
+
+
+    // Create log message with the given level, no matter what is the actual logger's level
+    template <typename... Args>
+    details::line_logger force_log(level::level_enum lvl, const char* fmt, const Args&... args);
+
+    // Set the format of the log messages from this logger
     void set_pattern(const std::string&);
     void set_formatter(formatter_ptr);
 
 
 protected:
-    virtual void _log_msg(details::log_msg& msg);
+    virtual void _log_msg(details::log_msg&);
     virtual void _set_pattern(const std::string&);
     virtual void _set_formatter(formatter_ptr);
-    virtual void _stop();
+    details::line_logger _log_if_enabled(level::level_enum lvl);
+    template <typename... Args>
+    details::line_logger _log_if_enabled(level::level_enum lvl, const char* fmt, const Args&... args);
 
 
     friend details::line_logger;
@@ -95,13 +124,6 @@ protected:
     std::vector<sink_ptr> _sinks;
     formatter_ptr _formatter;
     std::atomic_int _level;
-
-private:
-    void _variadic_log(details::line_logger& l);
-    template <typename Last>
-    inline void _variadic_log(spdlog::details::line_logger& l, const Last& last);
-    template <typename First, typename... Rest>
-    void _variadic_log(details::line_logger&l, const First& first, const Rest&... rest);
 
 };
 }

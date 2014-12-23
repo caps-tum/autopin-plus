@@ -2,7 +2,9 @@
 #include <vector>
 #include <atomic>
 
-#include "glog/logging.h"
+#define _ELPP_THREAD_SAFE
+#include "easylogging++.h"
+_INITIALIZE_EASYLOGGINGPP
 
 using namespace std;
 
@@ -15,9 +17,9 @@ int main(int argc, char* argv[])
 
     int howmany = 1000000;
 
-    FLAGS_logtostderr = 0;
-    FLAGS_log_dir = "logs";
-    google::InitGoogleLogging(argv[0]);
+    // Load configuration from file
+    el::Configurations conf("easyl.conf");
+    el::Loggers::reconfigureLogger("default", conf);
 
     std::atomic<int > msg_counter {0};
     vector<thread> threads;
@@ -30,7 +32,7 @@ int main(int argc, char* argv[])
             {
                 int counter = ++msg_counter;
                 if (counter > howmany) break;
-                LOG(INFO) << "glog message #" << counter << ": This is some text for your pleasure";
+                LOG(INFO) << "easylog message #" << counter << ": This is some text for your pleasure";
             }
         }));
     }
