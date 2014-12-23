@@ -85,12 +85,12 @@ void Main::slot_autopinReady() {
 	}
 }
 
-void Main::slot_TaskCreated(int tid) {
+void Main::slot_TaskCreated(int) {
 	// We received a signal telling us that a new task was created, so update the monitors.
 	updateMonitors();
 }
 
-void Main::slot_TaskTerminated(int tid) {
+void Main::slot_TaskTerminated(int) {
 	// We received a signal telling us that a task was terminated, so update the monitors.
 	updateMonitors();
 }

@@ -27,7 +27,6 @@
  */
 
 #include <AutopinPlus/ControlStrategy.h>
-
 #include <AutopinPlus/OS/OSServices.h>
 
 #include <algorithm>
@@ -49,13 +48,13 @@ void ControlStrategy::init() {
 
 QString ControlStrategy::getName() { return name; }
 
-void ControlStrategy::slot_TaskCreated(int tid) {}
+void ControlStrategy::slot_TaskCreated(int) {}
 
-void ControlStrategy::slot_TaskTerminated(int tid) {}
+void ControlStrategy::slot_TaskTerminated(int) {}
 
-void ControlStrategy::slot_PhaseChanged(int newphase) {}
+void ControlStrategy::slot_PhaseChanged(int) {}
 
-void ControlStrategy::slot_UserMessage(int arg, double val) {}
+void ControlStrategy::slot_UserMessage(int, double) {}
 
 ControlStrategy::pinning_list ControlStrategy::readPinnings(QString opt) {
 	pinning_list result;

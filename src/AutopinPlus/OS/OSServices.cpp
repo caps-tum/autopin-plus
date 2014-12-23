@@ -59,7 +59,7 @@ namespace AutopinPlus {
 namespace OS {
 
 OSServices::OSServices(AutopinContext &context)
-	: context(context), tracer(context), comm_notifier(nullptr), server_socket(-1), client_socket(-1) {
+	: tracer(context), comm_notifier(nullptr), server_socket(-1), client_socket(-1), context(context) {
 	integer = QRegExp("\\d+");
 
 	connect(&tracer, SIGNAL(sig_TaskCreated(int)), this, SIGNAL(sig_TaskCreated(int)));

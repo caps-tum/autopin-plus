@@ -318,7 +318,7 @@ void Main::slot_TaskTerminated(int tid) {
 	}
 }
 
-void Main::slot_PhaseChanged(int newphase) {
+void Main::slot_PhaseChanged(int) {
 	// Restart the current pinning if a new execution phase
 	// is reported and notifications are enabled
 
