@@ -44,9 +44,6 @@ Building autopin+
 
     - CMAKE_BUILD_TYPE: 	Type of the build, should be set to "Release"
     - CMAKE_INSTALL_PREFIX: 	Installation prefix
-    - OS_LINUX: 		Compile autopin+ for Linux (has to be "ON")
-    - PERFMON_SUPPORT: 		Compile autopin+ with support for perfmon
-    - PERF_SUPPORT:		Compile autopin+ with support for perf
     - QT_QMAKE_EXECUTABLE: 	Path to the qmake executable of the Qt distribution which
 				will be used for compiling
 

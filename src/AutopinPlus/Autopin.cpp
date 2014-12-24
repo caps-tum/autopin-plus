@@ -70,11 +70,9 @@ void Autopin::slot_autopinSetup() {
 		case ('v'):
 			printVersion();
 			EXIT(0);
-			break;
 		case ('h'):
 			printHelp();
 			EXIT(0);
-			break;
 		case ('c'):
 			configPaths.push_back(optarg);
 			break;
@@ -86,7 +84,6 @@ void Autopin::slot_autopinSetup() {
 			std::cout << "\n";
 			printHelp();
 			EXIT(2);
-			break;
 		}
 	}
 
