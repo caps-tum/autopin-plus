@@ -46,7 +46,7 @@ namespace AutopinPlus {
 std::atomic_int Watchdog::counter(0);
 
 Watchdog::Watchdog(std::unique_ptr<const Configuration> config)
-	: config(std::move(config)), service(nullptr), process(nullptr), strategy(nullptr), context(nullptr) {}
+	: context(nullptr), config(std::move(config)), service(nullptr), process(nullptr), strategy(nullptr) {}
 
 Watchdog::~Watchdog() { context->info("Watchdog destroyed"); }
 

@@ -22,7 +22,6 @@
 #include <AutopinPlus/AutopinContext.h>		// for AutopinContext
 #include <AutopinPlus/Configuration.h>		// for Configuration, etc
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
-#include <qobjectdefs.h>					// for Q_OBJECT
 #include <qobject.h>						// for QObject
 #include <qstring.h>						// for QString
 

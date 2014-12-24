@@ -31,7 +31,7 @@
 namespace AutopinPlus {
 
 StandardConfiguration::StandardConfiguration(const QString configText, AutopinContext &context)
-	: configText(configText), Configuration(context) {
+	: Configuration(context), configText(configText) {
 
 	this->name = "StandardConfiguration";
 }

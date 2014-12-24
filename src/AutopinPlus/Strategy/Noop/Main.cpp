@@ -27,11 +27,8 @@
 #include <AutopinPlus/ObservedProcess.h>	// for ObservedProcess
 #include <AutopinPlus/OS/OSServices.h>		// for OSServices
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
-#include <AutopinPlus/PinningHistory.h>		// fo PinningHistory
 #include <AutopinPlus/Tools.h>				// for Tools
-#include <qatomic_x86_64.h>					// for QBasicAtomicInt::deref
 #include <qmutex.h>							// for QMutexLocker
-#include <qobjectdefs.h>					// for SIGNAL, SLOT
 #include <qset.h>							// for QSet
 #include <qstring.h>						// for operator+, QString
 #include <qstringlist.h>					// for QStringList
@@ -88,12 +85,12 @@ void Main::slot_autopinReady() {
 	}
 }
 
-void Main::slot_TaskCreated(int tid) {
+void Main::slot_TaskCreated(int) {
 	// We received a signal telling us that a new task was created, so update the monitors.
 	updateMonitors();
 }
 
-void Main::slot_TaskTerminated(int tid) {
+void Main::slot_TaskTerminated(int) {
 	// We received a signal telling us that a task was terminated, so update the monitors.
 	updateMonitors();
 }

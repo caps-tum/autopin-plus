@@ -83,7 +83,7 @@ void SignalDispatcher::slot_handleSigChld() {
 	snChld->setEnabled(true);
 }
 
-void SignalDispatcher::chldSignalHandler(int param, siginfo_t *info, void *paramv) {
+void SignalDispatcher::chldSignalHandler(int, siginfo_t *info, void *) {
 	if (write(sigchldFd[0], info, sizeof(siginfo_t)) != 0) {
 		SignalDispatcher::getInstance().context.error("Could not write to socketpair. Bailing out!");
 		QCoreApplication::exit(1);

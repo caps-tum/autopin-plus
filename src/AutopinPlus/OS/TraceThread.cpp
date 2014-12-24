@@ -288,7 +288,7 @@ void TraceThread::setupSignalHandler() {
 
 bool TraceThread::alarm_occured = false;
 
-void TraceThread::alrmSignalHandler(int param) { alarm_occured = true; }
+void TraceThread::alrmSignalHandler(int) { alarm_occured = true; }
 
 } // namespace OS
 } // namespace AutopinPlus

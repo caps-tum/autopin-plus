@@ -144,7 +144,6 @@ QString PerformanceMonitor::showMontype(const montype &type) {
 		break;
 	default:
 		throw Exception("PerformanceMonitor::showMontype(" + QString::number(type) + ") failed: Invalid montype.");
-		break;
 	}
 
 	return result;

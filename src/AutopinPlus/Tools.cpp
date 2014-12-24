@@ -20,10 +20,7 @@
 #include <AutopinPlus/Tools.h>
 
 #include <AutopinPlus/Exception.h> // for Exception
-#include <qatomic_x86_64.h>		   // for QBasicAtomicInt::deref
 #include <qfile.h>				   // for QFile
-#include <qglobal.h>			   // for qFree
-#include <qiodevice.h>			   // for QIODevice, etc
 #include <qlist.h>				   // for QList
 #include <qstring.h>			   // for QString, operator+
 #include <qstringlist.h>		   // for QStringList

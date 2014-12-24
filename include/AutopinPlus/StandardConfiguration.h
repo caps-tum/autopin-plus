@@ -61,12 +61,12 @@ class StandardConfiguration : public Configuration {
 	/*!
 	 * \brief Data structure for storing key-value-pairs of the configuration
 	 */
-	typedef std::map<QString, QStringList> string_map;
+	using string_map = std::map<QString, QStringList>;
 
 	/*!
 	 * \brief Data structure for storing a single key-value-pair
 	 */
-	typedef std::pair<QString, QStringList> arg_pair;
+	using arg_pair = std::pair<QString, QStringList>;
 
 	/*!
 	 * Internal representation of the configuration

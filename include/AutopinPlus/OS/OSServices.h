@@ -281,7 +281,7 @@ signals:
 	/*!
 	 * \brief Data type for storing a list of tids
 	 */
-	typedef std::list<int> thread_list;
+	using thread_list = std::list<int>;
 
 	/*!
 	 * Regular expression for integer values

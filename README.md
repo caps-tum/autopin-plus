@@ -22,7 +22,7 @@ Prerequisites
 In order to build ```autopin+```, you'll need
 
  - the **CMake** build system, at least version 2.6
- - the **Qt4** development framework, at least version 4.7.3
+ - the **Qt5** development framework, at least version 5.0.0
  - the userspace development headers from the **Linux** kernel, at least version 3.13
 
 In order to build the optional documentation, you'll also need
@@ -44,9 +44,6 @@ Building autopin+
 
     - CMAKE_BUILD_TYPE: 	Type of the build, should be set to "Release"
     - CMAKE_INSTALL_PREFIX: 	Installation prefix
-    - OS_LINUX: 		Compile autopin+ for Linux (has to be "ON")
-    - PERFMON_SUPPORT: 		Compile autopin+ with support for perfmon
-    - PERF_SUPPORT:		Compile autopin+ with support for perf
     - QT_QMAKE_EXECUTABLE: 	Path to the qmake executable of the Qt distribution which
 				will be used for compiling
 
