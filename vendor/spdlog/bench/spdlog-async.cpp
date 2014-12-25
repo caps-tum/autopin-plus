@@ -1,31 +1,34 @@
+
 #include <thread>
 #include <vector>
 #include <atomic>
+#include <iostream>
+#include <chrono>
 
 #include "spdlog/spdlog.h"
 
-#include <iostream>
 using namespace std;
 
 int main(int argc, char* argv[])
 {
 
+    using namespace std::chrono;
+    using clock=steady_clock;
+    namespace spd = spdlog;
+
     int thread_count = 10;
     if(argc > 1)
         thread_count = atoi(argv[1]);
-
     int howmany = 1000000;
 
-    namespace spd = spdlog;
-	spd::set_async_mode(2500, std::chrono::seconds(0));
-    ///Create a file rotating logger with 5mb size max and 3 rotated files
-    auto logger = spd::rotating_logger_mt("file_logger", "logs/spd-sample", 10 *1024 * 1024 , 5);
-
+    spd::set_async_mode(1048576);
+    auto logger = spdlog::create<spd::sinks::simple_file_sink_mt>("file_logger", "logs/spd-bench-async.txt", false);
     logger->set_pattern("[%Y-%b-%d %T.%e]: %v");
+
 
     std::atomic<int > msg_counter {0};
     vector<thread> threads;
-
+    auto start = clock::now();
     for (int t = 0; t < thread_count; ++t)
     {
         threads.push_back(std::thread([&]()
@@ -39,12 +42,17 @@ int main(int argc, char* argv[])
         }));
     }
 
-
     for(auto &t:threads)
     {
         t.join();
     };
 
-	spd::stop();     
-    return 0;
+    duration<float> delta = clock::now() - start;
+    float deltaf = delta.count();
+    auto rate = howmany/deltaf;
+
+    cout << "Total: " << howmany << std::endl;
+    cout << "Threads: " << thread_count << std::endl;
+    std::cout << "Delta = " << deltaf << " seconds" << std::endl;
+    std::cout << "Rate = " << rate << "/sec" << std::endl;
 }

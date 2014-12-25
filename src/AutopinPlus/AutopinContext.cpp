@@ -40,23 +40,23 @@ AutopinContext::AutopinContext(std::string name) : err(), name(name) {
 	}
 }
 
-void AutopinContext::info(QString msg) const { logger->info(msg.toStdString()); }
+void AutopinContext::info(QString msg) const { logger->info(msg.toLocal8Bit()); }
 
-void AutopinContext::warn(QString msg) const { logger->warn(msg.toStdString()); }
+void AutopinContext::warn(QString msg) const { logger->warn(msg.toLocal8Bit()); }
 
-void AutopinContext::error(QString msg) const { logger->error(msg.toStdString()); }
+void AutopinContext::error(QString msg) const { logger->error(msg.toLocal8Bit()); }
 
-void AutopinContext::debug(QString msg) const { logger->debug(msg.toStdString()); }
+void AutopinContext::debug(QString msg) const { logger->debug(msg.toLocal8Bit()); }
 
 autopin_estate AutopinContext::report(Error::autopin_errors error, QString opt, QString msg) {
 	autopin_estate result;
 	result = err.report(error, opt);
 	if (isError()) {
-		logger->error(msg.toStdString());
+		logger->error(msg.toLocal8Bit());
 		// Emit signal to Watchdog
 		emit sig_error();
 	} else {
-		logger->warn(msg.toStdString());
+		logger->warn(msg.toLocal8Bit());
 	}
 
 	return result;

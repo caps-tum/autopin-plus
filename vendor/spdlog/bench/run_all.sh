@@ -1,77 +1,81 @@
 #~/bin/bash
-echo "Running benchmakrs (all with 1000,000 writes to the logs folder)"
-echo
-echo "boost-bench (single thread).."
-time ./boost-bench
-rm logs/*
-echo
-echo
-sleep 5
+#execute each bench 3 times and print the timing
 
-echo "glog-bench (single thread).."
-time ./glog-bench
-rm logs/*
-echo
-echo
-sleep 5
+exec 2>&1
 
-echo "g2log-bench (single thread).."
-time ./g2log-bench
-rm logs/*
-echo
-echo
-sleep 5
+#execute and time given exe 3 times 
+bench_exe ()
+{	
+	echo "**************** $1 ****************"
+	for i in {1..3}; do 
+		time ./$1 $2; 
+		rm  -f logs/*
+		sleep 3
+	done;
+}
 
-echo "spdlog-bench (single thread)"
-time ./spdlog-bench
-rm logs/*
-echo
-echo
-sleep 5
-echo "------------------------------------"
-echo "Multithreaded benchmarks.."
-echo "------------------------------------"
-echo "boost-bench-mt (10 threads, single logger)"..
-time ./boost-bench-mt
-rm logs/*
-echo
-echo
-sleep 5
+#execute  given async tests 3 times (timing is already builtin)
+bench_async ()
+{	
+	echo "**************** $1 ****************"
+	for i in {1..3}; do 
+		./$1 $2; 
+		echo		
+		rm  -f logs/*
+		sleep 3
+	done;
+}  
 
-echo "glog-bench-mt (10 threads, single logger)"..
-time ./glog-bench-mt
-rm logs/*
-echo
-echo
-sleep 5
 
-echo "g2log-bench-mt (10 threads, single logger)"..
-time ./g2log-bench-mt
-rm logs/*
-echo
-echo
-sleep 5
+echo "----------------------------------------------------------"
+echo "Single threaded benchmarks.. (1 thread,  1,000,000 lines)"
+echo "----------------------------------------------------------"
+for exe in boost-bench glog-bench easylogging-bench spdlog-bench;
+do
+	bench_exe $exe 1
+done;
 
-echo "spdlog-bench-mt (10 threads, single logger)"..
-time ./spdlog-bench-mt
-rm logs/*
-echo
-echo
-sleep 5
+echo "----------------------------------------------------------"
+echo "Multi threaded benchmarks.. (10 threads,  1,000,000 lines)"
+echo "----------------------------------------------------------"
+for exe in boost-bench-mt glog-bench-mt easylogging-bench-mt spdlog-bench-mt;
+do
+	bench_exe $exe 10
+done;
 
-echo "------------------------------------"
-echo "Async  benchmarks.."
-echo "------------------------------------"
+echo "----------------------------------------------------------"
+echo "Multi threaded benchmarks.. (100 threads,  1,000,000 lines)"
+echo "----------------------------------------------------------"
+for exe in boost-bench-mt glog-bench-mt easylogging-bench-mt spdlog-bench-mt;
+do
+	bench_exe $exe 100
+done;
+	
 
-echo "spdlog-bench-async (single thread)"..
-time ./spdlog-bench-async
-rm logs/*
-echo
-echo
-sleep 5
+echo "---------------------------------------------------------------"
+echo "Async, single threaded benchmark.. (1 thread,  1,000,000 lines)"
+echo "---------------------------------------------------------------"
+for exe in spdlog-async g2log-async
+do
+	bench_async $exe 1
+done;
 
-echo "spdlog-bench-mt-async (10 threads, single logger)"..
-time ./spdlog-bench-mt-async
+echo "---------------------------------------------------------------"
+echo "Async, multi threaded benchmark.. (10 threads,  1,000,000 lines)"
+echo "---------------------------------------------------------------"
+for exe in spdlog-async g2log-async
+do
+	bench_async $exe 10
+done;
+
+
+echo "---------------------------------------------------------------"
+echo "Async, multi threaded benchmark.. (100 threads,  1,000,000 lines)"
+echo "---------------------------------------------------------------"
+for exe in spdlog-async g2log-async
+do
+	bench_async $exe 100
+done;
 
 
 

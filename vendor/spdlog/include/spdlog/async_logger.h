@@ -24,10 +24,15 @@
 
 #pragma once
 
-// Async logger
+// Very fast asynchronous logger (millions of logs per second on an average desktop)
+// Uses pre allocated lockfree queue for maximum throughput even under large number of threads.
+// Creates a single back thread to pop messages from the queue and log them.
+//
 // Upon each log write the logger:
-// 1. Checks if its log level is enough to log the message
-// 2. Push a new copy of the message to a queue (uses sinks::async_sink for this)
+//    1. Checks if its log level is enough to log the message
+//    2. Push a new copy of the message to a queue (or block the caller until space is available in the queue)
+//    3. will throw spdlog_ex upon log exceptions
+// Upong destruction, logs all remaining messages in the queue before destructing..
 
 #include <chrono>
 #include "common.h"
@@ -37,29 +42,27 @@
 namespace spdlog
 {
 
-namespace sinks
+namespace details
 {
-class async_sink;
+class async_log_helper;
 }
 
 class async_logger :public logger
 {
 public:
     template<class It>
-    async_logger(const std::string& name, const It& begin, const It& end, size_t queue_size, const log_clock::duration& shutdown_duration);
-    async_logger(const std::string& logger_name, sinks_init_list sinks, size_t queue_size, const log_clock::duration& shutdown_duration);
-    async_logger(const std::string& logger_name, sink_ptr single_sink, size_t queue_size, const log_clock::duration& shutdown_duration);
+    async_logger(const std::string& name, const It& begin, const It& end, size_t queue_size);
+    async_logger(const std::string& logger_name, sinks_init_list sinks, size_t queue_size);
+    async_logger(const std::string& logger_name, sink_ptr single_sink, size_t queue_size);
 
 
 protected:
     void _log_msg(details::log_msg& msg) override;
     void _set_formatter(spdlog::formatter_ptr msg_formatter) override;
     void _set_pattern(const std::string& pattern) override;
-    void _stop() override;
 
 private:
-    log_clock::duration _shutdown_duration;
-    std::unique_ptr<sinks::async_sink> _as;
+    std::unique_ptr<details::async_log_helper> _async_log_helper;
 };
 }
 

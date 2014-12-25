@@ -29,7 +29,6 @@
 // Can be set to auto flush on every line
 // Throw spdlog_ex exception on errors
 
-#include <cstdio>
 #include <string>
 #include <thread>
 #include <chrono>
@@ -52,7 +51,7 @@ public:
     explicit file_helper(bool auto_flush):
         _fd(nullptr),
         _auto_flush(auto_flush)
-        {};
+    {}
 
     file_helper(const file_helper&) = delete;
     file_helper& operator=(const file_helper&) = delete;
@@ -63,15 +62,15 @@ public:
     }
 
 
-    void open(const std::string& fname)
+    void open(const std::string& fname, bool truncate=false)
     {
 
         close();
-
+        const char* mode = truncate ? "wb" : "ab";
         _filename = fname;
         for (int tries = 0; tries < open_tries; ++tries)
         {
-            if(!os::fopen_s(&_fd, fname, "wb"))
+            if(!os::fopen_s(&_fd, fname, mode))
                 return;
 
             std::this_thread::sleep_for(std::chrono::milliseconds(open_interval));
@@ -80,11 +79,11 @@ public:
         throw spdlog_ex("Failed opening file " + fname + " for writing");
     }
 
-    void reopen()
+    void reopen(bool truncate)
     {
         if(_filename.empty())
             throw spdlog_ex("Failed re opening file - was not opened before");
-        open(_filename);
+        open(_filename, truncate);
 
     }
 
@@ -99,14 +98,15 @@ public:
 
     void write(const log_msg& msg)
     {
-        auto& buf = msg.formatted.buf();
-        size_t size = buf.size();
-        if(std::fwrite(buf.data(), sizeof(char), size, _fd) != size)
+
+        size_t size = msg.formatted.size();
+        auto data = msg.formatted.data();
+        if(std::fwrite(data, 1, size, _fd) != size)
             throw spdlog_ex("Failed writing to file " + _filename);
 
         if(_auto_flush)
             std::fflush(_fd);
-        
+
     }
 
     const std::string& filename() const

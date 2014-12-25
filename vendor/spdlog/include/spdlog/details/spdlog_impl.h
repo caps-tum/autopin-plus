@@ -87,11 +87,10 @@ inline std::shared_ptr<spdlog::logger> spdlog::stderr_logger_st(const std::strin
 
 #ifdef __linux__
 // Create syslog logger
-inline std::shared_ptr<spdlog::logger> spdlog::syslog_logger(const std::string& logger_name)
+inline std::shared_ptr<spdlog::logger> spdlog::syslog_logger(const std::string& logger_name, const std::string& syslog_ident, int syslog_option)
 {
-    return create<spdlog::sinks::syslog_sink>(logger_name);
+    return create<spdlog::sinks::syslog_sink>(logger_name, syslog_ident, syslog_option);
 }
-
 #endif
 
 
@@ -133,9 +132,9 @@ inline void spdlog::set_level(level::level_enum log_level)
 }
 
 
-inline void spdlog::set_async_mode(size_t queue_size, const log_clock::duration& shutdown_duration)
+inline void spdlog::set_async_mode(size_t queue_size)
 {
-    details::registry::instance().set_async_mode(queue_size, shutdown_duration);
+    details::registry::instance().set_async_mode(queue_size);
 }
 
 inline void spdlog::set_sync_mode()
@@ -143,7 +142,4 @@ inline void spdlog::set_sync_mode()
     details::registry::instance().set_sync_mode();
 }
 
-inline void spdlog::stop()
-{
-    return details::registry::instance().stop_all();
-}
+
