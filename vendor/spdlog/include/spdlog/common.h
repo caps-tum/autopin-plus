@@ -27,9 +27,18 @@
 #include<initializer_list>
 #include<chrono>
 
+//visual studio does not support noexcept yet
+#ifndef _MSC_VER
+#define SPDLOG_NOEXCEPT noexcept
+#else
+#define SPDLOG_NOEXCEPT
+#endif
+
 namespace spdlog
 {
+
 class formatter;
+
 namespace sinks
 {
 class sink;
@@ -46,22 +55,20 @@ namespace level
 {
 typedef enum
 {
-    TRACE    = 0,
-    DEBUG    = 1,
-    INFO     = 2,
-    NOTICE   = 3,
-    WARN     = 4,
-    ERR      = 5,
-    CRITICAL = 6,
-    ALERT    = 7,
-    EMERG    = 8,
-    ALWAYS   = 9,
-    OFF      = 10
+    trace    = 0,
+    debug    = 1,
+    info     = 2,
+    notice   = 3,
+    warn     = 4,
+    err      = 5,
+    critical = 6,
+    alert    = 7,
+    emerg    = 8,
+    off      = 9
 } level_enum;
 
-static const char* level_names[] { "trace", "debug", "info", "notice", "warning", "error", "critical",
-                                   "alert", "emerg", "", ""
-                                 };
+static const char* level_names[] { "trace", "debug", "info", "notice", "warning", "error", "critical", "alert", "emerg", "off"};
+
 inline const char* to_str(spdlog::level::level_enum l)
 {
     return level_names[l];
@@ -74,8 +81,8 @@ inline const char* to_str(spdlog::level::level_enum l)
 class spdlog_ex : public std::exception
 {
 public:
-    spdlog_ex(const std::string& msg) :_msg(msg) {};
-    const char* what() const throw() override
+    spdlog_ex(const std::string& msg) :_msg(msg) {}
+    const char* what() const SPDLOG_NOEXCEPT override
     {
         return _msg.c_str();
     }

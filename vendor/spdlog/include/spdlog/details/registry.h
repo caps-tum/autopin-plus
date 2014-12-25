@@ -61,7 +61,7 @@ public:
             return found->second;
         std::shared_ptr<logger> new_logger;
         if (_async_mode)
-            new_logger = std::make_shared<async_logger>(logger_name, sinks_begin, sinks_end, _async_q_size, _async_shutdown_duration);
+            new_logger = std::make_shared<async_logger>(logger_name, sinks_begin, sinks_end, _async_q_size);
         else
             new_logger = std::make_shared<logger>(logger_name, sinks_begin, sinks_end);
 
@@ -114,26 +114,17 @@ public:
             l.second->set_level(log_level);
     }
 
-    void set_async_mode(size_t q_size, const log_clock::duration& shutdown_duration)
+    void set_async_mode(size_t q_size)
     {
         std::lock_guard<std::mutex> lock(_mutex);
         _async_mode = true;
         _async_q_size = q_size;
-        _async_shutdown_duration = shutdown_duration;
     }
 
     void set_sync_mode()
     {
         std::lock_guard<std::mutex> lock(_mutex);
         _async_mode = false;
-    }
-
-    void stop_all()
-    {
-        std::lock_guard<std::mutex> lock(_mutex);
-        _level = level::OFF;
-        for (auto& l : _loggers)
-            l.second->stop();
     }
 
 
@@ -150,10 +141,9 @@ private:
     std::mutex _mutex;
     std::unordered_map <std::string, std::shared_ptr<logger>> _loggers;
     formatter_ptr _formatter;
-    level::level_enum _level = level::INFO;
+    level::level_enum _level = level::info;
     bool _async_mode = false;
     size_t _async_q_size = 0;
-    log_clock::duration _async_shutdown_duration;
 };
 }
 }
