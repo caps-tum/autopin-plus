@@ -350,6 +350,10 @@ void OSServices::sendMsg(int event_id, int arg, double val) {
 }
 
 void OSServices::slot_msgReceived(int socket) {
+	// The parameter socket is currently not used, so the next line is
+	// for silencing the warning
+	(void)socket;
+
 	comm_notifier->setEnabled(false);
 
 	struct autopin_msg msg;
@@ -608,7 +612,12 @@ QString OSServices::getProcEntry(int tid, int index, bool error) {
 	return result;
 }
 
-void OSServices::usrSignalHandler(int param) { autopin_attached = true; }
+void OSServices::usrSignalHandler(int param) {
+	// The parameter param is currently not used, so the next line is
+	// for silencing the warning
+	(void)param;
+	autopin_attached = true;
+}
 
 QStringList OSServices::getArguments(QString cmd) {
 	QStringList result;

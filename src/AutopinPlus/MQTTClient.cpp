@@ -43,7 +43,7 @@ MQTTClient::MQTT_STATUS MQTTClient::init(std::string hostname, int port) {
 
 	int ret = MOSQ_ERR_SUCCESS;
 	mosquitto_lib_init();
-	getInstance().mosq = mosquitto_new(nullptr, true, nullptr);
+	getInstance().mosq = mosquitto_new(nullptr, true, &getInstance());
 
 	// Just an local alias
 	struct mosquitto *mosq = getInstance().mosq;
@@ -68,14 +68,18 @@ MQTTClient::MQTT_STATUS MQTTClient::init(std::string hostname, int port) {
 }
 
 void MQTTClient::messageCallback(struct mosquitto *mosq, void *obj, const struct mosquitto_message *message) {
+	// mosq is not needed, so this silences the warning.
+	(void)mosq;
+
+	MQTTClient *client = static_cast<MQTTClient *>(obj);
 	std::string topic(message->topic);
 
-	// AddProcess
+	// Implementation for the command "AddProcess"
 	const std::string &command = commands[0];
 	if (topic.length() >= command.length() &&
 		topic.compare(topic.length() - command.length(), command.length(), command) == 0) {
 		QString text(static_cast<char *>(message->payload));
-		getInstance().emitSignalReceivedProcessConfig(text);
+		client->emitSignalReceivedProcessConfig(text);
 	}
 }
 

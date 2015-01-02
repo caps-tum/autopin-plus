@@ -53,7 +53,8 @@ using AutopinPlus::OS::OSServices;
 
 namespace AutopinPlus {
 
-Autopin::Autopin(int &_argc, char * const*_argv) : QCoreApplication(_argc, const_cast<char**>(_argv)), context(std::string("global")), argc(_argc), argv(_argv) {}
+Autopin::Autopin(int &_argc, char *const *_argv)
+	: QCoreApplication(_argc, const_cast<char **>(_argv)), context(std::string("global")), argc(_argc), argv(_argv) {}
 
 void Autopin::slot_autopinSetup() {
 
@@ -134,6 +135,8 @@ void Autopin::slot_autopinSetup() {
 			break;
 		case MQTTClient::SUSCRIBE:
 			error_message = "Cannot suscripe to MQTT topics";
+			break;
+		case MQTTClient::OK:
 			break;
 		}
 

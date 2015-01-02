@@ -208,8 +208,9 @@ double Main::value(int thread) {
 		return 0;
 	}
 
+	int timeElapsed = timer.elapsed();
 	// Only send a new query if the cached value is too old.
-	if (timer.elapsed() > ttl) {
+	if (timeElapsed > 0 && static_cast<uint>(timeElapsed) > ttl) {
 		// Try to get the current energy consumption.
 		QByteArray payload;
 		try {
@@ -228,7 +229,8 @@ double Main::value(int thread) {
 
 		// Re-add the value of all outlets in which we are interested to the cached value.
 		for (auto outlet : outlets) {
-			if (payload.size() >= outlet * sizeof(uint32_t) + sizeof(uint32_t)) {
+			if (payload.size() >= 0 &&
+				static_cast<uint>(payload.size()) >= outlet * sizeof(uint32_t) + sizeof(uint32_t)) {
 				cached += qFromBigEndian<qint32>(((uint32_t *)payload.data())[outlet]);
 			} else {
 				context.report(Error::MONITOR, "value", name + ".value(" + QString::number(thread) +
