@@ -896,11 +896,11 @@ Sensor Main::readSensor(const QString &input) {
 }
 
 QString Main::showSensor(const Sensor &input) {
-	QString result = "{ attr.type=" + QString::number(input.attr.type) + ", attr.config=" +
+	QString result = "[ attr.type=" + QString::number(input.attr.type) + ", attr.config=" +
 					 QString::number(input.attr.config) + ", attr.config1=" + QString::number(input.attr.config1) +
 					 ", attr.config2=" + QString::number(input.attr.config2) + ", name=" + input.name +
 					 ", processors=" + Tools::showInts(input.processors).join(",") + ", scale=" +
-					 QString::number(input.scale) + ", unit=" + input.unit + " }";
+					 QString::number(input.scale) + ", unit=" + input.unit + " ]";
 
 	return result;
 }
