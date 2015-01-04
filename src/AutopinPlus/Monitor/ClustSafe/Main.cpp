@@ -38,6 +38,29 @@ namespace AutopinPlus {
 namespace Monitor {
 namespace ClustSafe {
 
+// Inialization of static variables
+const QString Main::signature = "MEGware";
+
+const uint64_t Main::timeout = 1000;
+
+const uint64_t Main::ttl = 10;
+
+QString Main::host = "localhost";
+
+uint16_t Main::port = 2010;
+
+QString Main::password = "";
+
+QList<int> Main::outlets;
+
+bool Main::started = false;
+
+QElapsedTimer Main::timer;
+
+QMutex Main::mutexStart;
+
+QMutex Main::mutexValue;
+
 /*!
  * \brief Convert a uint16_t to a QByteArray.
  *
@@ -83,121 +106,73 @@ Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	valtype = PerformanceMonitor::montype::MIN;
 }
 
-void Main::init() {
-	context.info("Initializing " + name + " (" + type + ")");
+void Main::init() { context.info("Initializing " + name + " (" + type + ")"); }
 
+void Main::init_static(const Configuration &config, const AutopinContext &context) {
 	// Read and parse the "host" option
-	if (config.configOptionExists(name + ".host") > 0) {
-		host = config.getConfigOption(name + ".host");
-		context.info("  - " + name + ".host = " + host);
-	} else {
-		context.report(Error::BAD_CONFIG, "option_missing", name + ".init() failed: Could not find the 'host' option.");
-		return;
+	if (config.configOptionExists("clust.host") > 0) {
+		Main::host = config.getConfigOption("clust.host");
 	}
-
 	// Read and parse the "port" option
-	if (config.configOptionExists(name + ".port") > 0) {
+	if (config.configOptionExists("clust.port") > 0) {
 		try {
-			port = Tools::readULong(config.getConfigOption(name + ".port"));
-			context.info("  - " + name + ".port = " + QString::number(port));
+			port = Tools::readULong(config.getConfigOption("clust.port"));
 		} catch (const Exception &e) {
-			context.report(Error::BAD_CONFIG, "option_format",
-						   name + ".init() failed: Could not parse the 'port' option (" + QString(e.what()) + ").");
-			return;
+			context.error("ClustSafe::Main::init_static() failed: Could not parse the 'port' option (" +
+						  QString(e.what()) + ").");
 		}
 	}
-
-	// Read and parse the "signature" option
-	if (config.configOptionExists(name + ".signature") > 0) {
-		signature = config.getConfigOption(name + ".signature");
-		context.info("  - " + name + ".signature = " + signature);
-	}
-
 	// Read and parse the "password" option
-	if (config.configOptionExists(name + ".password") > 0) {
-		password = config.getConfigOption(name + ".password");
-		context.info("  - " + name + ".password = " + password);
+	if (config.configOptionExists("clust.password") > 0) {
+		Main::password = config.getConfigOption("clust.password");
 	}
-
 	// Read and parse the "outlets" option
-	if (config.configOptionExists(name + ".outlets") > 0) {
+	if (config.configOptionExists("clust.outlets") > 0) {
 		try {
-			outlets = Tools::readInts(config.getConfigOptionList(name + ".outlets"));
-			context.info("     - " + name + ".outlets = " + Tools::showInts(outlets).join(" "));
+			Main::outlets = Tools::readInts(config.getConfigOptionList("clust.outlets"));
 		} catch (const Exception &e) {
-			context.report(Error::BAD_CONFIG, "option_format",
-						   name + ".init() failed: Could not parse the 'outlets' option (" + QString(e.what()) + ").");
-			return;
+			context.error("ClustSafe::Main::init_static() failed: Could not parse the 'outlets' option (" +
+						  QString(e.what()) + ").");
 		}
 	} else {
-		context.report(Error::BAD_CONFIG, "option_missing",
-					   name + ".init() failed: Could not find the 'outlets' option.");
-		return;
-	}
-
-	// Read and parse the "timeout" option
-	if (config.configOptionExists(name + ".timeout") > 0) {
-		try {
-			timeout = Tools::readULong(config.getConfigOption(name + ".timeout"));
-			context.info("  - " + name + ".timeout = " + QString::number(timeout));
-		} catch (const Exception &e) {
-			context.report(Error::BAD_CONFIG, "option_format",
-						   name + ".init() failed: Could not parse the 'timeout' option (" + QString(e.what()) + ").");
-			return;
-		}
-	}
-
-	// Read and parse the "ttl" option
-	if (config.configOptionExists(name + ".ttl") > 0) {
-		try {
-			ttl = Tools::readULong(config.getConfigOption(name + ".ttl"));
-			context.info("  - " + name + ".ttl = " + QString::number(ttl));
-		} catch (const Exception &e) {
-			context.report(Error::BAD_CONFIG, "option_format",
-						   name + ".init() failed: Could not parse the 'ttl' option (" + QString(e.what()) + ").");
-			return;
-		}
+		context.error("ClustSafe::Main::init_static() failed: Could not find the 'outlets' option.");
 	}
 }
 
 Configuration::configopts Main::getConfigOpts() {
 	Configuration::configopts result;
 
-	result.push_back(Configuration::configopt("host", QStringList(host)));
-	result.push_back(Configuration::configopt("port", QStringList(QString::number(port))));
-	result.push_back(Configuration::configopt("signature", QStringList(signature)));
-	result.push_back(Configuration::configopt("password", QStringList(password)));
-	result.push_back(Configuration::configopt("outlets", Tools::showInts(outlets)));
-	result.push_back(Configuration::configopt("timeout", QStringList(QString::number(timeout))));
-	result.push_back(Configuration::configopt("ttl", QStringList(QString::number(ttl))));
-
 	return result;
 }
 
 void Main::start(int thread) {
+	try {
+		start_static();
+	} catch (const Exception &e) {
+		context.report(Error::MONITOR, "start", name + ".start(" + QString::number(thread) +
+													") failed: Could not reset the ClustSafe device (" +
+													QString(e.what()) + ")");
+		return;
+	}
+
+	// Insert the thread into our thread set.
+	threads.insert(thread);
+}
+void Main::start_static() {
+	QMutexLocker ml(&mutexStart);
 	// If this monitor was never started, we need to reset the device and start the timer.
 	if (!started) {
 		// Set started to true.
 		started = true;
 
 		// Reset the device.
-		try {
-			// Set the command to 0x010F which means "get the current energy consumption on all outlets".
-			// Set the data to "0x01" which means "reset all counters after the response is sent".
-			sendCommand(0x010F, QByteArray(1, 1));
-		} catch (const Exception &e) {
-			context.report(Error::MONITOR, "start", name + ".start(" + QString::number(thread) +
-														") failed: Could not reset the ClustSafe device (" +
-														QString(e.what()) + ")");
-			return;
-		}
+		// Set the command to 0x010F which means "get the current energy consumption on all outlets".
+		// Set the data to "0x01" which means "reset all counters after the response is sent".
+		sendCommand(0x010F, QByteArray(1, 1));
 
 		// Start the timer.
 		timer.start();
 	}
-
-	// Insert the thread into our thread set.
-	threads.insert(thread);
 }
 
 double Main::value(int thread) {
@@ -207,6 +182,19 @@ double Main::value(int thread) {
 					   name + ".value(" + QString::number(thread) + ") failed: Thread is not being monitored.");
 		return 0;
 	}
+
+	try {
+		cached += value_static(thread);
+	} catch (const Exception &e) {
+		context.report(Error::MONITOR, "value", name + QString(e.what()));
+	}
+	return cached;
+}
+
+double Main::value_static(int thread) {
+	QMutexLocker ml(&mutexValue);
+
+	double value = 0;
 
 	int timeElapsed = timer.elapsed();
 	// Only send a new query if the cached value is too old.
@@ -218,24 +206,18 @@ double Main::value(int thread) {
 			// Set the data to "0x01" which means "reset all counters after the response is sent".
 			payload = sendCommand(0x010F, QByteArray(1, 1));
 		} catch (const Exception &e) {
-			context.report(Error::MONITOR, "value", name + ".value(" + QString::number(thread) +
-														") failed: Could not read from the ClustSafe device (" +
-														QString(e.what()) + ")");
-			return 0;
+			throw Exception(".value(" + QString::number(thread) +
+							") failed: Could not read from the ClustSafe device (" + QString(e.what()) + ")");
 		}
-
-		// Reset the cached value to zero.
-		// cached = 0;
 
 		// Re-add the value of all outlets in which we are interested to the cached value.
 		for (auto outlet : outlets) {
 			if (payload.size() >= 0 &&
 				static_cast<uint>(payload.size()) >= outlet * sizeof(uint32_t) + sizeof(uint32_t)) {
-				cached += qFromBigEndian<qint32>(((uint32_t *)payload.data())[outlet]);
+				value += qFromBigEndian<qint32>(((uint32_t *)payload.data())[outlet]);
 			} else {
-				context.report(Error::MONITOR, "value", name + ".value(" + QString::number(thread) +
-															") failed: No data received for outlet #" +
-															QString::number(outlet) + ".");
+				throw Exception(".value(" + QString::number(thread) + ") failed: No data received for outlet #" +
+								QString::number(outlet) + ".");
 				return 0;
 			}
 		}
@@ -245,7 +227,7 @@ double Main::value(int thread) {
 	}
 
 	// Return the cached value of the counter.
-	return cached;
+	return value;
 }
 
 double Main::stop(int thread) {
@@ -285,12 +267,12 @@ QString Main::getUnit() {
 	return "Joules";
 }
 
-void Main::checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) const {
+void Main::checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) {
 	// Check if array starts with the expected prefix.
 	if (array.startsWith(prefix)) {
 		array.remove(0, prefix.size());
 	} else {
-		throw Exception(name + ".checkAndDrop(" + array.toHex() + ", " + prefix.toHex() + ", " + field +
+		throw Exception(".checkAndDrop(" + array.toHex() + ", " + prefix.toHex() + ", " + field +
 						") failed: Second argument is not a prefix of the first argument.");
 	}
 }
@@ -314,19 +296,19 @@ QByteArray Main::sendCommand(uint16_t command, QByteArray data) {
 
 	// Wait until the specified timeout for the connection to become ready.
 	if (!socket.waitForConnected(timeout)) {
-		throw Exception(name + ".sendCommand(" + QString::number(command) + ", " + data.toHex() +
+		throw Exception(".sendCommand(" + QString::number(command) + ", " + data.toHex() +
 						") failed: Could not establish connection within " + QString::number(timeout) + " ms");
 	}
 
 	// Send the request.
 	if (socket.write(request) != request.size()) {
-		throw Exception(name + ".sendCommand(" + QString::number(command) + ", " + data.toHex() +
+		throw Exception(".sendCommand(" + QString::number(command) + ", " + data.toHex() +
 						") failed: Could not send request.");
 	}
 
 	// Wait for the specified timeout for a response/
 	if (!socket.waitForReadyRead(timeout)) {
-		throw Exception(name + ".sendCommand(" + QString::number(command) + ", " + data.toHex() +
+		throw Exception(".sendCommand(" + QString::number(command) + ", " + data.toHex() +
 						") failed: Did not receive any data within " + QString::number(timeout) + " ms");
 	}
 
