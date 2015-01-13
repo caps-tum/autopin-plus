@@ -53,15 +53,13 @@ QString Main::password = "";
 
 QList<int> Main::outlets;
 
-bool Main::started = false;
-
-double Main::lastValue = 0;
+bool Main::timerStarted = false;
 
 QElapsedTimer Main::timer;
 
-QMutex Main::mutexStart;
+QMutex Main::mutex;
 
-QMutex Main::mutexValue;
+std::map<ClustSafe::Main*, uint64_t> Main::instanceValueMap;
 
 /*!
  * \brief Convert a uint16_t to a QByteArray.
@@ -149,7 +147,7 @@ Configuration::configopts Main::getConfigOpts() {
 
 void Main::start(int thread) {
 	try {
-		start_static();
+		start_static(this);
 	} catch (const Exception &e) {
 		context.report(Error::MONITOR, "start", name + ".start(" + QString::number(thread) +
 													") failed: Could not reset the ClustSafe device (" +
@@ -160,20 +158,15 @@ void Main::start(int thread) {
 	// Insert the thread into our thread set.
 	threads.insert(thread);
 }
-void Main::start_static() {
-	QMutexLocker ml(&mutexStart);
-	// If this monitor was never started, we need to reset the device and start the timer.
-	if (!started) {
-		// Set started to true.
-		started = true;
+void Main::start_static(ClustSafe::Main* instance) {
+	QMutexLocker ml(&mutex);
 
-		// Reset the device.
-		// Set the command to 0x010F which means "get the current energy consumption on all outlets".
-		// Set the data to "0x01" which means "reset all counters after the response is sent".
-		sendCommand(0x010F, QByteArray(1, 1));
+	readValueFromDevice(true);
+	instanceValueMap[instance] = 0;
 
-		// Start the timer.
+	if(!timerStarted) {
 		timer.start();
+		timerStarted = true;
 	}
 }
 
@@ -186,60 +179,27 @@ double Main::value(int thread) {
 	}
 
 	try {
-		cached += value_static(thread);
+		return value_static(this);
 	} catch (const Exception &e) {
 		context.report(Error::MONITOR, "value", name + QString(e.what()));
+		return 0;
 	}
-	return cached;
 }
 
-double Main::value_static(int thread) {
-	QMutexLocker ml(&mutexValue);
+double Main::value_static(ClustSafe::Main* instance) {
+	QMutexLocker ml(&mutex);
 
-	int timeElapsed = timer.elapsed();
-	// Only send a new query if the cached value is too old.
-	if (timeElapsed > 0 && static_cast<uint>(timeElapsed) > ttl) {
-		// Try to get the current energy consumption.
-		double value = 0;
-		QByteArray payload;
-		try {
-			// Set the command to 0x010F which means "get the current energy consumption on all outlets".
-			// Set the data to "0x01" which means "reset all counters after the response is sent".
-			payload = sendCommand(0x010F, QByteArray(1, 1));
-		} catch (const Exception &e) {
-			throw Exception(".value(" + QString::number(thread) +
-							") failed: Could not read from the ClustSafe device (" + QString(e.what()) + ")");
-		}
-
-		// Re-add the value of all outlets in which we are interested.
-		for (auto outlet : outlets) {
-			if (payload.size() >= 0 &&
-				static_cast<uint>(payload.size()) >= outlet * sizeof(uint32_t) + sizeof(uint32_t)) {
-				value += qFromBigEndian<qint32>(((uint32_t *)payload.data())[outlet]);
-			} else {
-				throw Exception(".value(" + QString::number(thread) + ") failed: No data received for outlet #" +
-								QString::number(outlet) + ".");
-				return 0;
-			}
-		}
-
-		lastValue = value;
-
-		// Restart the timer.
-		timer.restart();
-
-		return value;
-	} else {
-		return lastValue;
-	}
+	readValueFromDevice();
+	return instanceValueMap[instance];
 }
 
 double Main::stop(int thread) {
-
 	// Before stopping the counter, get its value one last time...
-	double result = value(thread);
-	if (context.isError()) {
-		context.report(Error::MONITOR, "stop", name + ".stop(" + QString::number(thread) + ") failed: value() failed.");
+	double result = 0;
+	try {
+		result = stop_static(this);
+	} catch (const Exception &e) {
+		context.report(Error::MONITOR, "stop", name + ".stop(" + QString::number(thread) + ") failed: value() failed: " + QString(e.what()));
 		return 0;
 	}
 
@@ -251,6 +211,17 @@ double Main::stop(int thread) {
 	}
 
 	return result;
+}
+
+double Main::stop_static(ClustSafe::Main* instance) {
+	QMutexLocker ml(&mutex);
+
+	readValueFromDevice();
+	double result = instanceValueMap[instance];
+	instanceValueMap.erase(instance);
+
+	return result;
+	
 }
 
 void Main::clear(int thread) { threads.remove(thread); }
@@ -278,6 +249,42 @@ void Main::checkAndDrop(QByteArray &array, const QByteArray &prefix, const QStri
 	} else {
 		throw Exception(".checkAndDrop(" + array.toHex() + ", " + prefix.toHex() + ", " + field +
 						") failed: Second argument is not a prefix of the first argument.");
+	}
+}
+
+void Main::readValueFromDevice(bool reset) {
+	int timeElapsed = timer.elapsed();
+	// Only send a new query if the cached value is too old.
+	if (reset || (timeElapsed > 0 && static_cast<uint>(timeElapsed) > ttl)) {
+		// Try to get the current energy consumption.
+		QByteArray payload;
+		uint64_t value= 0;
+		try {
+			// Set the command to 0x010F which means "get the current energy consumption on all outlets".
+			// Set the data to "0x01" which means "reset all counters after the response is sent".
+			payload = sendCommand(0x010F, QByteArray(1, 1));
+		} catch (const Exception &e) {
+			throw Exception("Could not read from the ClustSafe device (" + QString(e.what()) + ")");
+		}
+
+		// Re-add the value of all outlets in which we are interested.
+		for (auto outlet : outlets) {
+			if (payload.size() >= 0 &&
+				static_cast<uint>(payload.size()) >= outlet * sizeof(uint32_t) + sizeof(uint32_t)) {
+				value += qFromBigEndian<qint32>(((uint32_t *)payload.data())[outlet]);
+			} else {
+				throw Exception("No data received for outlet #" +
+								QString::number(outlet) + ".");
+			}
+		}
+
+		// Restart the timer.
+		timer.restart();
+
+		// Update the values of all instances.
+		for (auto iterator = instanceValueMap.begin(); iterator != instanceValueMap.end(); iterator++) {
+			iterator->second += value;
+		}
 	}
 }
 

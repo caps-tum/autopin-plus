@@ -111,29 +111,48 @@ class Main : public PerformanceMonitor {
 	static QByteArray sendCommand(uint16_t command, QByteArray data = QByteArray());
 
 	/*!
-	 * Resets the ClustSafe device on the first run of the monitor. Is
-	 * called by start(int tid).
+	 * Mutex for threadsafe access to static methods (start_static,
+	 * value_static, stop_static).
 	 */
-	static void start_static();
+	static QMutex mutex;
 
 	/*!
-	 * Mutex for threadsafe access to start_static().
-	 */
-	static QMutex mutexStart;
-
-	/*!
-	 * Gets the value from the ClustSafe device. Is called by
-	 * value(int tid).
+	 * Calls readValueFromDevice() and starts the timer if necessary.
 	 *
-	 * \param[in] tid The id of the task
+ 	 * \param[in] instance Pointer to the current instance
 	 */
-	static double value_static(int tid);
+	static void start_static(ClustSafe::Main* instance);
 
 	/*!
-	 * Mutex for threadsafe access to value_static(int tid).
+	 * Calls readValueFromDevice() and then reads the value of
+	 * instance from the map and returns it.
+	 *
+	 * \param[in] instance Pointer to the current instance
+	 * \param[in] tid The id of the task
+	 * 
+	 * \return value of this monitor.
 	 */
-	static QMutex mutexValue;
+	static double value_static(ClustSafe::Main* instance);
 
+	/*!
+	 * Calls readValueFromDevice() and then reads the value of this
+	 * instance one last time and returns it. This function also
+	 * removes instance from the map.
+	 *
+ 	 * \param[in] instance Pointer to the current instance
+ 	 * 
+	 * \return value of this monitor.
+	 */
+	static double stop_static(ClustSafe::Main* instance);
+
+	/*!
+	 * Reads the values from the ClustSafe device, and adds the value
+	 * to all instances of this monitor.
+	 *
+ 	 * \param[in] instance Pointer to the current instance
+	 */
+	static void readValueFromDevice(bool reset = false);
+	
 	/*!
 	 * \brief The host name or IP address of the ClustSafe device.
 	 */
@@ -155,6 +174,11 @@ class Main : public PerformanceMonitor {
 	static QString password;
 
 	/*!
+	 * \brief Stores if the timer was already started.
+	 */
+	static bool timerStarted;
+
+	/*!
 	 * \brief The list of outlets whose values will be added to form the resulting value.
 	 */
 	static QList<int> outlets;
@@ -172,17 +196,12 @@ class Main : public PerformanceMonitor {
 	/*!
 	 * \brief Stores if this monitor was already started once.
 	 */
-	static bool started;
-
-	/*!
-	 * \brief Stores the last value received from the ClustSafe device.
-	 */
-	static double lastValue;
+	static std::map<ClustSafe::Main*, uint64_t> instanceValueMap;
 
 	/*!
 	 * \brief The cached value of the internal counter of the ClustSafe device.
 	 */
-	uint64_t cached;
+	static uint64_t cached;
 
 	/*!
 	 * \brief A set of threads which are currently monitored.
