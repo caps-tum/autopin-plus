@@ -55,6 +55,8 @@ QList<int> Main::outlets;
 
 bool Main::started = false;
 
+double Main::lastValue = 0;
+
 QElapsedTimer Main::timer;
 
 QMutex Main::mutexStart;
@@ -194,12 +196,11 @@ double Main::value(int thread) {
 double Main::value_static(int thread) {
 	QMutexLocker ml(&mutexValue);
 
-	double value = 0;
-
 	int timeElapsed = timer.elapsed();
 	// Only send a new query if the cached value is too old.
 	if (timeElapsed > 0 && static_cast<uint>(timeElapsed) > ttl) {
 		// Try to get the current energy consumption.
+		double value = 0;
 		QByteArray payload;
 		try {
 			// Set the command to 0x010F which means "get the current energy consumption on all outlets".
@@ -210,7 +211,7 @@ double Main::value_static(int thread) {
 							") failed: Could not read from the ClustSafe device (" + QString(e.what()) + ")");
 		}
 
-		// Re-add the value of all outlets in which we are interested to the cached value.
+		// Re-add the value of all outlets in which we are interested.
 		for (auto outlet : outlets) {
 			if (payload.size() >= 0 &&
 				static_cast<uint>(payload.size()) >= outlet * sizeof(uint32_t) + sizeof(uint32_t)) {
@@ -222,12 +223,15 @@ double Main::value_static(int thread) {
 			}
 		}
 
+		lastValue = value;
+
 		// Restart the timer.
 		timer.restart();
-	}
 
-	// Return the cached value of the counter.
-	return value;
+		return value;
+	} else {
+		return lastValue;
+	}
 }
 
 double Main::stop(int thread) {

@@ -175,6 +175,11 @@ class Main : public PerformanceMonitor {
 	static bool started;
 
 	/*!
+	 * \brief Stores the last value received from the ClustSafe device.
+	 */
+	static double lastValue;
+
+	/*!
 	 * \brief The cached value of the internal counter of the ClustSafe device.
 	 */
 	uint64_t cached;
