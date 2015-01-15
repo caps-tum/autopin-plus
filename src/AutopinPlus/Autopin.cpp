@@ -31,6 +31,7 @@
 #include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/OS/SignalDispatcher.h>
 #include <AutopinPlus/MQTTClient.h>
+#include <AutopinPlus/Monitor/ClustSafe/Main.h>
 #include <QFileInfo>
 #include <QString>
 #include <memory>
@@ -59,14 +60,14 @@ Autopin::Autopin(int &_argc, char *const *_argv)
 void Autopin::slot_autopinSetup() {
 
 	struct option long_options[] = {
-		{"conf", 1, NULL, 'c'}, {"daemon", 1, NULL, 'd'}, {"version", 0, NULL, 'v'}, {"help", 0, NULL, 'h'}};
+		{"conf", 1, NULL, 'c'}, {"daemon", 0, NULL, 'd'}, {"version", 0, NULL, 'v'}, {"help", 0, NULL, 'h'}};
 
 	// Parsing commandline arguments
 	std::list<QString> configPaths;
-	QString daemonConfigPath;
+	QString globalConfigPath = "";
 
 	int opt;
-	while ((opt = getopt_long(argc, argv, "vhd:c:", long_options, NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "vhdc:", long_options, NULL)) != -1) {
 		switch (opt) {
 		case ('v'):
 			printVersion();
@@ -78,7 +79,6 @@ void Autopin::slot_autopinSetup() {
 			configPaths.push_back(optarg);
 			break;
 		case ('d'):
-			daemonConfigPath = optarg;
 			isDaemon = true;
 			break;
 		case ('?'):
@@ -86,6 +86,10 @@ void Autopin::slot_autopinSetup() {
 			printHelp();
 			EXIT(2);
 		}
+	}
+
+	if (argv[optind] != nullptr) {
+		globalConfigPath = QString(argv[optind]);
 	}
 
 	// Start message
@@ -100,53 +104,41 @@ void Autopin::slot_autopinSetup() {
 	qt_msg = QString("Running with Qt") + qVersion();
 	context.info(qt_msg);
 
-	// Load daemon config file
-	if (isDaemon) {
-		std::string mqqtHostname = "";
-		int mqqtPort = 0;
+	// Load global config file
+	Configuration *globalConfig = nullptr;
 
-		QFile daemonConfigFile(daemonConfigPath);
-		if (daemonConfigFile.open(QIODevice::ReadOnly)) {
-			QTextStream stream(&daemonConfigFile);
-			StandardConfiguration daemonConfig(stream.readAll(), context);
-			daemonConfig.init();
-			mqqtHostname = daemonConfig.getConfigOption("mqtt.hostname").toStdString();
-			mqqtPort = daemonConfig.getConfigOptionInt("mqtt.port");
+	if (globalConfigPath != "") {
+		context.info("Reading global configuration");
+
+		QFile globalConfigFile(globalConfigPath);
+		if (globalConfigFile.open(QIODevice::ReadOnly)) {
+			QTextStream stream(&globalConfigFile);
+			globalConfig = new StandardConfiguration(stream.readAll(), context);
+			globalConfig->init();
 		} else {
 			context.report(Error::FILE_NOT_FOUND, "config_file",
-						   "Could not read configuration \"" + daemonConfigPath + "\"");
-			EXIT(1);
+						   "Could not read global configuration \"" + globalConfigPath + "\"");
+		}
+	}
+
+	if (globalConfig != nullptr) {
+		if (isDaemon) {
+			// Setting up MQTT Communcation
+			context.info("Setting up MQTT communication");
+			std::string error_message = MQTTClient::init(*globalConfig);
+
+			if (error_message != "") {
+				context.error(QString::fromStdString(error_message));
+				EXIT(1);
+			} else {
+				connect(&MQTTClient::getInstance(), SIGNAL(sig_receivedProcessConfig(QString)), this,
+						SLOT(slot_runProcess(QString)));
+			}
 		}
 
-		// Setting up MQTT Communcation
-		context.info("Setting up MQTT communication");
-		MQTTClient::MQTT_STATUS status = MQTTClient::init(mqqtHostname, mqqtPort);
-		QString error_message = "";
-		switch (status) {
-		case MQTTClient::MOSQUITTO:
-			error_message = "Cannot initalize MQTT client";
-			break;
-		case MQTTClient::CONNECT:
-			error_message = "Cannot connect to MQTT broker on host " + QString::fromStdString(mqqtHostname) +
-							" on port " + QString::number(mqqtPort);
-			break;
-		case MQTTClient::LOOP:
-			error_message = "Cannot initalize MQTT loop";
-			break;
-		case MQTTClient::SUSCRIBE:
-			error_message = "Cannot suscripe to MQTT topics";
-			break;
-		case MQTTClient::OK:
-			break;
-		}
+		AutopinPlus::Monitor::ClustSafe::Main::init_static(*globalConfig, context);
 
-		if (error_message != "") {
-			context.report(Error::SYSTEM, "mqqt", error_message);
-			EXIT(1);
-		}
-
-		connect(&MQTTClient::getInstance(), SIGNAL(sig_receivedProcessConfig(QString)), this,
-				SLOT(slot_runProcess(QString)));
+		delete globalConfig;
 	}
 
 	// Setting up signal Handlers
@@ -203,16 +195,14 @@ void Autopin::slot_runProcess(const QString configText) {
 
 void Autopin::printHelp() {
 	printVersion();
-	std::cout << "\nUsage: " << applicationName().toStdString() << " [OPTION]\n";
+	std::cout << "\nUsage: " << applicationName().toStdString() << " [OPTION] [GLOBAL_CONFIG_FILE]\n";
 	std::cout << "Options:\n";
 	std::cout << std::left << std::setw(30) << "  -c, --config=CONFIG_FILE"
 			  << "Read process-configuration options from file.\n";
 	std::cout << std::left << std::setw(30) << ""
 			  << "There can be multiple occurrences of this option!\n";
-	std::cout << std::left << std::setw(30) << "  -d, --daemon=CONFIG_FILE"
-			  << "Run autopin as a daemon and read the\n";
-	std::cout << std::left << std::setw(30) << ""
-			  << "daemon-configuration from file.\n";
+	std::cout << std::left << std::setw(30) << "  -d, --daemon"
+			  << "Run autopin as a daemon.\n";
 	std::cout << std::left << std::setw(30) << "  -v, --version"
 			  << "Prints version and exit\n";
 	std::cout << std::left << std::setw(30) << "  -h, --help"
