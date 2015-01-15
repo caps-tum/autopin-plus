@@ -29,6 +29,7 @@
 #include <qlist.h>							// for QList
 #include <qset.h>							// for QSet
 #include <qstring.h>						// for QString
+#include <stdint.h>							// for uint16_t, uint8_t
 
 namespace AutopinPlus {
 namespace Monitor {
@@ -197,10 +198,10 @@ class Main : public PerformanceMonitor {
 	 * \brief Mapping between instances of ClustSafe::Main and their
 	 * corresponding measured value from the ClustSafe device.
 	 *
-	 * Th pointer is just used to identify the instance, it is never
-	 * dereferenced.
+	 * The first value is the address of the instance, the second is
+	 * the the instance's value.
 	 */
-	static std::map<ClustSafe::Main *, uint64_t> instanceValueMap;
+	static std::map<uintptr_t, uint64_t> instanceValueMap;
 
 	/*!
 	 * \brief The cached value of the internal counter of the ClustSafe device.

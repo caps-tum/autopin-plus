@@ -32,7 +32,6 @@
 #include <qstringlist.h>	   // for QStringList
 #include <QtEndian>			   // for qFromBigEndian
 #include <QUdpSocket>		   // for QUdpSocket, etc.
-#include <stdint.h>			   // for uint16_t, uint8_t
 
 namespace AutopinPlus {
 namespace Monitor {
@@ -59,7 +58,7 @@ QElapsedTimer Main::timer;
 
 QMutex Main::mutex;
 
-std::map<ClustSafe::Main *, uint64_t> Main::instanceValueMap;
+std::map<uintptr_t, uint64_t> Main::instanceValueMap;
 
 /*!
  * \brief Convert a uint16_t to a QByteArray.
@@ -162,7 +161,7 @@ void Main::start_static(ClustSafe::Main *instance) {
 	QMutexLocker ml(&mutex);
 
 	readValueFromDevice(true);
-	instanceValueMap[instance] = 0;
+	instanceValueMap[reinterpret_cast<uintptr_t>(instance)] = 0;
 
 	if (!timerStarted) {
 		timer.start();
@@ -190,7 +189,7 @@ double Main::value_static(ClustSafe::Main *instance) {
 	QMutexLocker ml(&mutex);
 
 	readValueFromDevice();
-	return instanceValueMap[instance];
+	return instanceValueMap[reinterpret_cast<uintptr_t>(instance)];
 }
 
 double Main::stop(int thread) {
@@ -218,8 +217,9 @@ double Main::stop_static(ClustSafe::Main *instance) {
 	QMutexLocker ml(&mutex);
 
 	readValueFromDevice();
-	double result = instanceValueMap[instance];
-	instanceValueMap.erase(instance);
+	uintptr_t ptr = reinterpret_cast<uintptr_t>(instance);
+	double result = instanceValueMap[ptr];
+	instanceValueMap.erase(ptr);
 
 	return result;
 }
