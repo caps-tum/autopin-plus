@@ -194,7 +194,11 @@ class Main : public PerformanceMonitor {
 	static const uint64_t ttl;
 
 	/*!
-	 * \brief Stores if this monitor was already started once.
+	 * \brief Mapping between instances of ClustSafe::Main and their
+	 * corresponding measured value from the ClustSafe device.
+	 *
+	 * Th pointer is just used to identify the instance, it is never
+	 * dereferenced.
 	 */
 	static std::map<ClustSafe::Main *, uint64_t> instanceValueMap;
 
