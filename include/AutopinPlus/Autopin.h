@@ -121,7 +121,7 @@ signals:
 	 * \brief True, if the application runs in daemon mode, otherwise false.
 	 */
 	bool isDaemon = false;
-	
+
 	/*!
 	 * Command line's argc
 	 */
