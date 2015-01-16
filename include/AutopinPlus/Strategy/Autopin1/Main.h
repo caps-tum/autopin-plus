@@ -62,7 +62,7 @@ class Main : public ControlStrategy {
 	Configuration::configopts getConfigOpts() override;
 
   public slots:
-	void slot_autopinReady() override;
+	void slot_watchdogReady() override;
 
 	/*!
 	 * \brief Assigns tasks to cores

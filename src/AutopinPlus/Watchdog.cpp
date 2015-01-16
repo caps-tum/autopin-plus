@@ -95,6 +95,8 @@ void Watchdog::slot_watchdogRun() {
 	process->start();
 
 	context->info("Starting control strategy ...");
+
+	emit sig_watchdogReady();
 }
 
 void Watchdog::createContext() {
@@ -184,7 +186,7 @@ void Watchdog::createControlStrategy() {
 		return;
 	}
 
-	context->report(Error::UNSUPPORTED, "", "Control strategy \"" + strategy_config + "\" is not supported");
+	context->report(Error::UNSUPPORTED, "critical", "Control strategy \"" + strategy_config + "\" is not supported");
 }
 
 void Watchdog::createDataLoggers() {
@@ -224,6 +226,9 @@ void Watchdog::createComponentConnections() {
 
 	// Connections between the ObservedProcess and this object
 	connect(process.get(), SIGNAL(sig_ProcTerminated()), this, SIGNAL(sig_watchdogStop()));
+
+	// Connection between ControlStrategy and this object
+	connect(this, SIGNAL(sig_watchdogReady()), strategy.get(), SLOT(slot_watchdogReady()));
 }
 
 } // namespace AutopinPlus
