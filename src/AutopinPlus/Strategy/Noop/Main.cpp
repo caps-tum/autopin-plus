@@ -70,14 +70,14 @@ Configuration::configopts Main::getConfigOpts() {
 	return result;
 }
 
-void Main::slot_autopinReady() {
+void Main::slot_watchdogReady() {
 	// Now that all initialization is done, ask the ObservedProcess if tracing is supported.
 	if (proc.getTrace()) {
 		// Process tracing is enabled, so we can rely on the ObservedProcess to notify us if new threads are being
 		// created. Therefore, do nothing.
 	} else {
 		// Process tracing is not enabled, we therefore have to periodically update the list of threads to monitor.
-		context.debug(name + ".slot_autopinReady(): Process tracing is disabled, falling back to regular polling for "
+		context.debug(name + ".slot_watchdogReady(): Process tracing is disabled, falling back to regular polling for "
 							 "determining the threads to monitor.");
 		connect(&timer, SIGNAL(timeout()), this, SLOT(slot_timer()));
 		timer.setInterval(interval);
