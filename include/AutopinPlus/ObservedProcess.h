@@ -205,7 +205,7 @@ signals:
 	void sig_UserMessage(int arg, double val);
 
 	/*!
-	 * \brief
+	 * \brief Signal emitted after a process terminated.
 	 */
 	void sig_ProcTerminated();
 

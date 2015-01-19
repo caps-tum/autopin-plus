@@ -9,7 +9,7 @@ include(ExternalProject)
 # Handle different build types
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug
-       CACHE STRING "Choose the type of build : None Debug Release RelWithDebInfo MinSizeRel Coverage."
+       CACHE STRING "Choose the type of build : None Debug Release RelWithDebInfo MinSizeRel."
        FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 message("* Current build type is : ${CMAKE_BUILD_TYPE}")
@@ -204,4 +204,3 @@ if (DOXYGEN_FOUND)
   )
 endif (DOXYGEN_FOUND)
 ########
-
