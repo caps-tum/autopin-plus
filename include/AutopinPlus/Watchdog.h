@@ -76,9 +76,12 @@ signals:
 	 * Emitted, when the watchdogs stop, either because there is an error or
 	 * the observed process has terminated
 	 */
-
 	void sig_watchdogStop();
 
+	/*!
+	 * \brief Emitted, when the watchdog has finished initalization.
+	 */
+	void sig_watchdogReady();
   private:
 	/*!
 	 * Counts the instances of Watchdog

@@ -71,7 +71,7 @@ void SignalDispatcher::slot_handleSigChld() {
 	snChld->setEnabled(false);
 
 	siginfo_t info;
-	if (read(sigchldFd[1], &info, sizeof(siginfo_t)) != 0) {
+	if (read(sigchldFd[1], &info, sizeof(siginfo_t)) == -1) {
 		context.error("Could not read from socketpair. Bailing out!");
 		QCoreApplication::exit(1);
 	}
@@ -84,7 +84,7 @@ void SignalDispatcher::slot_handleSigChld() {
 }
 
 void SignalDispatcher::chldSignalHandler(int, siginfo_t *info, void *) {
-	if (write(sigchldFd[0], info, sizeof(siginfo_t)) != 0) {
+	if (write(sigchldFd[0], info, sizeof(siginfo_t)) == -1) {
 		SignalDispatcher::getInstance().context.error("Could not write to socketpair. Bailing out!");
 		QCoreApplication::exit(1);
 	}

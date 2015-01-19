@@ -29,6 +29,7 @@
 #include <qlist.h>							// for QList
 #include <qset.h>							// for QSet
 #include <qstring.h>						// for QString
+#include <stdint.h>							// for uint16_t, uint8_t
 
 namespace AutopinPlus {
 namespace Monitor {
@@ -76,10 +77,18 @@ class Main : public PerformanceMonitor {
 	// Overridden from the base class
 	QString getUnit() override;
 
+	/*!
+	 * \brief Static initalizer for the ClustSafe-device
+	 *
+	 * \param[in] config  Reference to the global configuration
+	 * \param[in] context Reference to the global AutopinContext
+	 */
+	static void init_static(const Configuration &config, const AutopinContext &context);
+
   private:
 	/*!
 	 * \brief Checks if an array has a specific prefix and drops it.
-	*
+	 *
 	 * This function checks if an array has a specific prefix and drops it. If the prefix is not present, an exception
 	 * will be thrown.
 	 *
@@ -89,7 +98,7 @@ class Main : public PerformanceMonitor {
 	 *
 	 * \exception Exception This exception will be thrown if the specified prefix is not present.
 	 */
-	void checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) const;
+	static void checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field);
 
 	/*!
 	 * \brief Sends a command to a ClustSafe device and returns the answer.
@@ -100,52 +109,104 @@ class Main : public PerformanceMonitor {
 	 * \param[in] command The command to send.
 	 * \paramp[in] data   An optional array of binary data which usually contains arguments to the command.
 	 */
-	QByteArray sendCommand(uint16_t command, QByteArray data = QByteArray());
+	static QByteArray sendCommand(uint16_t command, QByteArray data = QByteArray());
+
+	/*!
+	 * Mutex for threadsafe access to static methods (start_static,
+	 * value_static, stop_static).
+	 */
+	static QMutex mutex;
+
+	/*!
+	 * Calls readValueFromDevice() and starts the timer if necessary.
+	 *
+	 * \param[in] instance Pointer to the current instance
+	 */
+	static void start_static(ClustSafe::Main *instance);
+
+	/*!
+	 * Calls readValueFromDevice() and then reads the value of
+	 * instance from the map and returns it.
+	 *
+	 * \param[in] instance Pointer to the current instance
+	 * \param[in] tid The id of the task
+	 *
+	 * \return value of this monitor.
+	 */
+	static double value_static(ClustSafe::Main *instance);
+
+	/*!
+	 * Calls readValueFromDevice() and then reads the value of this
+	 * instance one last time and returns it. This function also
+	 * removes instance from the map.
+	 *
+	 * \param[in] instance Pointer to the current instance
+	 *
+	 * \return value of this monitor.
+	 */
+	static double stop_static(ClustSafe::Main *instance);
+
+	/*!
+	 * Reads the values from the ClustSafe device, and adds the value
+	 * to all instances of this monitor.
+	 *
+	 * \param[in] instance Pointer to the current instance
+	 */
+	static void readValueFromDevice(bool reset = false);
 
 	/*!
 	 * \brief The host name or IP address of the ClustSafe device.
 	 */
-	QString host;
+	static QString host;
 
 	/*!
 	 * \brief The port on which the ClustSafe device listens.
 	 */
-	uint16_t port = 2010;
+	static uint16_t port;
 
 	/*!
 	 * \brief The signature string used to address a specific kind of CLustSafe device.
 	 */
-	QString signature = "MEGware";
+	static const QString signature;
 
 	/*!
 	 * \brief The password used when accessing the ClustSafe device.
 	 */
-	QString password = "";
+	static QString password;
+
+	/*!
+	 * \brief Stores if the timer was already started.
+	 */
+	static bool timerStarted;
 
 	/*!
 	 * \brief The list of outlets whose values will be added to form the resulting value.
 	 */
-	QList<int> outlets;
+	static QList<int> outlets;
 
 	/*!
 	 * \brief The amount of milliseconds before a connection attempt or data read will time out.
 	 */
-	uint64_t timeout = 1000;
+	static const uint64_t timeout;
 
 	/*!
 	 * \brief The amount of milliseconds after which the cached value will be refreshed.
 	 */
-	uint64_t ttl = 10;
+	static const uint64_t ttl;
 
 	/*!
-	 * \brief Stores if this monitor was already started once.
+	 * \brief Mapping between instances of ClustSafe::Main and their
+	 * corresponding measured value from the ClustSafe device.
+	 *
+	 * The first value is the address of the instance, the second is
+	 * the the instance's value.
 	 */
-	bool started = false;
+	static std::map<uintptr_t, uint64_t> instanceValueMap;
 
 	/*!
 	 * \brief The cached value of the internal counter of the ClustSafe device.
 	 */
-	uint64_t cached = 0;
+	static uint64_t cached;
 
 	/*!
 	 * \brief A set of threads which are currently monitored.
@@ -155,7 +216,7 @@ class Main : public PerformanceMonitor {
 	/*!
 	 * \brief The timer keeping track of the age of the cached value.
 	 */
-	QElapsedTimer timer;
+	static QElapsedTimer timer;
 
 }; // class Main
 

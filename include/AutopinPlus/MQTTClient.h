@@ -31,7 +31,6 @@
 #include <QObject>
 #include <mosquitto.h>
 #include <AutopinPlus/Configuration.h>
-#include <AutopinPlus/StandardConfiguration.h>
 
 namespace AutopinPlus {
 
@@ -51,16 +50,11 @@ class MQTTClient : public QObject {
 	}
 
 	/*!
-	 * \brief Return status of MQTTClient::init()
-	 *
-	 * \sa init
-	 */
-	enum MQTT_STATUS { OK, MOSQUITTO, CONNECT, LOOP, SUSCRIBE };
-
-	/*!
 	 * \brief Initalizes the MQTTClient
+	 *
+	 * \param[in] config Reference to the global configuration.
 	 */
-	static MQTTClient::MQTT_STATUS init(std::string hostname, int port);
+	static std::string init(const Configuration &config);
 
 	/*!
 	 * Delete funtions to ensure singleton functionality

@@ -61,7 +61,7 @@ class Main : public ControlStrategy {
 	/*!
 	 * \brief Slot which will be called if autopin+ has finished initializing.
 	 */
-	void slot_autopinReady() override;
+	void slot_watchdogReady() override;
 
 	/*!
 	 * \brief Slot which will be called if a new thread has been created.

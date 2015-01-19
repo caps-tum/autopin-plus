@@ -144,7 +144,7 @@ Configuration::configopts Main::getConfigOpts() {
 	return result;
 }
 
-void Main::slot_autopinReady() {
+void Main::slot_watchdogReady() {
 	context.info("Set phase notification interval");
 	proc.setPhaseNotificationInterval(notification_interval);
 

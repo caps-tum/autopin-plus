@@ -100,7 +100,7 @@ class ControlStrategy : public QObject {
 	/*!
 	 * \brief Starts the strategy when autopin+ has finished initialization
 	 */
-	virtual void slot_autopinReady() = 0;
+	virtual void slot_watchdogReady() = 0;
 
 	/*!
 	 * \brief Handles the creation of a new tasks
