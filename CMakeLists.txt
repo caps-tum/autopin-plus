@@ -9,7 +9,7 @@ include(ExternalProject)
 # Handle different build types
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug
-       CACHE STRING "Choose the type of build : None Debug Release RelWithDebInfo MinSizeRel Coverage."
+       CACHE STRING "Choose the type of build : None Debug Release RelWithDebInfo MinSizeRel."
        FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 message("* Current build type is : ${CMAKE_BUILD_TYPE}")
@@ -30,7 +30,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif()
 
   # Reduce the noise coming from Qt5
-  ADD_DEFINITIONS(-Wno-inconsistent-missing-override -Wno-disabled-macro-expansion)
+  ADD_DEFINITIONS(-Wno-inconsistent-missing-override -Wno-disabled-macro-expansion -Wno-deprecated)
 
   # Options required to reduce the noise of spdlog
   ADD_DEFINITIONS(-Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-switch-enum)
@@ -56,6 +56,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
     ADD_DEFINITIONS(-g3 -O0 -Wall -Wextra)
   endif()
+
 endif()
 
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
@@ -120,7 +121,7 @@ QT5_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 # C-ares
 ExternalProject_Add(libcares
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0/configure --prefix=<INSTALL_DIR>
+    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0/configure --prefix=<INSTALL_DIR> CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
     BUILD_IN_SOURCE 0
     BUILD_COMMAND ${MAKE})
 
@@ -133,7 +134,7 @@ set (libcares_path ${install_dir})
 # Mosquitto
 ExternalProject_Add(libmosquitto
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
-    CONFIGURE_COMMAND cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DARES_PATH=${libcares_path} ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
+    CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DARES_PATH=${libcares_path} ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
     BUILD_IN_SOURCE 0
     BUILD_COMMAND ${MAKE})
 
@@ -203,4 +204,3 @@ if (DOXYGEN_FOUND)
   )
 endif (DOXYGEN_FOUND)
 ########
-
