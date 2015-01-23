@@ -35,6 +35,7 @@
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
 #include <AutopinPlus/Strategy/Noop/Main.h>
 #include <AutopinPlus/Strategy/Compact/Main.h>
+#include <AutopinPlus/Strategy/Scatter/Main.h>
 #include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/OS/SignalDispatcher.h>
 #include <QString>
@@ -190,6 +191,12 @@ void Watchdog::createControlStrategy() {
 	if (strategy_config == "compact") {
 		strategy = std::unique_ptr<ControlStrategy>(
 			new Strategy::Compact::Main(*config, *process, *service, monitors, *context));
+		return;
+	}
+
+	if (strategy_config == "scatter") {
+		strategy = std::unique_ptr<ControlStrategy>(
+			new Strategy::Scatter::Main(*config, *process, *service, monitors, *context));
 		return;
 	}
 

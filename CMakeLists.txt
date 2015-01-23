@@ -95,6 +95,10 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Noop/Main.cpp)
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Compact/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Compact/Main.cpp)
 
+# Scatter control strategy
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Scatter/Main.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Scatter/Main.cpp)
+
 # External data logger
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Logger/External/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Logger/External/Main.cpp src/AutopinPlus/Logger/External/Process.cpp)
