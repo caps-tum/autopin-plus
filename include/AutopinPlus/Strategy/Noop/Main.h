@@ -59,11 +59,6 @@ class Main : public ControlStrategy {
 
   public slots:
 	/*!
-	 * \brief Slot which will be called if autopin+ has finished initializing.
-	 */
-	void slot_watchdogReady() override;
-
-	/*!
 	 * \brief Slot which will be called if a new thread has been created.
 	 *
 	 * \param[in] tid The tid of the thread.
@@ -76,33 +71,6 @@ class Main : public ControlStrategy {
 	 * \param[in] tid The tid of the thread.
 	 */
 	void slot_TaskTerminated(int tid) override;
-
-  private:
-	/*!
-	 * \brief Start all configured performance monitors for all new threads and stop them for all threads which have
-	 * terminated.
-	 */
-	void updateMonitors();
-
-	/*!
-	 * \brief Stores the (configurable) interval between the regular queries to the OS for the current list of threads.
-	 */
-	int interval = 100;
-
-	/*!
-	 * \brief Mutex which prevents two threads from updating the monitors at the same time.
-	 */
-	QMutex mutex;
-
-	/*!
-	 * \brief If process tracing is disabled, this timer will regularly query the OS for the current list of threads.
-	 */
-	QTimer timer;
-  private slots:
-	/*!
-	 * \brief Handles the regular update of the list of monitored threads if process tracing is disabled.
-	 */
-	void slot_timer();
 };
 
 } // namespace Log
