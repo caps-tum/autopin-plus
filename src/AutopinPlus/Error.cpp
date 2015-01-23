@@ -83,8 +83,6 @@ autopin_estate Error::report(Error::autopin_errors error, QString opt) {
 			setError();
 		else if (opt == "get_children")
 			break;
-		else if (opt == "set_affinity")
-			break;
 		else if (opt == "file_open")
 			setError();
 
@@ -135,6 +133,8 @@ autopin_estate Error::report(Error::autopin_errors error, QString opt) {
 		break;
 	case STRATEGY:
 		if (opt == "no_task") setError();
+		if (opt == "wrong_cpu") setError();
+		if (opt == "set_affinity") break;
 
 		break;
 	case HISTORY:

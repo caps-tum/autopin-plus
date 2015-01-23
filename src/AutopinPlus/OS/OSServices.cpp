@@ -456,21 +456,16 @@ int OSServices::getTaskSortId(int tid) {
 	return str_result.toInt();
 }
 
-void OSServices::setAffinity(int tid, int cpu) {
+int OSServices::setAffinity(int tid, int cpu) {
 	cpu_set_t cores;
 	pid_t linux_tid = tid;
-	int ret = 0;
 
 	// Setup CPU mask
 	CPU_ZERO(&cores);
 	CPU_SET(cpu, &cores);
 
 	// set affinity
-	ret = sched_setaffinity(linux_tid, sizeof(cores), &cores);
-
-	if (ret != 0)
-		context.report(Error::SYSTEM, "set_affinity",
-					   "Could not pin thread " + QString::number(tid) + " to cpu " + QString::number(cpu));
+	return sched_setaffinity(linux_tid, sizeof(cores), &cores);
 }
 
 ProcessTree::autopin_tid_list OSServices::getPid(QString proc) {

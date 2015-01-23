@@ -82,6 +82,7 @@ signals:
 	 * \brief Emitted, when the watchdog has finished initalization.
 	 */
 	void sig_watchdogReady();
+
   private:
 	/*!
 	 * Counts the instances of Watchdog

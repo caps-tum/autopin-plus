@@ -34,64 +34,127 @@
 #include <QString>
 #include <QStringList>
 #include <QFileInfo>
+#include <QSet>
+#include <QTextStream>
 
 namespace AutopinPlus {
+
+ControlStrategy::Pinning ControlStrategy::pinning;
+QMutex ControlStrategy::mutex;
 
 ControlStrategy::ControlStrategy(const Configuration &config, const ObservedProcess &proc, OS::OSServices &service,
 								 const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: config(config), proc(proc), service(service), monitors(monitors), context(context), name("ControlStrategy") {}
 
+const ControlStrategy::Task ControlStrategy::emptyTask = {0, 0};
+
+bool ControlStrategy::Task::operator==(const ControlStrategy::Task &rhs) const {
+	return (this->tid == rhs.tid) && (this->pid == rhs.pid);
+}
+
+bool ControlStrategy::Task::operator!=(const ControlStrategy::Task &rhs) const {
+	return (this->tid != rhs.tid) || (this->pid != rhs.pid);
+}
+
+bool ControlStrategy::Task::isCpuFree() const { return (*this == emptyTask); }
+
 void ControlStrategy::init() {
-	// Setup pinning history
-	createPinningHistory();
+	if (pinning.size() == 0) {
+		context.info("Reading /proc/cpu");
+		QFile cpuinfo("/proc/cpuinfo");
+		if (cpuinfo.open(QIODevice::ReadOnly)) {
+			QTextStream stream(&cpuinfo);
+
+			// Workaround is needed as procfs always returns 0 for its
+			// size, so atEnd() returns always true.
+			// See also the third example:
+			// http://doc.qt.io/qt-5/qfile.html#using-streams-to-read-files
+			int cpu = 0;
+			auto line = stream.readLine();
+			while (!line.isNull()) {
+				if (line.isEmpty()) pinning.push_back(emptyTask);
+				line = stream.readLine();
+				cpu++;
+			}
+		} else {
+			context.report(Error::FILE_NOT_FOUND, "config_file", "Could not read \"/proc/cpuinfo\"");
+		}
+	}
 }
 
 QString ControlStrategy::getName() { return name; }
 
-void ControlStrategy::slot_TaskCreated(int) {}
+void ControlStrategy::slot_watchdogReady() {
+	// Now that all initialization is done, ask the ObservedProcess if
+	// tracing is supported.
+	if (!proc.getTrace() && interval >= 1) {
+		// Process tracing is not enabled, we therefore have to
+		// periodically update the list of threads to monitor.
+		context.debug(
+			name +
+			": Process tracing is disabled, falling back to regular polling for determining the threads to monitor.");
+		connect(&timer, SIGNAL(timeout()), this, SLOT(slot_timer()));
+		timer.setInterval(interval);
+		timer.start();
+	}
+}
 
-void ControlStrategy::slot_TaskTerminated(int) {}
+void ControlStrategy::slot_TaskCreated(int tid) {
+	tasks.push_back(tid);
+	changePinning();
+}
+
+void ControlStrategy::slot_TaskTerminated(int tid) {
+	auto it_tasks = std::find(tasks.begin(), tasks.end(), tid);
+	if (it_tasks != tasks.end()) tasks.erase(it_tasks);
+
+	QMutexLocker ml(&mutex);
+	Task t = {proc.getPid(), tid};
+	auto it_pinning = std::find(pinning.begin(), pinning.end(), t);
+	if (it_pinning != pinning.end()) *it_pinning = emptyTask;
+
+	ml.unlock();
+	changePinning();
+}
 
 void ControlStrategy::slot_PhaseChanged(int) {}
-
 void ControlStrategy::slot_UserMessage(int, double) {}
 
-ControlStrategy::pinning_list ControlStrategy::readPinnings(QString opt) {
-	pinning_list result;
-	QStringList pinnings;
+ControlStrategy::Pinning ControlStrategy::getPinning(const Pinning &pinning) const { return pinning; }
 
-	if (config.configOptionExists(opt) <= 0) {
-		context.report(Error::BAD_CONFIG, "option_missing", "No pinning specified");
-		return result;
-	}
+void ControlStrategy::changePinning() {
+	QMutexLocker ml(&mutex);
+	int pid = proc.getPid();
+	Pinning new_pinning = getPinning(ControlStrategy::pinning);
 
-	pinnings = config.getConfigOptionList(opt);
-
-	for (int i = 0; i < pinnings.size(); i++) {
-		QStringList pinning = pinnings[i].split(':', QString::SkipEmptyParts, Qt::CaseSensitive);
-		autopin_pinning new_pinning;
-
-		for (int j = 0; j < pinning.size(); j++) {
-			bool ok;
-			int cpu = pinning[j].toInt(&ok);
-			if (ok && cpu >= 0)
-				new_pinning.push_back(cpu);
-			else {
-				context.report(Error::BAD_CONFIG, "option_format", pinnings[i] + " is not a valid pinning");
-				return result;
+	for (uint i = 0; i < pinning.size(); i++) {
+		Task new_task = new_pinning[i];
+		Task old_task = pinning[i];
+		if (new_task != old_task) {
+			// Test whether this ControlStrategy is allowed to
+			// overwrite this pinning.
+			if (!old_task.isCpuFree() && old_task.pid != pid) {
+				context.report(Error::STRATEGY, "wrong_cpu",
+							   "ControlStrategy." + name +
+								   " tried to overwrite a pinning from another strategy. Bailing out!");
+			} else {
+				if (old_task.pid == pid) context.warn("ControlStrategy." + name + " is overwritting its own pinning!");
+				int ret = service.setAffinity(new_task.tid, i);
+				if (ret != 0) {
+					context.report(Error::STRATEGY, "set_affinity", "Could not pin thread " +
+																		QString::number(new_task.tid) + " to cpu " +
+																		QString::number(i));
+				} else {
+					pinning[i] = new_task;
+					context.info("Pinned task " + QString::number(new_task.tid) + " to cpu " + QString::number(i));
+				}
 			}
 		}
-
-		result.push_back(new_pinning);
 	}
-
-	return result;
 }
 
 void ControlStrategy::refreshTasks() {
 	ProcessTree ptree;
-
-	struct tasksort sort;
 
 	ptree = proc.getProcessTree();
 	ProcessTree::autopin_tid_list task_set = ptree.getAllTasks();
@@ -100,35 +163,19 @@ void ControlStrategy::refreshTasks() {
 
 	for (const auto &elem : task_set) {
 		tasks.push_back(elem);
-		sort.sort_tasks[elem] = service.getTaskSortId(elem);
 	}
-
-	std::sort(tasks.begin(), tasks.end(), sort);
 }
 
-void ControlStrategy::createPinningHistory() {
-	int optcount_read = config.configOptionExists("PinningHistory.load");
-	int optcount_write = config.configOptionExists("PinningHistory.save");
+void ControlStrategy::slot_timer() {
+	QSet<int> old_tasks;
+	QSet<int> new_tasks;
 
-	if (optcount_read <= 0 && optcount_write <= 0) return;
+	for_each(tasks.begin(), tasks.end(), [&old_tasks](int tid) { old_tasks.insert(tid); });
+	refreshTasks();
+	for_each(tasks.begin(), tasks.end(), [&new_tasks](int tid) { new_tasks.insert(tid); });
 
-	if (optcount_read > 1)
-		context.report(Error::BAD_CONFIG, "inconsistent",
-					   "Specified " + QString::number(optcount_read) + " pinning histories as input");
-	if (optcount_write > 1)
-		context.report(Error::BAD_CONFIG, "inconsistent",
-					   "Specified " + QString::number(optcount_write) + " pinning histories as output");
+	for (auto tid : old_tasks - new_tasks) slot_TaskTerminated(tid);
 
-	QString history_config;
-	if (optcount_read > 0)
-		history_config = config.getConfigOption("PinningHistory.load");
-	else if (optcount_write > 0)
-		history_config = config.getConfigOption("PinningHistory.save");
-
-	QFileInfo history_info(history_config);
-
-	context.report(Error::UNSUPPORTED, "critical",
-				   "File type \"." + history_info.suffix() + "\" is not supported by any pinning history");
+	for (auto tid : new_tasks - old_tasks) slot_TaskCreated(tid);
 }
-
 } // namespace AutopinPlus

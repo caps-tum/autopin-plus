@@ -34,10 +34,10 @@
 #include <AutopinPlus/ObservedProcess.h>
 #include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/PerformanceMonitor.h>
+#include <QTimer>
+#include <memory>
 #include <deque>
 #include <map>
-#include <QObject>
-#include <memory>
 
 namespace AutopinPlus {
 
@@ -57,7 +57,7 @@ class ControlStrategy : public QObject {
 	 * \param[in] proc		Reference to the observed process
 	 * \param[in] service	Reference to the current OSServices instance
 	 * \param[in] monitors	Reference to a list of available instances of PerformanceMonitor
-	 * \param[in] context	Refernnce to the context of the object calling the constructor
+	 * \param[in] context	Reference to the context of the object calling the constructor
 	 */
 	ControlStrategy(const Configuration &config, const ObservedProcess &proc, OS::OSServices &service,
 					const PerformanceMonitor::monitor_list &monitors, AutopinContext &context);
@@ -81,26 +81,11 @@ class ControlStrategy : public QObject {
 	 */
 	virtual Configuration::configopts getConfigOpts() = 0;
 
-	/*!
-	 * \brief Data structure that maps tasks to cores
-	 */
-	using autopin_pinning = std::deque<int>;
-
-	/*!
-	 * \brief Data structure for storing a list of pinnings
-	 */
-	using pinning_list = std::deque<autopin_pinning>;
-
-	/*!
-	 * \brief Data type for storing a pinning with its result
-	 */
-	using pinning_result = std::pair<autopin_pinning, double>;
-
   public slots:
 	/*!
 	 * \brief Starts the strategy when autopin+ has finished initialization
 	 */
-	virtual void slot_watchdogReady() = 0;
+	virtual void slot_watchdogReady();
 
 	/*!
 	 * \brief Handles the creation of a new tasks
@@ -132,38 +117,52 @@ class ControlStrategy : public QObject {
 	virtual void slot_UserMessage(int arg, double val);
 
   protected:
+	struct Task {
+		int pid;
+		int tid;
+		bool operator==(const Task &rhs) const;
+		bool operator!=(const Task &rhs) const;
+		bool isCpuFree() const;
+	};
+
+	const static Task emptyTask;
+
+	/*!
+	 * \brief Data structure that maps tasks to cores
+	 */
+	using Pinning = std::vector<Task>;
+
 	/*!
 	 * \brief Data structure for storing a list of pinnings
-	 *
-	 * In contrast to ProcessTree::autopin_tid_list this data structure
-	 * supports the sorting of tasks.
 	 */
-	using autopin_tasklist = std::deque<int>;
+	using Tasklist = std::vector<int>;
 
 	/*!
-	 * \brief Data structure which maps tids to the corresponding sortids
-	 *
-	 * sortids are used for sorting tids in a consistent way
+	 * Current tasks of the observed process
 	 */
-	using sortmap = std::map<int, int>;
+	Tasklist tasks;
 
 	/*!
-	 * \brief Reads pinnings from the configuration
-	 *
-	 * \param[in] opt Name of the configuration option where
-	 * 	the pinnings are stored.
-	 * \return A list of pinnings
+	 * Should be called, when the Strategy wishes to change the
+	 * pinning. This funtion calls getPinning and changes the pinning
+	 * accordingly.
 	 */
-	pinning_list readPinnings(QString opt);
+	void changePinning();
 
 	/*!
-	 * \brief Factory function for the pinning history
+	 * \brief Returns the nth-cpu for the nth-unpinned task
 	 *
-	 * Reads the configuration and creates the requested
-	 * pinning history. The pinning history which is created
-	 * depends on the suffix of the history file:
+	 * The implementation of this function has to make sure that the
+	 * cpus are free to pin, which means it is occupied by a task from
+	 * its own process or it is unused which equals 'pinning[cpu] ==
+	 * {0,0}'.
+	 *
+	 * \param[in] current_pinning The actual pinning for all supervised processes
+	 *
+	 * \return The new pinning. The tasks will be pinned accordingly
+	 * by changePinning.
 	 */
-	void createPinningHistory();
+	virtual Pinning getPinning(const Pinning &current_pinning) const;
 
 	//@{
 	/*!
@@ -181,11 +180,6 @@ class ControlStrategy : public QObject {
 	AutopinContext &context;
 
 	/*!
-	 * Current tasks of the observed process
-	 */
-	autopin_tasklist tasks;
-
-	/*!
 	 * \brief Get running tasks
 	 *
 	 * Refreshes the current tasks of the observed process and stores
@@ -199,25 +193,34 @@ class ControlStrategy : public QObject {
 	QString name;
 
 	/*!
-	 * \brief Data structure for sorting tasks
-	 *
-	 * This struct is used in refreshTasks() and serves as comparison function for the
-	 * call of the sort function. Moreover, it stores a sort id for every. This id has
-	 * to be assigned before calling sort. The sorting is done with respect to the sort
-	 * ids (e. g. they could contain the creation time of a task) in ascending order. If
-	 * two sort ids are equal the tids are considered.
+	 * \brief Stores the (configurable) interval between the regular
+	 * queries to the OS for the current list of threads. If intervall
+	 * is 0 or negative, polling is disabled;
 	 */
-	struct tasksort {
-		sortmap sort_tasks;
-		bool operator()(int tida, int tidb) {
-			if (sort_tasks[tida] < sort_tasks[tidb])
-				return true;
-			else if (sort_tasks[tida] > sort_tasks[tidb])
-				return false;
-			else
-				return (tida < tidb);
-		}
-	};
+	int interval = 100;
+
+  private:
+	/*!
+	 * \brief Stores the current pinning
+	 */
+	static Pinning pinning;
+
+	/*!
+	 * \brief Mutex for access to current_pinning
+	 */
+	static QMutex mutex;
+
+	/*!
+	 * \brief If process tracing is disabled, this timer will
+	 * regularly query the OS for the current list of threads.
+	 */
+	QTimer timer;
+  private slots:
+	/*!
+	 * \brief Handles the regular update of the list of monitored
+	 * threads if process tracing is disabled.
+	 */
+	void slot_timer();
 };
 
 } // namespace AutopinPlus
