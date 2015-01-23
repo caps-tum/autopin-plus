@@ -91,6 +91,10 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Autopin1/Main.
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Noop/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Noop/Main.cpp)
 
+# Compact control strategy
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Compact/Main.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Compact/Main.cpp)
+
 # External data logger
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Logger/External/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Logger/External/Main.cpp src/AutopinPlus/Logger/External/Process.cpp)
