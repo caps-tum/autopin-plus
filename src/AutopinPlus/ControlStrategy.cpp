@@ -59,27 +59,8 @@ bool ControlStrategy::Task::operator!=(const ControlStrategy::Task &rhs) const {
 bool ControlStrategy::Task::isCpuFree() const { return (*this == emptyTask); }
 
 void ControlStrategy::init() {
-	if (pinning.size() == 0) {
-		context.info("Reading /proc/cpu");
-		QFile cpuinfo("/proc/cpuinfo");
-		if (cpuinfo.open(QIODevice::ReadOnly)) {
-			QTextStream stream(&cpuinfo);
-
-			// Workaround is needed as procfs always returns 0 for its
-			// size, so atEnd() returns always true.
-			// See also the third example:
-			// http://doc.qt.io/qt-5/qfile.html#using-streams-to-read-files
-			int cpu = 0;
-			auto line = stream.readLine();
-			while (!line.isNull()) {
-				if (line.isEmpty()) pinning.push_back(emptyTask);
-				line = stream.readLine();
-				cpu++;
-			}
-		} else {
-			context.report(Error::FILE_NOT_FOUND, "config_file", "Could not read \"/proc/cpuinfo\"");
-		}
-	}
+	int cpuCount = OS::OSServices::getCpuCount();
+	for (int i = 0; i < cpuCount; i++) pinning.push_back(emptyTask);
 }
 
 QString ControlStrategy::getName() { return name; }

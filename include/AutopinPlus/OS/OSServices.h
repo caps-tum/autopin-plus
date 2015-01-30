@@ -241,6 +241,13 @@ class OSServices : public QObject {
 	 */
 	static void usrSignalHandler(int param);
 
+	/*!
+	 * \brief Gets the number of availaible cpus.
+	 *
+	 * \return Returns the number of availaible cpus.
+	 */
+	static int getCpuCount();
+
 signals:
 	/*!
 	 * \brief Signals that a task has terminated
