@@ -193,20 +193,21 @@ class ControlStrategy : public QObject {
 	QString name;
 
 	/*!
-	 * \brief Stores the (configurable) interval between the regular
-	 * queries to the OS for the current list of threads. If intervall
-	 * is 0 or negative, polling is disabled;
+	 * \brief Stores the (configurable) interval in milliseconds
+	 * between the regular queries to the OS for the current list of
+	 * threads. If intervall is 0 or negative, polling is disabled.
 	 */
 	int interval = 100;
 
   private:
 	/*!
-	 * \brief Stores the current pinning
+	 * \brief Stores the current pinning.
 	 */
 	static Pinning pinning;
 
 	/*!
-	 * \brief Mutex for access to current_pinning
+	 * \brief Mutex for access to pinning, to avoid a race condition,
+	 * between reading the current pinning and writing a new one.
 	 */
 	static QMutex mutex;
 

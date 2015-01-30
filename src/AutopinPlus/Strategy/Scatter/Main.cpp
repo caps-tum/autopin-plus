@@ -62,7 +62,9 @@ Configuration::configopts Main::getConfigOpts() {
 
 void Main::slot_TaskCreated(int tid) {
 	new_task_tid = tid;
-	ControlStrategy::slot_TaskCreated(tid); // We received a signal telling us that a
+	// We received a signal telling us that a new task is created, so
+	// we need to update the pinning.
+	ControlStrategy::slot_TaskCreated(tid);
 	new_task_tid = 0;
 }
 
@@ -76,7 +78,7 @@ ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) const 
 	int last_own_task_pos = result.size();
 	int max_distance = 0;
 	int pin_cpu_pos = -1;
-	// Edge Case: No cpus are free, all cpus are free
+
 	for (uint i = 0; i < result.size(); i++) {
 		Task task = current_pinning[i];
 		int distance;
