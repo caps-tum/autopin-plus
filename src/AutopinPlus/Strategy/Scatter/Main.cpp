@@ -74,32 +74,53 @@ ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) const 
 	Pinning result = current_pinning;
 	int pid = proc.getPid();
 
-	int last_free_cpu_pos = result.size();
-	int last_own_task_pos = result.size();
-	int max_distance = 0;
+	uint max_distance = 0;
+	uint min_balance = result.size();
 	int pin_cpu_pos = -1;
 
 	for (uint i = 0; i < result.size(); i++) {
 		Task task = current_pinning[i];
-		int distance;
-		if (task.pid == pid) {
-			distance = i - last_free_cpu_pos;
-			if (distance > max_distance) {
-				max_distance = distance;
-				pin_cpu_pos = last_free_cpu_pos;
-			}
-			last_own_task_pos = i;
-		}
 		if (task.isCpuFree()) {
 			if (pin_cpu_pos == -1) pin_cpu_pos = i;
-			distance = i - last_own_task_pos;
-			if (distance > max_distance) {
+
+			// Search forward for the next pinned task.
+			uint distance_forward = 0;
+			for (uint j = i + 1; j < result.size(); j++) {
+				if (current_pinning[j].pid == pid) {
+					distance_forward = j - i;
+					break;
+				}
+			}
+
+			uint distance_backward = 0;
+			// Search backward for the last pinned task.
+			for (int w = i - 1; w >= 0; w--) {
+				if (current_pinning[w].pid == pid) {
+					distance_backward = i - w;
+					break;
+				}
+			}
+
+			// If the distance is than the current max distance,
+			// overwrite the pinning.
+			//
+			// If the distance equals the max distance, than the
+			// current balance between the forward distance and the
+			// backward distance comes into account.  This is
+			// necessary, so a free cpu with both a forward distance
+			// and a backwards distance of 2 are preferred to a free
+			// cpu with forward distance of 4 and a backward distance
+			// of 0.
+			uint distance = distance_forward + distance_backward;
+			uint balance = std::abs((int)(distance_forward - distance_backward));
+			if ((distance > max_distance) || ((distance == max_distance) && (balance < min_balance))) {
 				max_distance = distance;
+				min_balance = balance;
 				pin_cpu_pos = i;
 			}
-			last_free_cpu_pos = i;
 		}
 	}
+
 	if (pin_cpu_pos != -1) {
 		Task t;
 		t.pid = pid;

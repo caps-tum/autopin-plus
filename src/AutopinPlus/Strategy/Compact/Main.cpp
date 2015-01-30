@@ -74,32 +74,26 @@ ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) const 
 	Pinning result = current_pinning;
 	int pid = proc.getPid();
 
-	int last_free_cpu_pos = -result.size();
-	int last_own_task_pos = -result.size();
-	int min_distance = result.size();
+	uint min_distance = result.size();
 	int pin_cpu_pos = -1;
 
 	for (uint i = 0; i < result.size(); i++) {
 		Task task = current_pinning[i];
-		int distance;
-		if (task.pid == pid) {
-			distance = i - last_free_cpu_pos;
-			if (distance < min_distance) {
-				min_distance = distance;
-				pin_cpu_pos = last_free_cpu_pos;
-			}
-			last_own_task_pos = i;
-		}
 		if (task.isCpuFree()) {
 			if (pin_cpu_pos == -1) pin_cpu_pos = i;
-			distance = i - last_own_task_pos;
-			if (distance < min_distance) {
-				min_distance = distance;
-				pin_cpu_pos = i;
+
+			for (uint j = 0; j < result.size(); j++) {
+				if (current_pinning[j].pid == pid) {
+					uint distance = std::abs(j - i);
+					if (distance < min_distance) {
+						min_distance = distance;
+						pin_cpu_pos = i;
+					}
+				}
 			}
-			last_free_cpu_pos = i;
 		}
 	}
+
 	if (pin_cpu_pos != -1) {
 		Task t;
 		t.pid = pid;
