@@ -62,8 +62,6 @@ class Main : public ControlStrategy {
 	Configuration::configopts getConfigOpts() override;
 
   public slots:
-	void slot_watchdogReady() override;
-
 	/*!
 	 * \brief Assigns tasks to cores
 	 */
@@ -79,13 +77,20 @@ class Main : public ControlStrategy {
 	 */
 	void slot_stopPinning();
 
+	void slot_watchdogReady() override;
 	void slot_TaskCreated(int tid) override;
 	void slot_TaskTerminated(int tid) override;
 	void slot_PhaseChanged(int newphase) override;
 
   private:
 	/*!
-	 * \brief Data structure for storing the parameters of the currently pinned tasks.
+	 * \brief Data structure for storing the pinning.
+	 */
+	using autopin_pinning = std::deque<int>;
+
+	/*!
+	 * \brief Data structure for storing the parameters of the
+	 * currently pinned tasks.
 	 */
 	typedef struct {
 		int tid;
@@ -100,6 +105,11 @@ class Main : public ControlStrategy {
 	using autopin_pinned_tasklist = std::deque<pinned_task>;
 
 	/*!
+	 * \brief Data structure for storing a list of pinnings
+	 */
+	using pinning_list = std::deque<autopin_pinning>;
+
+	/*!
 	 * \brief Applies a pinning
 	 *
 	 * The pinning provided in the argument is applied
@@ -109,6 +119,15 @@ class Main : public ControlStrategy {
 	 *
 	 */
 	void applyPinning(autopin_pinning pinning);
+
+	/*!
+	 * \brief Reads pinnings from the configuration
+	 *
+	 * \param[in] opt Name of the configuration option where
+	 * 	the pinnings are stored.
+	 * \return A list of pinnings
+	 */
+	pinning_list readPinnings(QString opt);
 
 	/*!
 	 * \brief Determines if all pinned tasks are still running

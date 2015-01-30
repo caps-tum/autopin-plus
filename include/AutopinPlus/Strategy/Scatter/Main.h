@@ -1,7 +1,7 @@
 /*
  * This file is part of Autopin+.
  *
- * Copyright (C) 2014 Alexander Kurtz <alexander@kurtz.be>
+ * Copyright (C) 2014 Lukas Fürmetz
 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,15 +25,14 @@
 #include <AutopinPlus/ObservedProcess.h>	// for ObservedProcess
 #include <AutopinPlus/OS/OSServices.h>		// for OSServices
 #include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
-#include <qmutex.h>							// for QMutex
-#include <qtimer.h>							// for QTimer
 
 namespace AutopinPlus {
 namespace Strategy {
-namespace Noop {
+namespace Scatter {
 
 /*!
- * \brief A control strategy which does nothing besides starting the configured performance monitors.
+ * \brief A control strategy which tries to put tasks as near as
+ * possible to each other.
  */
 class Main : public ControlStrategy {
 	Q_OBJECT
@@ -58,21 +57,17 @@ class Main : public ControlStrategy {
 	Configuration::configopts getConfigOpts() override;
 
   public slots:
-	/*!
-	 * \brief Slot which will be called if a new thread has been created.
-	 *
-	 * \param[in] tid The tid of the thread.
-	 */
 	void slot_TaskCreated(int tid) override;
 
+  private:
+	Pinning getPinning(const Pinning &current_pinning) const;
+
 	/*!
-	 * \brief Slot which will be called if a thread has terminated.
-	 *
-	 * \param[in] tid The tid of the thread.
+	 * \brief Stores the currently new Task for getPinning;
 	 */
-	void slot_TaskTerminated(int tid) override;
+	int new_task_tid = 0;
 };
 
-} // namespace Log
+} // namespace Scatter
 } // namespace Strategy
 } // namespace AutopinPlus

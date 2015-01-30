@@ -1,8 +1,8 @@
 /*
  * This file is part of Autopin+.
  *
- * Copyright (C) 2014 Alexander Kurtz <alexander@kurtz.be>
-
+ * Copyright (C) 2015 Lukas Fürmetz
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,31 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <AutopinPlus/Strategy/Noop/Main.h>
+#include <AutopinPlus/Strategy/Compact/Main.h>
 
-#include <AutopinPlus/AutopinContext.h>		// for AutopinContext
-#include <AutopinPlus/Configuration.h>		// for Configuration, etc
-#include <AutopinPlus/ControlStrategy.h>	// for ControlStrategy
-#include <AutopinPlus/Error.h>				// for Error, Error::::BAD_CONFIG, etc
-#include <AutopinPlus/Exception.h>			// for Exception
-#include <AutopinPlus/ObservedProcess.h>	// for ObservedProcess
-#include <AutopinPlus/OS/OSServices.h>		// for OSServices
-#include <AutopinPlus/PerformanceMonitor.h> // for PerformanceMonitor, etc
-#include <AutopinPlus/Tools.h>				// for Tools
-#include <qmutex.h>							// for QMutexLocker
-#include <qset.h>							// for QSet
-#include <qstring.h>						// for operator+, QString
-#include <qstringlist.h>					// for QStringList
-#include <qtimer.h>							// for QTimer
+#include <AutopinPlus/Error.h>	 // for Error, Error::::BAD_CONFIG, etc
+#include <AutopinPlus/Exception.h> // for Exception
+#include <AutopinPlus/Tools.h>	 // for Tools
+#include <QString>				   // for operator+, QString
 
 namespace AutopinPlus {
 namespace Strategy {
-namespace Noop {
+namespace Compact {
 
 Main::Main(const Configuration &config, const ObservedProcess &proc, OS::OSServices &service,
 		   const PerformanceMonitor::monitor_list &monitors, AutopinContext &context)
 	: ControlStrategy(config, proc, service, monitors, context) {
-	name = "noop";
+	name = "compact";
 }
 
 void Main::init() {
@@ -71,22 +61,48 @@ Configuration::configopts Main::getConfigOpts() {
 }
 
 void Main::slot_TaskCreated(int tid) {
+	new_task_tid = tid;
+	// We received a signal telling us that a new task is created, so
+	// we need to update the pinning.
 	ControlStrategy::slot_TaskCreated(tid);
-	// Add the task to the monitors
-	for (auto i = monitors.begin(); i != monitors.end(); i++) {
-		context.debug(name + ".updateMonitors(): Starting monitor for new task " + QString::number(tid) + ".");
-		(*i)->start(tid);
-	}
+	new_task_tid = 0;
 }
 
-void Main::slot_TaskTerminated(int tid) {
-	ControlStrategy::slot_TaskTerminated(tid);
-	// Remove the task from the monitors
-	for (auto i = monitors.begin(); i != monitors.end(); i++) {
-		context.debug(name + ".updateMonitors(): Stopping monitor for dead task " + QString::number(tid) + ".");
-		(*i)->clear(tid);
+ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) const {
+	if (new_task_tid == 0) return current_pinning;
+
+	Pinning result = current_pinning;
+	int pid = proc.getPid();
+
+	uint min_distance = result.size();
+	int pin_cpu_pos = -1;
+
+	for (uint i = 0; i < result.size(); i++) {
+		Task task = current_pinning[i];
+		if (task.isCpuFree()) {
+			if (pin_cpu_pos == -1) pin_cpu_pos = i;
+
+			for (uint j = 0; j < result.size(); j++) {
+				if (current_pinning[j].pid == pid) {
+					uint distance = std::abs(j - i);
+					if (distance < min_distance) {
+						min_distance = distance;
+						pin_cpu_pos = i;
+					}
+				}
+			}
+		}
 	}
+
+	if (pin_cpu_pos != -1) {
+		Task t;
+		t.pid = pid;
+		t.tid = new_task_tid;
+		result[pin_cpu_pos] = t;
+	}
+
+	return result;
 }
-} // namespace Noop
+} // namespace Compact
 } // namespace Strategy
 } // namespace AutopinPlus

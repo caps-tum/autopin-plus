@@ -104,8 +104,9 @@ class OSServices : public QObject {
 	 * \param[in] tid	The id of the task
 	 * \param[in] cpu	The number of the core the task will be assigned to
 	 *
+	 * \return The result of sched_setaffinity
 	 */
-	void setAffinity(int tid, int cpu);
+	int setAffinity(int tid, int cpu);
 
 	/*!
 	 * \brief Attaches autopin+ to a process
@@ -239,6 +240,13 @@ class OSServices : public QObject {
 	 * via SIGUSR1.
 	 */
 	static void usrSignalHandler(int param);
+
+	/*!
+	 * \brief Gets the number of availaible cpus.
+	 *
+	 * \return Returns the number of availaible cpus.
+	 */
+	static int getCpuCount();
 
 signals:
 	/*!

@@ -361,6 +361,38 @@ void Main::applyPinning(autopin_pinning pinning) {
 	}
 }
 
+Main::pinning_list Main::readPinnings(QString opt) {
+	pinning_list result;
+	QStringList pinnings;
+
+	if (config.configOptionExists(opt) <= 0) {
+		context.report(Error::BAD_CONFIG, "option_missing", "No pinning specified");
+		return result;
+	}
+
+	pinnings = config.getConfigOptionList(opt);
+
+	for (int i = 0; i < pinnings.size(); i++) {
+		QStringList pinning = pinnings[i].split(':', QString::SkipEmptyParts, Qt::CaseSensitive);
+		autopin_pinning new_pinning;
+
+		for (int j = 0; j < pinning.size(); j++) {
+			bool ok;
+			int cpu = pinning[j].toInt(&ok);
+			if (ok && cpu >= 0)
+				new_pinning.push_back(cpu);
+			else {
+				context.report(Error::BAD_CONFIG, "option_format", pinnings[i] + " is not a valid pinning");
+				return result;
+			}
+		}
+
+		result.push_back(new_pinning);
+	}
+
+	return result;
+}
+
 void Main::checkPinnedTasks() {
 	// There is no need to check for terminated tasks if process tracing is enabled
 	if (proc.getTrace()) return;
