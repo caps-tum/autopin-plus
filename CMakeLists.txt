@@ -172,7 +172,7 @@ include_directories(${libmosquitto_path}/include)
 ########
 # Compiling and linking
 add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS} ${autopin+_HEADERS_MOC})
-target_link_libraries(autopin+ -lpthread)
+target_link_libraries(autopin+ -lpthread -lrt)
 
 # Make sure auotpin+ depends on libmosquitto and link with it
 add_dependencies (autopin+ libmosquitto)
