@@ -162,7 +162,15 @@ class ControlStrategy : public QObject {
 	 * \return The new pinning. The tasks will be pinned accordingly
 	 * by changePinning.
 	 */
-	virtual Pinning getPinning(const Pinning &current_pinning) const;
+	virtual Pinning getPinning(const Pinning &current_pinning);
+
+	/*!
+	 * \brief Returns the index of the cpu, the Task is pinned on,
+	 * otherwise -1
+	 *
+	 * \param[in] tid ID of the task.
+	 */
+	int getCpuByTask(int tid);
 
 	//@{
 	/*!

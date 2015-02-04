@@ -23,6 +23,9 @@
 #include <AutopinPlus/Exception.h> // for Exception
 #include <AutopinPlus/Tools.h>	 // for Tools
 #include <QString>				   // for operator+, QString
+#include <AutopinPlus/OS/CpuInfo.h>
+
+namespace CpuInfo = AutopinPlus::OS::CpuInfo;
 
 namespace AutopinPlus {
 namespace Strategy {
@@ -68,7 +71,7 @@ void Main::slot_TaskCreated(int tid) {
 	new_task_tid = 0;
 }
 
-ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) const {
+ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) {
 	if (new_task_tid == 0) return current_pinning;
 
 	Pinning result = current_pinning;
@@ -84,7 +87,7 @@ ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) const 
 
 			for (uint j = 0; j < result.size(); j++) {
 				if (current_pinning[j].pid == pid) {
-					uint distance = std::abs(j - i);
+					uint distance = CpuInfo::getCpuDistance(i, j);
 					if (distance < min_distance) {
 						min_distance = distance;
 						pin_cpu_pos = i;

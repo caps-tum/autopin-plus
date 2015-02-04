@@ -46,7 +46,6 @@
 #include <sys/types.h>
 #include <sys/un.h>
 #include <sys/wait.h>
-#include <sys/sysinfo.h>
 #include <unistd.h>
 
 /*!
@@ -106,8 +105,6 @@ QString OSServices::getHostname_static() {
 
 	return qhostname;
 }
-
-int OSServices::getCpuCount() { return get_nprocs(); }
 
 int OSServices::createProcess(QString cmd, bool wait) {
 	pid_t pid;
