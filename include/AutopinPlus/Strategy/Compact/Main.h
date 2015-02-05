@@ -60,7 +60,7 @@ class Main : public ControlStrategy {
 	void slot_TaskCreated(int tid) override;
 
   private:
-	Pinning getPinning(const Pinning &current_pinning) const;
+	Pinning getPinning(const Pinning &current_pinning) override;
 
 	/*!
 	 * \brief Stores the currently new Task for getPinning;

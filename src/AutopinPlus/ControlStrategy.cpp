@@ -28,6 +28,7 @@
 
 #include <AutopinPlus/ControlStrategy.h>
 #include <AutopinPlus/OS/OSServices.h>
+#include <AutopinPlus/OS/CpuInfo.h>
 
 #include <algorithm>
 #include <QChar>
@@ -59,7 +60,7 @@ bool ControlStrategy::Task::operator!=(const ControlStrategy::Task &rhs) const {
 bool ControlStrategy::Task::isCpuFree() const { return (*this == emptyTask); }
 
 void ControlStrategy::init() {
-	int cpuCount = OS::OSServices::getCpuCount();
+	int cpuCount = OS::CpuInfo::getCpuCount();
 	for (int i = 0; i < cpuCount; i++) pinning.push_back(emptyTask);
 }
 
@@ -101,7 +102,7 @@ void ControlStrategy::slot_TaskTerminated(int tid) {
 void ControlStrategy::slot_PhaseChanged(int) {}
 void ControlStrategy::slot_UserMessage(int, double) {}
 
-ControlStrategy::Pinning ControlStrategy::getPinning(const Pinning &pinning) const { return pinning; }
+ControlStrategy::Pinning ControlStrategy::getPinning(const Pinning &pinning) { return pinning; }
 
 void ControlStrategy::changePinning() {
 	QMutexLocker ml(&mutex);
@@ -158,5 +159,16 @@ void ControlStrategy::slot_timer() {
 	for (auto tid : old_tasks - new_tasks) slot_TaskTerminated(tid);
 
 	for (auto tid : new_tasks - old_tasks) slot_TaskCreated(tid);
+}
+
+int ControlStrategy::getCpuByTask(int tid) {
+	QMutexLocker ml(&mutex);
+	Task t = {proc.getPid(), tid};
+
+	for (uint cpu = 0; cpu < pinning.size(); cpu++) {
+		if (t == pinning[cpu]) return cpu;
+	}
+
+	return -1;
 }
 } // namespace AutopinPlus

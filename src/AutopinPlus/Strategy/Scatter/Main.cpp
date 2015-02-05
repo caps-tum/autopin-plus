@@ -23,6 +23,9 @@
 #include <AutopinPlus/Exception.h> // for Exception
 #include <AutopinPlus/Tools.h>	 // for Tools
 #include <QString>				   // for operator+, QString
+#include <AutopinPlus/OS/CpuInfo.h>
+
+namespace CpuInfo = AutopinPlus::OS::CpuInfo;
 
 namespace AutopinPlus {
 namespace Strategy {
@@ -50,6 +53,8 @@ void Main::init() {
 			return;
 		}
 	}
+
+	for (int node = 0; node < CpuInfo::getNodeCount(); node++) pinCount.push_back(0);
 }
 
 Configuration::configopts Main::getConfigOpts() {
@@ -68,68 +73,42 @@ void Main::slot_TaskCreated(int tid) {
 	new_task_tid = 0;
 }
 
-ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) const {
+void Main::slot_TaskTerminated(int tid) {
+	int cpu = getCpuByTask(tid);
+	int node = CpuInfo::getNodeByCpu(cpu);
+	pinCount[node]--;
+	ControlStrategy::slot_TaskTerminated(tid);
+}
+
+ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) {
 	if (new_task_tid == 0) return current_pinning;
 
 	Pinning result = current_pinning;
-	int pid = proc.getPid();
 
-	uint max_distance = 0;
-	uint min_balance = result.size();
 	int pin_cpu_pos = -1;
-
-	for (uint i = 0; i < result.size(); i++) {
-		Task task = current_pinning[i];
-		if (task.isCpuFree()) {
-			if (pin_cpu_pos == -1) pin_cpu_pos = i;
-
-			// Search forward for the next pinned task.
-			uint distance_forward = 0;
-			for (uint j = i + 1; j < result.size(); j++) {
-				if (current_pinning[j].pid == pid) {
-					distance_forward = j - i;
-					break;
-				}
-			}
-
-			uint distance_backward = 0;
-			// Search backward for the last pinned task.
-			for (int w = i - 1; w >= 0; w--) {
-				if (current_pinning[w].pid == pid) {
-					distance_backward = i - w;
-					break;
-				}
-			}
-
-			// If the distance is than the current max distance,
-			// overwrite the pinning.
-			//
-			// If the distance equals the max distance, than the
-			// current balance between the forward distance and the
-			// backward distance comes into account.  This is
-			// necessary, so a free cpu with both a forward distance
-			// and a backwards distance of 2 are preferred to a free
-			// cpu with forward distance of 4 and a backward distance
-			// of 0.
-			uint distance = distance_forward + distance_backward;
-			uint balance = std::abs((int)(distance_forward - distance_backward));
-			if ((distance > max_distance) || ((distance == max_distance) && (balance < min_balance))) {
-				max_distance = distance;
-				min_balance = balance;
-				pin_cpu_pos = i;
+	for (auto node : sort_indexes(pinCount)) {
+		auto cpus = CpuInfo::getCpusByNode(node);
+		for (auto cpu : cpus) {
+			Task task = current_pinning[cpu];
+			if (task.isCpuFree()) {
+				pin_cpu_pos = cpu;
+				pinCount[node]++;
+				goto LoopEnd;
 			}
 		}
 	}
+LoopEnd:
 
 	if (pin_cpu_pos != -1) {
 		Task t;
-		t.pid = pid;
+		t.pid = proc.getPid();
 		t.tid = new_task_tid;
 		result[pin_cpu_pos] = t;
 	}
 
 	return result;
 }
+
 } // namespace Scatter
 } // namespace Strategy
 } // namespace AutopinPlus

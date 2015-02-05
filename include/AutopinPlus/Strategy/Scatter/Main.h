@@ -58,14 +58,35 @@ class Main : public ControlStrategy {
 
   public slots:
 	void slot_TaskCreated(int tid) override;
+	void slot_TaskTerminated(int tid) override;
 
   private:
-	Pinning getPinning(const Pinning &current_pinning) const;
+	Pinning getPinning(const Pinning &current_pinning) override;
 
 	/*!
-	 * \brief Stores the currently new Task for getPinning;
+	 * \brief Stores the currently new Task for getPinning.
 	 */
 	int new_task_tid = 0;
+
+	/*!
+	 * \brief Count of task pinned on the n-th numa node
+	 */
+	std::vector<int> pinCount;
+
+	/*!
+	 * \brief Sorts an std::vector and returns an vector of the indexes
+	 */
+	template <typename T> std::vector<size_t> sort_indexes(const std::vector<T> &v) const {
+
+		// initialize original index locations
+		std::vector<size_t> idx(v.size());
+		for (size_t i = 0; i != idx.size(); ++i) idx[i] = i;
+
+		// sort indexes based on comparing values in v
+		std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) { return v[i1] < v[i2]; });
+
+		return idx;
+	}
 };
 
 } // namespace Scatter

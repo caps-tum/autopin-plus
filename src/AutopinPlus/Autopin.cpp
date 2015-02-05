@@ -30,6 +30,7 @@
 #include <AutopinPlus/Error.h>
 #include <AutopinPlus/OS/OSServices.h>
 #include <AutopinPlus/OS/SignalDispatcher.h>
+#include <AutopinPlus/OS/CpuInfo.h>
 #include <AutopinPlus/MQTTClient.h>
 #include <AutopinPlus/Monitor/ClustSafe/Main.h>
 #include <QFileInfo>
@@ -51,6 +52,8 @@
 
 using AutopinPlus::OS::SignalDispatcher;
 using AutopinPlus::OS::OSServices;
+
+namespace CpuInfo = AutopinPlus::OS::CpuInfo;
 
 namespace AutopinPlus {
 
@@ -147,6 +150,10 @@ void Autopin::slot_autopinSetup() {
 		context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
 		EXIT(1);
 	}
+
+	// Setting up CpuInfo
+	context.info("Getting information about the cpu");
+	CpuInfo::setupCpuInfo();
 
 	// Read configuration
 	context.info("Reading configurations ...");
