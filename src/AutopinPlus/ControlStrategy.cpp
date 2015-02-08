@@ -60,8 +60,10 @@ bool ControlStrategy::Task::operator!=(const ControlStrategy::Task &rhs) const {
 bool ControlStrategy::Task::isCpuFree() const { return (*this == emptyTask); }
 
 void ControlStrategy::init() {
-	int cpuCount = OS::CpuInfo::getCpuCount();
-	for (int i = 0; i < cpuCount; i++) pinning.push_back(emptyTask);
+	if (pinning.empty()) {
+		int cpuCount = OS::CpuInfo::getCpuCount();
+		for (int i = 0; i < cpuCount; i++) pinning.push_back(emptyTask);
+	}
 }
 
 QString ControlStrategy::getName() { return name; }
