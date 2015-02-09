@@ -58,7 +58,7 @@ namespace CpuInfo = AutopinPlus::OS::CpuInfo;
 namespace AutopinPlus {
 
 Autopin::Autopin(int &_argc, char *const *_argv)
-	: QCoreApplication(_argc, const_cast<char **>(_argv)), context(std::string("global")), argc(_argc), argv(_argv) {}
+	: QCoreApplication(_argc, const_cast<char **>(_argv)), argc(_argc), argv(_argv) {}
 
 void Autopin::slot_autopinSetup() {
 
@@ -95,6 +95,43 @@ void Autopin::slot_autopinSetup() {
 		globalConfigPath = QString(argv[optind]);
 	}
 
+	// Load global config file
+	Configuration *globalConfig = nullptr;
+
+	if (globalConfigPath != "") {
+		QFile globalConfigFile(globalConfigPath);
+		if (globalConfigFile.open(QIODevice::ReadOnly)) {
+			QTextStream stream(&globalConfigFile);
+			AutopinContext globalConfigContext("GlobalConfig");
+			globalConfig = new StandardConfiguration(stream.readAll(), globalConfigContext);
+			globalConfig->init();
+		} else {
+			std::cerr << "Could not read global configuration \"" + globalConfigPath.toStdString() + "\"" << std::endl;
+			EXIT(1);
+		}
+	}
+
+	if (globalConfig != nullptr) {
+		// Setup logging
+		QString logtype = globalConfig->getConfigOption("log.type");
+		if (logtype == "syslog") {
+			AutopinContext::setupLogging(AutopinContext::logging_t::SYSLOG);
+		} else if (logtype == "file") {
+			QString logfilePath = globalConfig->getConfigOption("log.file");
+			if (logfilePath != "") {
+				AutopinContext::setupLogging(AutopinContext::logging_t::LOGFILE, logfilePath);
+			} else {
+				AutopinContext::setupLogging(AutopinContext::logging_t::LOGFILE);
+			}
+		} else {
+			AutopinContext::setupLogging(AutopinContext::logging_t::STDOUT);
+		}
+	} else {
+		AutopinContext::setupLogging(AutopinContext::logging_t::STDOUT);
+	}
+
+	context = std::unique_ptr<AutopinContext>(new AutopinContext("global"));
+
 	// Start message
 	QString startup_msg, qt_msg, host;
 
@@ -102,36 +139,19 @@ void Autopin::slot_autopinSetup() {
 
 	startup_msg = applicationName() + " " + applicationVersion() + " started with pid " +
 				  QString::number(applicationPid()) + " on " + host + "!";
-	context.info(startup_msg);
+	context->info(startup_msg);
 
 	qt_msg = QString("Running with Qt") + qVersion();
-	context.info(qt_msg);
-
-	// Load global config file
-	Configuration *globalConfig = nullptr;
-
-	if (globalConfigPath != "") {
-		context.info("Reading global configuration");
-
-		QFile globalConfigFile(globalConfigPath);
-		if (globalConfigFile.open(QIODevice::ReadOnly)) {
-			QTextStream stream(&globalConfigFile);
-			globalConfig = new StandardConfiguration(stream.readAll(), context);
-			globalConfig->init();
-		} else {
-			context.report(Error::FILE_NOT_FOUND, "config_file",
-						   "Could not read global configuration \"" + globalConfigPath + "\"");
-		}
-	}
+	context->info(qt_msg);
 
 	if (globalConfig != nullptr) {
 		if (isDaemon) {
 			// Setting up MQTT Communcation
-			context.info("Setting up MQTT communication");
+			context->info("Setting up MQTT communication");
 			std::string error_message = MQTTClient::init(*globalConfig);
 
 			if (error_message != "") {
-				context.error(QString::fromStdString(error_message));
+				context->error(QString::fromStdString(error_message));
 				EXIT(1);
 			} else {
 				connect(&MQTTClient::getInstance(), SIGNAL(sig_receivedProcessConfig(QString)), this,
@@ -139,30 +159,30 @@ void Autopin::slot_autopinSetup() {
 			}
 		}
 
-		AutopinPlus::Monitor::ClustSafe::Main::init_static(*globalConfig, context);
+		AutopinPlus::Monitor::ClustSafe::Main::init_static(*globalConfig, *context);
 
 		delete globalConfig;
 	}
 
 	// Setting up signal Handlers
-	context.info("Setting up signal handlers");
+	context->info("Setting up signal handlers");
 	if (SignalDispatcher::setupSignalHandler() != 0) {
-		context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
+		context->report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
 		EXIT(1);
 	}
 
 	// Setting up CpuInfo
-	context.info("Getting information about the cpu");
+	context->info("Getting information about the cpu");
 	CpuInfo::setupCpuInfo();
 
 	// Read configuration
-	context.info("Reading configurations ...");
+	context->info("Reading configurations ...");
 
 	for (const auto configPath : configPaths) {
 		QFile configFile(configPath);
 		if (configFile.open(QIODevice::ReadOnly)) {
 			QTextStream stream(&configFile);
-			std::unique_ptr<Configuration> config(new StandardConfiguration(stream.readAll(), context));
+			std::unique_ptr<Configuration> config(new StandardConfiguration(stream.readAll(), *context));
 			config->init();
 
 			Watchdog *watchdog = new Watchdog(std::move(config));
@@ -171,7 +191,8 @@ void Autopin::slot_autopinSetup() {
 
 			watchdogs.push_back(watchdog);
 		} else {
-			context.report(Error::FILE_NOT_FOUND, "config_file", "Could not read configuration \"" + configPath + "\"");
+			context->report(Error::FILE_NOT_FOUND, "config_file",
+							"Could not read configuration \"" + configPath + "\"");
 		}
 	}
 
@@ -189,7 +210,7 @@ void Autopin::slot_watchdogStop() {
 }
 
 void Autopin::slot_runProcess(const QString configText) {
-	std::unique_ptr<Configuration> config(new StandardConfiguration(configText, context));
+	std::unique_ptr<Configuration> config(new StandardConfiguration(configText, *context));
 	config->init();
 
 	Watchdog *watchdog = new Watchdog(std::move(config));

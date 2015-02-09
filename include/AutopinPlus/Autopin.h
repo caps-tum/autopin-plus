@@ -110,7 +110,7 @@ signals:
 	/*!
 	 * Stores a pointer to an instance of the class AutopinContext.
 	 */
-	AutopinContext context;
+	std::unique_ptr<AutopinContext> context;
 
 	/*!
 	 * Stores each Watchdog in a List.

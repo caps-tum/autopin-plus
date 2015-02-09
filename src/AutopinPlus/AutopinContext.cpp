@@ -31,22 +31,29 @@
 
 namespace AutopinPlus {
 
-AutopinContext::AutopinContext(std::string name) : err(), name(name) {
-	try {
-		logger = spdlog::stdout_logger_mt(name);
-	} catch (const spdlog::spdlog_ex &ex) {
-		std::cerr << "Could not initalizes logger. Exiting!";
-		QCoreApplication::exit(-2);
-	}
+std::shared_ptr<spdlog::logger> AutopinContext::logger;
+
+AutopinContext::AutopinContext(std::string name) : err(), name(name) {}
+
+void AutopinContext::info(QString msg) const {
+	std::string log = "[" + name + "] " + msg.toStdString();
+	logger->info(log.c_str());
 }
 
-void AutopinContext::info(QString msg) const { logger->info(msg.toLocal8Bit()); }
+void AutopinContext::warn(QString msg) const {
+	std::string log = "[" + name + "] " + msg.toStdString();
+	logger->warn(log.c_str());
+}
 
-void AutopinContext::warn(QString msg) const { logger->warn(msg.toLocal8Bit()); }
+void AutopinContext::error(QString msg) const {
+	std::string log = "[" + name + "] " + msg.toStdString();
+	logger->error(log.c_str());
+}
 
-void AutopinContext::error(QString msg) const { logger->error(msg.toLocal8Bit()); }
-
-void AutopinContext::debug(QString msg) const { logger->debug(msg.toLocal8Bit()); }
+void AutopinContext::debug(QString msg) const {
+	std::string log = "[" + name + "] " + msg.toStdString();
+	logger->debug(log.c_str());
+}
 
 autopin_estate AutopinContext::report(Error::autopin_errors error, QString opt, QString msg) {
 	autopin_estate result;
@@ -62,15 +69,20 @@ autopin_estate AutopinContext::report(Error::autopin_errors error, QString opt, 
 	return result;
 }
 
-void AutopinContext::setPid(int pid) {
-	name = name + " (pid: " + std::to_string(pid) + ")";
+void AutopinContext::setPid(int pid) { name = name + " (pid: " + std::to_string(pid) + ")"; }
+
+bool AutopinContext::isError() const { return err.autopinErrorState() == AUTOPIN_ERROR; }
+
+void AutopinContext::setupLogging(const AutopinContext::logging_t type, const QString &path) {
 	try {
-		logger = spdlog::stdout_logger_mt(name);
+		// std::cout << logtype << std::endl;
+		if (type == logging_t::SYSLOG) logger = spdlog::syslog_logger("autopin+");
+		if (type == logging_t::LOGFILE) logger = spdlog::daily_logger_mt("autopin+", path.toStdString());
+		if (type == logging_t::STDOUT) logger = spdlog::stdout_logger_mt("autopin+");
 	} catch (const spdlog::spdlog_ex &ex) {
-		std::cerr << "Could not initalizes logger. Exiting!";
-		emit sig_error();
+		std::cerr << "Could not initalizes logger. Exiting!" << std::endl;
+		QCoreApplication::exit(-2);
 	}
 }
 
-bool AutopinContext::isError() const { return err.autopinErrorState() == AUTOPIN_ERROR; }
 } // namespace AutopinPlus

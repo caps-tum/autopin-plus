@@ -109,6 +109,18 @@ class AutopinContext : public QObject {
 	 */
 	void setPid(int pid);
 
+	/*!
+	 * \brief Logging types
+	 */
+	enum class logging_t { STDOUT, LOGFILE, SYSLOG };
+
+	/*!
+	 * \brief Sets up the logging infrastructur
+	 *
+	 * \param[in] type	The logging type
+	 * \param[in] path	Optional paramter, specifing the file, if type == LOGFILE
+	 */
+	static void setupLogging(const logging_t type, const QString &path = "log.txt");
 signals:
 	/*
 	 * Gets emmitted, when context encounters a critical error
@@ -117,9 +129,10 @@ signals:
 
   private:
 	/*!
-	 * \brief Stores a shared pointer to the logger of the current context
+	 * \brief Stores a shared pointer to the logger, shared by all
+	 * instances of AutopinContex
 	 */
-	std::shared_ptr<spdlog::logger> logger;
+	static std::shared_ptr<spdlog::logger> logger;
 
 	/*!
 	 * \brief Stores an instance of the class Error
