@@ -110,12 +110,15 @@ class AutopinContext : public QObject {
 	void setPid(int pid);
 
 	/*!
-	 *
+	 * \brief Logging types
 	 */
-	enum logging_t { STDOUT, LOGFILE, SYSLOG };
+	enum class logging_t { STDOUT, LOGFILE, SYSLOG };
 
 	/*!
+	 * \brief Sets up the logging infrastructur
 	 *
+	 * \param[in] type	The logging type
+	 * \param[in] path	Optional paramter, specifing the file, if type == LOGFILE
 	 */
 	static void setupLogging(const logging_t type, const QString &path = "log.txt");
 signals:

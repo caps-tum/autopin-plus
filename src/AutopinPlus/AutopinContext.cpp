@@ -76,9 +76,9 @@ bool AutopinContext::isError() const { return err.autopinErrorState() == AUTOPIN
 void AutopinContext::setupLogging(const AutopinContext::logging_t type, const QString &path) {
 	try {
 		// std::cout << logtype << std::endl;
-		if (type == SYSLOG) logger = spdlog::syslog_logger("autopin+");
-		if (type == LOGFILE) logger = spdlog::daily_logger_mt("autopin+", path.toStdString());
-		if (type == STDOUT) logger = spdlog::stdout_logger_mt("autopin+");
+		if (type == logging_t::SYSLOG) logger = spdlog::syslog_logger("autopin+");
+		if (type == logging_t::LOGFILE) logger = spdlog::daily_logger_mt("autopin+", path.toStdString());
+		if (type == logging_t::STDOUT) logger = spdlog::stdout_logger_mt("autopin+");
 	} catch (const spdlog::spdlog_ex &ex) {
 		std::cerr << "Could not initalizes logger. Exiting!" << std::endl;
 		QCoreApplication::exit(-2);
