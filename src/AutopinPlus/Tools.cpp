@@ -1,21 +1,9 @@
 /*
- * This file is part of Autopin+.
- *
- * Copyright (C) 2014 Alexander Kurtz <alexander@kurtz.be>
-
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
-
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
-
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+* This file is part of Autopin+.
+* Copyright (C) 2015 Technische Universität München - LRR
+*
+* This file is licensed under the GNU General Public License Version 3
+*/
 
 #include <AutopinPlus/Tools.h>
 
@@ -28,8 +16,9 @@
 #include <utility>				   // for pair
 
 namespace AutopinPlus {
+namespace Tools {
 
-double Tools::readDouble(const QString &string) {
+double readDouble(const QString &string) {
 	bool valid;
 
 	auto result = string.toDouble(&valid);
@@ -41,7 +30,7 @@ double Tools::readDouble(const QString &string) {
 	return result;
 }
 
-int Tools::readInt(const QString &string) {
+int readInt(const QString &string) {
 	bool valid;
 
 	auto result = string.toInt(&valid, 0);
@@ -53,7 +42,7 @@ int Tools::readInt(const QString &string) {
 	return result;
 }
 
-QList<int> Tools::readInts(const QStringList &list) {
+QList<int> readInts(const QStringList &list) {
 	QList<int> result;
 
 	for (auto element : list) {
@@ -63,7 +52,7 @@ QList<int> Tools::readInts(const QStringList &list) {
 	return result;
 }
 
-QString Tools::readLine(const QString &path) {
+QString readLine(const QString &path) {
 	QFile file(path);
 
 	if (!file.open(QIODevice::ReadOnly)) {
@@ -77,7 +66,7 @@ QString Tools::readLine(const QString &path) {
 	return result;
 }
 
-std::pair<QString, QString> Tools::readPair(const QString &string, const QString &separator) {
+std::pair<QString, QString> readPair(const QString &string, const QString &separator) {
 	auto list = string.split(separator);
 
 	if (list.size() != 2) {
@@ -87,7 +76,7 @@ std::pair<QString, QString> Tools::readPair(const QString &string, const QString
 	return std::pair<QString, QString>(list[0], list[1]);
 }
 
-unsigned long Tools::readULong(const QString &string) {
+unsigned long readULong(const QString &string) {
 	bool valid;
 
 	auto result = string.toULong(&valid, 0);
@@ -99,7 +88,7 @@ unsigned long Tools::readULong(const QString &string) {
 	return result;
 }
 
-QStringList Tools::showInts(const QList<int> &list) {
+QStringList showInts(const QList<int> &list) {
 	QStringList result;
 
 	for (int element : list) {
@@ -109,4 +98,5 @@ QStringList Tools::showInts(const QList<int> &list) {
 	return result;
 }
 
+} // namespace Tools
 } // namespace AutopinPlus
