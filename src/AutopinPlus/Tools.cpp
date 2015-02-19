@@ -1,9 +1,9 @@
 /*
-* This file is part of Autopin+.
-* Copyright (C) 2015 Technische Universität München - LRR
-*
-* This file is licensed under the GNU General Public License Version 3
-*/
+ * This file is part of Autopin+.
+ * Copyright (C) 2015 Technische Universität München - LRR
+ *
+ * This file is licensed under the GNU General Public License Version 3
+ */
 
 #include <AutopinPlus/Tools.h>
 
