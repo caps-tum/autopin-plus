@@ -9,7 +9,7 @@ include(ExternalProject)
 # Handle different build types
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE Debug
-       CACHE STRING "Choose the type of build : None Debug Release RelWithDebInfo MinSizeRel."
+       CACHE STRING "Choose the type of build : Debug Release."
        FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 message("* Current build type is : ${CMAKE_BUILD_TYPE}")
@@ -187,6 +187,11 @@ qt5_use_modules(autopin+ Core)
 qt5_use_modules(autopin+ Network)
 ########
 
+########
+# Add git-cmake-format
+set (GCF_IGNORE_LIST "vendor/")
+add_subdirectory(vendor/git-cmake-format)
+########
 
 ########
 # Doxygen
