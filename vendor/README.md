@@ -13,3 +13,7 @@ http://mosquitto.org/download/
 c-ares
 ------
 http://c-ares.haxx.se/
+
+git-cmake-format
+----------------
+https://github.com/kbenzie/git-cmake-format
