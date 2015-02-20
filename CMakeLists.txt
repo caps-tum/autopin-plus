@@ -189,8 +189,11 @@ qt5_use_modules(autopin+ Network)
 
 ########
 # Add git-cmake-format
-set (GCF_IGNORE_LIST "vendor/")
-add_subdirectory(vendor/git-cmake-format)
+option(CLANG_FORMAT "Call clang-format for every call to make" OFF)
+if(CLANG_FORMAT)
+    set (GCF_IGNORE_LIST "vendor/")
+    add_subdirectory(vendor/git-cmake-format)
+endif(CLANG_FORMAT)
 ########
 
 ########
