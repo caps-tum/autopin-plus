@@ -159,7 +159,7 @@ void Main::start_static(ClustSafe::Main *instance) {
 
 double Main::value(int thread) {
 	// Check if we are actually monitoring that thread. If not, error out.
-	if (!threads.contains(thread)) {
+	if (!threads.count(thread)) {
 		context.report(Error::MONITOR, "value",
 					   name + ".value(" + QString::number(thread) + ") failed: Thread is not being monitored.");
 		return 0;
@@ -212,7 +212,7 @@ double Main::stop_static(ClustSafe::Main *instance) {
 	return result;
 }
 
-void Main::clear(int thread) { threads.remove(thread); }
+void Main::clear(int thread) { threads.erase(thread); }
 
 ProcessTree::autopin_tid_list Main::getMonitoredTasks() {
 	ProcessTree::autopin_tid_list result;

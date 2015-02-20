@@ -15,7 +15,7 @@
 #define APP_NEW_PHASE 0x0100
 #define APP_USER 0x1000
 
-struct __attribute__((__packed__)) autopin_msg {
+struct autopin_msg {
 	unsigned long event_id;
 	unsigned long arg;
 	double val;

@@ -46,7 +46,7 @@ int readInt(const QString &string);
  *
  * This function parses the specified string list to a list of ints. If this fails, an exception is thrown.
  *
- * \param[in] string The string list to be parsed.
+ * \param[in] list The string list to be parsed.
  *
  * \exception Exception This exception will be thrown if the string list could not be parsed.
  *
@@ -65,7 +65,7 @@ QList<int> readInts(const QStringList &list);
  *
  * \return The first line of the specified file, without the line break.
  */
-QString readLine(const QString &string);
+QString readLine(const QString &path);
 
 /*!
  * \brief Splits a string in two parts.
