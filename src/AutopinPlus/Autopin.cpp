@@ -77,17 +77,15 @@ void Autopin::slot_autopinSetup() {
 	// Load global config file
 	Configuration *globalConfig = nullptr;
 
-	if (globalConfigPath != "") {
-		QFile globalConfigFile(globalConfigPath);
-		if (globalConfigFile.open(QIODevice::ReadOnly)) {
-			QTextStream stream(&globalConfigFile);
-			AutopinContext globalConfigContext("GlobalConfig");
-			globalConfig = new StandardConfiguration(stream.readAll(), globalConfigContext);
-			globalConfig->init();
-		} else {
-			std::cerr << "Could not read global configuration \"" + globalConfigPath.toStdString() + "\"" << std::endl;
-			EXIT(1);
-		}
+	QFile globalConfigFile(globalConfigPath);
+	if (globalConfigFile.exists() && globalConfigFile.open(QIODevice::ReadOnly)) {
+		QTextStream stream(&globalConfigFile);
+		AutopinContext globalConfigContext("GlobalConfig");
+		globalConfig = new StandardConfiguration(stream.readAll(), globalConfigContext);
+		globalConfig->init();
+	} else {
+		std::cerr << "Could not read global configuration \"" + globalConfigPath.toStdString() + "\"" << std::endl;
+		EXIT(1);
 	}
 
 	if (globalConfig != nullptr) {
@@ -175,6 +173,9 @@ void Autopin::slot_autopinSetup() {
 		}
 	}
 
+	// If theres nothing to do, exit!
+	if (!isDaemon && watchdogs.empty()) QCoreApplication::exit(0);
+
 	emit sig_autopinReady();
 }
 
@@ -185,7 +186,7 @@ void Autopin::slot_watchdogStop() {
 	watchdogs.remove(watchdog);
 	watchdog->deleteLater();
 
-	if (!isDaemon && watchdogs.empty()) EXIT(0);
+	if (!isDaemon && watchdogs.empty()) QCoreApplication::exit(0);
 }
 
 void Autopin::slot_runProcess(const QString configText) {
