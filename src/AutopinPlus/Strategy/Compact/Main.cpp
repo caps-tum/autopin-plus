@@ -35,7 +35,7 @@ void Main::init() {
 		try {
 			interval = Tools::readInt(config.getConfigOption(name + ".interval"));
 			context.info("  - " + name + ".interval = " + QString::number(interval));
-		} catch (const Exception &e) {
+		} catch (const Exception &) {
 			context.report(Error::BAD_CONFIG, "option_format",
 						   name + ".init() failed: Could not parse the 'interval' option.");
 			return;
@@ -65,10 +65,10 @@ ControlStrategy::Pinning Main::getPinning(const Pinning &current_pinning) {
 	Pinning result = current_pinning;
 	int pid = proc.getPid();
 
-	uint min_distance = result.size();
+	auto min_distance = result.size();
 	int pin_cpu_pos = -1;
 
-	for (uint i = 0; i < result.size(); i++) {
+	for (unsigned int i = 0; i < result.size(); i++) {
 		Task task = current_pinning[i];
 		if (task.isCpuFree()) {
 			if (pin_cpu_pos == -1) pin_cpu_pos = i;

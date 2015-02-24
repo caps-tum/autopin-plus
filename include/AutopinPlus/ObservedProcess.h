@@ -172,7 +172,7 @@ signals:
 	 * \param[in] newphase integer representing the new execution phase of the
 	 * 	observed process
 	 */
-	void sig_PhaseChanged(int newphase);
+	void sig_PhaseChanged(unsigned long newphase);
 
 	/*!
 	 * \brief Signals new user-defined messages from the communication channel
@@ -268,7 +268,7 @@ signals:
 	 * Stores the execution phase of the process. The default value
 	 * is 0.
 	 */
-	int phase;
+	unsigned long phase;
 
 	/*!
 	 * Stores the address of the communication channel

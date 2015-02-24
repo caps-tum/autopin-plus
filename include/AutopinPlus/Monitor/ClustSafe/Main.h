@@ -15,7 +15,7 @@
 #include <qelapsedtimer.h>					// for QElapsedTimer
 #include <qglobal.h>						// for qFree
 #include <qlist.h>							// for QList
-#include <qset.h>							// for QSet
+#include <set>								// for std::set
 #include <qstring.h>						// for QString
 #include <stdint.h>							// for uint16_t, uint8_t
 
@@ -95,7 +95,7 @@ class Main : public PerformanceMonitor {
 	 * or the answer was malformed, an exception will be thrown.
 	 *
 	 * \param[in] command The command to send.
-	 * \paramp[in] data   An optional array of binary data which usually contains arguments to the command.
+	 * \param[in] data   An optional array of binary data which usually contains arguments to the command.
 	 */
 	static QByteArray sendCommand(uint16_t command, QByteArray data = QByteArray());
 
@@ -117,7 +117,6 @@ class Main : public PerformanceMonitor {
 	 * instance from the map and returns it.
 	 *
 	 * \param[in] instance Pointer to the current instance
-	 * \param[in] tid The id of the task
 	 *
 	 * \return value of this monitor.
 	 */
@@ -138,7 +137,7 @@ class Main : public PerformanceMonitor {
 	 * Reads the values from the ClustSafe device, and adds the value
 	 * to all instances of this monitor.
 	 *
-	 * \param[in] instance Pointer to the current instance
+	 * \param[in] reset Pass true in case the value on the ClustSafe should be reset
 	 */
 	static void readValueFromDevice(bool reset = false);
 
@@ -199,7 +198,7 @@ class Main : public PerformanceMonitor {
 	/*!
 	 * \brief A set of threads which are currently monitored.
 	 */
-	QSet<int> threads;
+	std::set<int> threads;
 
 	/*!
 	 * \brief The timer keeping track of the age of the cached value.

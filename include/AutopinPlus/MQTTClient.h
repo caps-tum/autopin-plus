@@ -46,7 +46,7 @@ signals:
 	 * Is emitted when the MQTTClient receives a message to a add a
 	 * process.
 	 *
-	 * \param[in] text  QString, which contains the configuration
+	 * \param[in] config  QString, which contains the configuration
 	 */
 	void sig_receivedProcessConfig(const QString config);
 

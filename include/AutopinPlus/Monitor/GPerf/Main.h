@@ -65,7 +65,7 @@ class Main : public PerformanceMonitor {
 	 *
 	 * This function parses the specified string to a sensor. If this fails, an exception is thrown.
 	 *
-	 * \param[in] string The string to be parsed.
+	 * \param[in] input The string to be parsed.
 	 *
 	 * \exception Exception This exception will be thrown if the string could not be parsed.
 	 *
@@ -78,7 +78,7 @@ class Main : public PerformanceMonitor {
 	 *
 	 * This function converts the supplied sensor into a string.
 	 *
-	 * \param[in] type The sensor to be converted.
+	 * \param[in] input The sensor to be converted.
 	 *
 	 * \return A string representing the supplied sensor.
 	 */

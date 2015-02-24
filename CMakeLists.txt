@@ -155,6 +155,26 @@ set (libmosquitto_path ${install_dir})
 ########
 
 ########
+# Boost
+include(vendor/boost/add_boost.cmake)
+########
+
+########
+# Yaml-Cpp
+ExternalProject_Add(libyaml
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/yaml-cpp-0.5.1
+    CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} cmake -DBOOST_ROOT=${BoostSourceDir} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/vendor/yaml-cpp-0.5.1
+    BUILD_IN_SOURCE 0
+    BUILD_COMMAND ${MAKE})
+
+#add_dependencies (libyaml ${AllBoostLibs})
+
+# Store libmosquitto variable in directory
+ExternalProject_Get_Property(libyaml install_dir)
+set (libyaml_path ${install_dir})
+########
+
+########
 # Includes
 # autopin+ include path
 include_directories(include)
@@ -167,6 +187,12 @@ include_directories(${libcares_path}/include)
 
 # libmosquitto
 include_directories(${libmosquitto_path}/include)
+
+# libyaml-cpp
+include_directories(${libyaml_path}/include)
+
+# Boost
+include_directories(${BoostSourceDir})
 ########
 
 ########
@@ -181,6 +207,10 @@ target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a)
 # Make sure auotpin+ depends on libcares and link with it
 add_dependencies (autopin+ libcares)
 target_link_libraries(autopin+ ${libcares_path}/lib/libcares.a)
+
+# Make sure auotpin+ depends on libyaml and link with it
+add_dependencies (autopin+ libyaml)
+target_link_libraries(autopin+ ${libyaml_path}/lib/libyaml-cpp.a)
 
 # Add Qt5 libraries
 qt5_use_modules(autopin+ Core)
