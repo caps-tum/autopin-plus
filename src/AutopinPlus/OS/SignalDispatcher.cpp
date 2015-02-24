@@ -55,17 +55,23 @@ void SignalDispatcher::slot_handleSigChld() {
 		QCoreApplication::exit(1);
 	}
 
-	waitpid(info.si_pid, nullptr, WNOHANG);
-
 	emit sig_ProcTerminated(info.si_pid, info.si_status);
 
 	snChld->setEnabled(true);
 }
 
-void SignalDispatcher::chldSignalHandler(int, siginfo_t *info, void *) {
-	if (write(sigchldFd[0], info, sizeof(siginfo_t)) == -1) {
-		SignalDispatcher::getInstance().context.error("Could not write to socketpair. Bailing out!");
-		QCoreApplication::exit(1);
+void SignalDispatcher::chldSignalHandler(int, siginfo_t *, void *) {
+	pid_t pid;
+	int status;
+
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		siginfo_t info;
+		info.si_pid = pid;
+		info.si_status = status;
+		if (write(sigchldFd[0], &info, sizeof(siginfo_t)) == -1) {
+			SignalDispatcher::getInstance().context.error("Could not write to socketpair. Bailing out!");
+			QCoreApplication::exit(1);
+		}
 	}
 }
 
