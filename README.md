@@ -31,7 +31,7 @@ Building autopin+
     options will be available:
 
     - CMAKE_BUILD_TYPE: 	Type of the build, should be set to "Release"
-    - CMAKE_PREFIX_PATH: 	Path to your Qt distribution (if not detected automatically)
+    - CMAKE_PREFIX_PATH: 	Path to your Qt distributions CMake files, e.g. ~/Qt5.4.0/5.4/gcc_64/lib/cmake  (if not detected automatically)
     - CMAKE_INSTALL_PREFIX: 	Installation prefix
 
     When all options are set to the correct values type "c"and then "g" to generate the build
