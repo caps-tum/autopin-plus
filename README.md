@@ -3,25 +3,13 @@ autopin-plus
 
 [![Build Status](https://travis-ci.org/autopin/autopin-plus.svg?branch=master)](https://travis-ci.org/autopin/autopin-plus)
 
-Project directories and files
-------------
-
-    build		Build directory (has to be created)
-    doc			Documentation of the source code
-    src			Source code of autopin+
-
-    CMakeLists.txt	CMake configuration file
-    Doxyfile		Configuration file for Doxygen
-    CHANGELOG		Changelog for autopin+
-    CONFIGURATION	User guide for autopin+
-    README		This README
-
 Prerequisites
 ------------
 
 In order to build ```autopin+```, you'll need
 
- - the **CMake** build system, at least version 2.6
+ - a C++ compiler supporting C++ 11 (>= g++ 4.8, >= clang 3.3)
+ - the **CMake** build system, at least version 2.8
  - the **Qt5** development framework, at least version 5.0.0
  - the userspace development headers from the **Linux** kernel, at least version 3.13
 
@@ -43,25 +31,8 @@ Building autopin+
     options will be available:
 
     - CMAKE_BUILD_TYPE: 	Type of the build, should be set to "Release"
+    - CMAKE_PREFIX_PATH: 	Path to your Qt distribution (if not detected automatically)
     - CMAKE_INSTALL_PREFIX: 	Installation prefix
-    - QT_QMAKE_EXECUTABLE: 	Path to the qmake executable of the Qt distribution which
-				will be used for compiling
-
-    The value QT_QMAKE_EXECUTABLE is determined by searching the directories listed in then
-    PATH variable of the system. The paths of the Qt distribution which will be used for
-    compiling are determined using the qmake binary referenced by this variable. In order to
-    use an own Qt distribution (e. g. for static linking) change the value of QT_QMAKE_EXECUTABLE
-    to the path of the qmake executable which belongs to this distribution. In order to make sure
-    that the paths for this distribution can be determined correctly execute
-
-      qmake -query
-
-    using the qmake binary of the custom Qt distribution. If the paths in the output of the
-    command are not correct re-configure the Qt distribution with the correct prefix:
-
-      ./configure ... -prefix /path/to/the/distribution ...
-
-    Otherwise, CMake will not be able to determine the correct paths of the Qt distribution.
 
     When all options are set to the correct values type "c"and then "g" to generate the build
     system. Then execute
