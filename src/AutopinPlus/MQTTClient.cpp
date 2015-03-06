@@ -7,6 +7,7 @@
 
 #include <AutopinPlus/MQTTClient.h>
 #include <AutopinPlus/OS/OSServices.h>
+#include <QCoreApplication>
 
 using AutopinPlus::OS::OSServices;
 
@@ -28,7 +29,9 @@ std::string MQTTClient::init(const Configuration &config) {
 
 	int ret = MOSQ_ERR_SUCCESS;
 	mosquitto_lib_init();
-	getInstance().mosq = mosquitto_new(nullptr, true, &getInstance());
+
+	std::string id = "autopin_" + std::to_string(QCoreApplication::applicationPid());
+	getInstance().mosq = mosquitto_new(id.c_str(), false, &getInstance());
 
 	// Just an local alias
 	struct mosquitto *mosq = getInstance().mosq;
@@ -40,6 +43,7 @@ std::string MQTTClient::init(const Configuration &config) {
 	ret = mosquitto_connect(mosq, hostname.c_str(), port, 60);
 	if (ret != MOSQ_ERR_SUCCESS) return "Cannot connect to MQTT broker on host " + hostname;
 
+	mosquitto_reconnect_delay_set(mosq, 1, 30, false);
 	ret = mosquitto_loop_start(mosq);
 	if (ret != MOSQ_ERR_SUCCESS) return "Cannot initalize MQTT loop";
 
