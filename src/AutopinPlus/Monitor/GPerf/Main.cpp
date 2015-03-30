@@ -138,8 +138,11 @@ void Main::start(int thread) {
 	} else {
 		// Create a new monitor on all the processors specified either by the user or by the sensor itself. If none are
 		// specified, monitor all processors.
-		for (auto processor : !processors.isEmpty() ? processors : !sensor.processors.isEmpty() ? sensor.processors
-																								: QList<int>() << -1) {
+        QList<int> tmp;
+        tmp << -1;
+        if (!processors.isEmpty()) tmp = processors;
+        else if (!sensor.processors.isEmpty()) tmp = sensor.processors;
+        for (auto processor : tmp) {
 			int fd;
 
 			/*
