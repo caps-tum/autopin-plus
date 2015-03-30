@@ -66,7 +66,7 @@ void SignalDispatcher::chldSignalHandler(int, siginfo_t *, void *) {
 
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
 		siginfo_t info;
-        memset(&info, 0, sizeof(info));
+		memset(&info, 0, sizeof(info));
 		info.si_pid = pid;
 		info.si_status = status;
 		if (write(sigchldFd[0], &info, sizeof(siginfo_t)) == -1) {
