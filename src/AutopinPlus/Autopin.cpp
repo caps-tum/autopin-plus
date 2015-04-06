@@ -85,7 +85,6 @@ void Autopin::slot_autopinSetup() {
 		globalConfig->init();
 	} else {
 		std::cerr << "Could not read global configuration \"" + globalConfigPath.toStdString() + "\"" << std::endl;
-		EXIT(1);
 	}
 
 	if (globalConfig != nullptr) {
