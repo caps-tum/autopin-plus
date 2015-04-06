@@ -214,7 +214,6 @@ void Watchdog::createComponentConnections() {
 	// Connections between the ObservedProcess and the ControlStrategy
 	connect(process.get(), SIGNAL(sig_TaskCreated(int)), strategy.get(), SLOT(slot_TaskCreated(int)));
 	connect(process.get(), SIGNAL(sig_TaskTerminated(int)), strategy.get(), SLOT(slot_TaskTerminated(int)));
-	connect(process.get(), SIGNAL(sig_PhaseChanged(int)), strategy.get(), SLOT(slot_PhaseChanged(int)));
 	connect(process.get(), SIGNAL(sig_UserMessage(int, double)), strategy.get(), SLOT(slot_UserMessage(int, double)));
 
 	// Connections between the ObservedProcess and this object

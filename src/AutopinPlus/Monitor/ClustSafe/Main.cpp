@@ -38,7 +38,7 @@ uint16_t Main::port = 2010;
 
 QString Main::password = "";
 
-QList<int> Main::outlets;
+QList<int> Main::outlets = {1};
 
 bool Main::timerStarted = false;
 
@@ -121,9 +121,14 @@ void Main::init_static(const Configuration &config, const AutopinContext &contex
 			context.error("ClustSafe::Main::init_static() failed: Could not parse the 'outlets' option (" +
 						  QString(e.what()) + ").");
 		}
-	} else {
-		context.error("ClustSafe::Main::init_static() failed: Could not find the 'outlets' option.");
 	}
+
+	context.info("Using following values for ClustSafe");
+	context.info("Host = " + Main::host);
+	context.info("Port = :" + QString::number(Main::port));
+	QString outlets = "";
+	for (const auto &elem : Main::outlets) outlets += QString::number(elem);
+	context.info("Outlets = " + outlets);
 }
 
 Configuration::configopts Main::getConfigOpts() {
