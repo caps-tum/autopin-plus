@@ -1,12 +1,15 @@
 # Configuring autopin+
 
 This documents describes how to configure ```autopin+```. The first
-two sections are specific to the configuration format implemented by
-the class ```StandardConfiguration```, which is used by default.
+section describes the command-line options. The second section is
+splitted in two parts. The first one describes the process
+configuration and the second one describes the available global
+configuration options. Both configurations use the format implemented
+by the class ```StandardConfiguration```, which is used by default.
 
-# Commandline options
+# Command-line options
 
-Autopin+ can be started with different commandline switches:
+Autopin+ can be started with different command-line switches:
 
   - ```-c, --config=CONFIG_FILE```
     Read process-configuration options from file.
@@ -84,21 +87,6 @@ The following options are available:
     specified but the argument is set to true ```autopin+``` will use
     a default address.
 
-  - ```Logfile = <string>``` (no default)
-
-    If this option is set, the output of ```autopin+``` will be
-    redirected to the file specified in the argument.
-
-  - ```PinningHistory.load = <string>``` (no default)
-
-    Load a pinning history file from the specified path. The type of
-    the history is determined by the suffix of the file (e. g. .xml).
-
-  - ```PinningHistory.save = <string>``` (no default)
-
-    Save a pinning history file to the specified path. The type of the
-    history is determined by the suffix of the file. (e. g. .xml).
-
 ### Performance monitors
 
 As ```autopin+``` supports the parallel usage of different performance
@@ -141,30 +129,6 @@ replaced with the name of the monitor):
     ```UNKNOWN```). This information can be used by control strategies
     to find out if bigger or smaller results are "better".
 
-#### perf
-
-The ```perf``` monitor is based on the Linux Performance Counter
-subsystem which is part of newer kernel versions and does not require
-any kernel patches.
-
-The following options are available:
-
-  - ```<name>.event_type = <string>``` (no default)
-
-    A valid perf event type.
-
-    The following event types are available:
-
-      - ```PERF_COUNT_HW_CPU_CYCLES```
-      - ```PERF_COUNT_HW_INSTRUCTIONS```
-      - ```PERF_COUNT_HW_CACHE_REFERENCES```
-      - ```PERF_COUNT_HW_CACHE_MISSES```
-      - ```PERF_COUNT_HW_BRANCH_INSTRUCTIONS```
-      - ```PERF_COUNT_HW_BRANCH_MISSES```
-      - ```PERF_COUNT_HW_BUS_CYCLES```
-      - ```PERF_COUNT_HW_STALLED_CYCLES_FRONTEND```
-      - ```PERF_COUNT_HW_STALLED_CYCLES_BACKEND```
-
 #### clustsafe
 
 The ```clustsafe``` performance monitor can read the current energy
@@ -174,15 +138,13 @@ See also:
 http://www.megware.com/en/produkte_leistungen/eigenentwicklungen/clustsafe-71-8.aspx
 
 All of the options for the clustsafe device are configured in the
-global configuration file. The only thing configured on a per process
-basis is, whether the process is observed by this monitor or not (by
-writing ```<name>.type = clustsafe```).
+global configuration file (see below). The only thing configured on a
+per process basis is, whether the process is observed by this monitor
+or not (by writing ```<name>.type = clustsafe```).
 
 #### gperf
 
 The ```gperf``` monitor is also based on Linux' perf subsystem.
-Compared to the ```perf``` monitor it is more generic and allows to
-monitor (almost) all events available on the system.
 
 The following options are available:
 
