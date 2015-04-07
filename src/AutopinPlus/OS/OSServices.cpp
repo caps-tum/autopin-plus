@@ -109,17 +109,18 @@ int OSServices::createProcess(QString cmd, bool wait) {
 
 	if (pid == 0) {
 		// in the child
-		char *argc = new char[cmd.size()+1];
-		argc[cmd.size()] = '\0';
-		std::string s = cmd.toStdString();
-		for (int i=0; i<s.size(); ++i) argc[i]=s[i];
 
-		char** argv = new char*[cmd.size()/2];
+		std::string s = cmd.toStdString();
+		char *argc = new char[s.size() + 1];
+		for (std::size_t i = 0; i < s.size(); ++i) argc[i] = s[i];
+		argc[cmd.size()] = '\0';
+
+		char **argv = new char *[cmd.size() / 2];
 		{
-			char ** temp = argv;
+			char **temp = argv;
 			while (*argc != '\0') {
 				// replace whitespace with \0
-				// while is ok as long as cmd is null terminated
+				// while is ok as long as argc is null terminated
 				while (*argc == ' ' || *argc == '\t' || *argc == '\n') *argc++ = '\0';
 				*temp = argc;
 				++temp;
@@ -129,19 +130,10 @@ int OSServices::createProcess(QString cmd, bool wait) {
 			*temp = nullptr;
 		}
 
-
 		// Get new pid
 		pid = getpid();
 
 		context.debug(QString("Binary to start: ") + *argv);
-
-		/*for (int i = 0; i < args_str.size(); i++) {
-			int size = args_str[i].size() + 1;
-			args[i] = (char *)malloc(size * sizeof(char));
-			strcpy(args[i], args_str[i].toStdString().c_str());
-		}*/
-
-		//args[args_str.size()] = nullptr;
 
 		if (wait) {
 			context.debug("Waiting for autopin to attach");
@@ -156,7 +148,7 @@ int OSServices::createProcess(QString cmd, bool wait) {
 		}
 
 		execvp(*argv, argv);
-		//execvp(bin.toStdString().c_str(), args);
+		// execvp(bin.toStdString().c_str(), args);
 
 		context.report(Error::PROCESS, "create", QString("Could not create new process from binary ") + *argv);
 		exit(-1);
@@ -610,56 +602,6 @@ void OSServices::usrSignalHandler(int param) {
 	// for silencing the warning
 	(void)param;
 	autopin_attached = true;
-}
-
-QStringList OSServices::getArguments(QString cmd) {
-	QStringList result;
-	QString token = "";
-	int state = 0;
-	bool escape = false;
-
-	for (auto &elem : cmd) {
-		switch (state) {
-		case 0:
-			if (elem == ' ')
-				break;
-			else {
-				state = 1;
-				token += elem;
-			}
-			break;
-		case 1:
-			if (elem == ' ') {
-				if (!escape) {
-					state = 0;
-					result.push_back(token);
-					token.clear();
-				} else {
-					token += elem;
-					escape = false;
-				}
-
-				break;
-			} else if (elem == '\\') {
-				if (escape) {
-					token += elem;
-					escape = false;
-				} else
-					escape = true;
-				break;
-			} else {
-				token += elem;
-				escape = false;
-				break;
-			}
-		default:
-			break;
-		}
-	}
-
-	if (state == 1) result.push_back(token);
-
-	return result;
 }
 
 ProcessTree::autopin_tid_list OSServices::convertQStringList(QStringList &qlist) {
