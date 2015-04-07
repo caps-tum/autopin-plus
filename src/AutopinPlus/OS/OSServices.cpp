@@ -54,8 +54,6 @@ OSServices::~OSServices() {
 	if (comm_notifier != nullptr) delete comm_notifier;
 }
 
-bool OSServices::autopin_attached = false;
-
 void OSServices::init() { context.info("Initializing OS services"); }
 
 QString OSServices::getHostname() { return getHostname_static(); }
@@ -86,29 +84,16 @@ QString OSServices::getHostname_static() {
 }
 
 int OSServices::createProcess(QString cmd, bool wait) {
-	pid_t pid;
-
-	struct sigaction old_usr;
-
-	// install handler for signal SIGUSR1
-	if (wait) {
-		int ret = 0;
-		struct sigaction usr;
-		memset(&usr, 0, sizeof(struct sigaction));
-		usr.sa_handler = usrSignalHandler;
-		usr.sa_flags = SA_RESTART;
-		ret |= sigemptyset(&usr.sa_mask);
-		ret |= sigaction(SIGUSR1, &usr, &old_usr);
-		if (ret != 0) {
-			context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
-			return -1;
-		}
-	}
-
-	pid = fork();
+	pid_t pid = fork();
 
 	if (pid == 0) {
 		// in the child
+
+		// Get new pid
+		pid = getpid();
+		if (kill(pid, SIGSTOP) != 0) {
+			context.error(QString("Could not stop process before exec ") + pid);
+		}
 
 		std::string s = cmd.toStdString();
 		char *argc = new char[s.size() + 1];
@@ -130,38 +115,16 @@ int OSServices::createProcess(QString cmd, bool wait) {
 			*temp = nullptr;
 		}
 
-		// Get new pid
-		pid = getpid();
-
 		context.debug(QString("Binary to start: ") + *argv);
 
-		if (wait) {
-			context.debug("Waiting for autopin to attach");
-
-			while (!autopin_attached) {
-
-				context.debug("Wait for signal from autopin+");
-				usleep(1000);
-			}
-
-			context.debug("Autopin has attached!");
-		}
-
 		execvp(*argv, argv);
-		// execvp(bin.toStdString().c_str(), args);
 
 		context.report(Error::PROCESS, "create", QString("Could not create new process from binary ") + *argv);
 		exit(-1);
 
 	} else {
-		// Restore original signal handler
-		if (wait) {
-			int ret;
-			ret = sigaction(SIGUSR1, &old_usr, nullptr);
-			if (ret != 0) {
-				context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
-				return -1;
-			}
+		if (kill(pid, SIGCONT) != 0) {
+			context.error(QString("Could send SIGCONT to ") + pid);
 		}
 
 		return pid;
@@ -595,13 +558,6 @@ QString OSServices::getProcEntry(int tid, int index, bool error) {
 					   "Could not get status information for process " + QString::number(tid));
 
 	return result;
-}
-
-void OSServices::usrSignalHandler(int param) {
-	// The parameter param is currently not used, so the next line is
-	// for silencing the warning
-	(void)param;
-	autopin_attached = true;
 }
 
 ProcessTree::autopin_tid_list OSServices::convertQStringList(QStringList &qlist) {

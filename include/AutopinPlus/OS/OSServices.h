@@ -336,11 +336,6 @@ signals:
 	int client_socket;
 
 	/*!
-	 * Stores if autopin+ has already attached
-	 */
-	static bool autopin_attached;
-
-	/*!
 	 * The runtime context
 	 */
 	AutopinContext &context;
