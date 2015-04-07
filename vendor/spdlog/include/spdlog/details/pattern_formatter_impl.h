@@ -69,6 +69,15 @@ class level_formatter :public flag_formatter
     }
 };
 
+// short log level appender
+class short_level_formatter :public flag_formatter
+{
+    void format(details::log_msg& msg, const std::tm&) override
+    {
+        msg.formatted << level::to_short_str(msg.level);
+    }
+};
+
 ///////////////////////////////////////////////////////////////////////
 // Date time pattern appenders
 ///////////////////////////////////////////////////////////////////////
@@ -242,6 +251,17 @@ class e_formatter :public flag_formatter
         auto duration = msg.time.time_since_epoch();
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count() % 1000;
         msg.formatted << fmt::pad(static_cast<int>(millis), 3, '0');
+    }
+};
+
+// microseconds
+class f_formatter :public flag_formatter
+{
+    void format(details::log_msg& msg, const std::tm&) override
+    {
+        auto duration = msg.time.time_since_epoch();
+        auto micros = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() % 1000000;
+        msg.formatted << fmt::pad(static_cast<int>(micros), 6, '0');
     }
 };
 
@@ -467,6 +487,10 @@ inline void spdlog::pattern_formatter::handle_flag(char flag)
         _formatters.push_back(std::unique_ptr<details::flag_formatter>(new details::level_formatter()));
         break;
 
+    case 'L':
+        _formatters.push_back(std::unique_ptr<details::flag_formatter>(new details::short_level_formatter()));
+        break;
+
     case('t') :
         _formatters.push_back(std::unique_ptr<details::flag_formatter>(new details::t_formatter()));
         break;
@@ -537,6 +561,10 @@ inline void spdlog::pattern_formatter::handle_flag(char flag)
         _formatters.push_back(std::unique_ptr<details::flag_formatter>(new details::e_formatter()));
         break;
 
+    case('f') :
+        _formatters.push_back(std::unique_ptr<details::flag_formatter>(new details::f_formatter()));
+        break;
+
     case('p') :
         _formatters.push_back(std::unique_ptr<details::flag_formatter>(new details::p_formatter()));
         break;
@@ -582,8 +610,8 @@ inline void spdlog::pattern_formatter::format(details::log_msg& msg)
         //write eol
         msg.formatted << details::os::eol();
     }
-    catch(const details::fmt::FormatError& e)
+    catch(const fmt::FormatError& e)
     {
-        throw spdlog_ex(details::fmt::format("formatting error while processing format string: {}", e.what()));
+        throw spdlog_ex(fmt::format("formatting error while processing format string: {}", e.what()));
     }
 }
