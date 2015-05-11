@@ -54,8 +54,6 @@ OSServices::~OSServices() {
 	if (comm_notifier != nullptr) delete comm_notifier;
 }
 
-bool OSServices::autopin_attached = false;
-
 void OSServices::init() { context.info("Initializing OS services"); }
 
 QString OSServices::getHostname() { return getHostname_static(); }
@@ -86,71 +84,47 @@ QString OSServices::getHostname_static() {
 }
 
 int OSServices::createProcess(QString cmd, bool wait) {
-	pid_t pid;
-
-	struct sigaction old_usr;
-
-	// install handler for signal SIGUSR1
-	if (wait) {
-		int ret = 0;
-		struct sigaction usr;
-		memset(&usr, 0, sizeof(struct sigaction));
-		usr.sa_handler = usrSignalHandler;
-		usr.sa_flags = SA_RESTART;
-		ret |= sigemptyset(&usr.sa_mask);
-		ret |= sigaction(SIGUSR1, &usr, &old_usr);
-		if (ret != 0) {
-			context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
-			return -1;
-		}
-	}
-
-	pid = fork();
+	pid_t pid = fork();
 
 	if (pid == 0) {
-		QStringList args_str = getArguments(cmd);
-		QString bin = args_str[0];
-		char *args[args_str.size() + 1];
+		// in the child
 
 		// Get new pid
 		pid = getpid();
-
-		context.debug("Binary to start: " + bin);
-
-		for (int i = 0; i < args_str.size(); i++) {
-			int size = args_str[i].size() + 1;
-			args[i] = (char *)malloc(size * sizeof(char));
-			strcpy(args[i], args_str[i].toStdString().c_str());
+		if (kill(pid, SIGSTOP) != 0) {
+			context.error(QString("Could not stop process before exec ") + pid);
 		}
 
-		args[args_str.size()] = nullptr;
+		std::string s = cmd.toStdString();
+		char *argc = new char[s.size() + 1];
+		for (std::size_t i = 0; i < s.size(); ++i) argc[i] = s[i];
+		argc[cmd.size()] = '\0';
 
-		if (wait) {
-			context.debug("Waiting for autopin to attach");
-
-			while (!autopin_attached) {
-
-				context.debug("Wait for signal from autopin+");
-				usleep(1000);
+		char **argv = new char *[cmd.size() / 2];
+		{
+			char **temp = argv;
+			while (*argc != '\0') {
+				// replace whitespace with \0
+				// while is ok as long as argc is null terminated
+				while (*argc == ' ' || *argc == '\t' || *argc == '\n') *argc++ = '\0';
+				*temp = argc;
+				++temp;
+				// wait until whitespace or '\0'
+				while (*argc != '\0' && *argc != ' ' && *argc != '\t' && *argc != '\n') ++argc;
 			}
-
-			context.debug("Autopin has attached!");
+			*temp = nullptr;
 		}
 
-		execvp(bin.toStdString().c_str(), args);
+		context.debug(QString("Binary to start: ") + *argv);
 
-		context.report(Error::PROCESS, "create", "Could not create new process from binary " + bin);
+		execvp(*argv, argv);
+
+		context.report(Error::PROCESS, "create", QString("Could not create new process from binary ") + *argv);
 		exit(-1);
 
 	} else {
-		// Restore original signal handler
-		if (wait) {
-			int ret;
-			ret = sigaction(SIGUSR1, &old_usr, nullptr);
-			if (ret != 0) {
-				context.report(Error::SYSTEM, "sigset", "Cannot setup signal handling");
-				return -1;
-			}
+		if (kill(pid, SIGCONT) != 0) {
+			context.error(QString("Could send SIGCONT to ") + pid);
 		}
 
 		return pid;
@@ -582,63 +556,6 @@ QString OSServices::getProcEntry(int tid, int index, bool error) {
 	if (error)
 		context.report(Error::SYSTEM, "access_proc",
 					   "Could not get status information for process " + QString::number(tid));
-
-	return result;
-}
-
-void OSServices::usrSignalHandler(int param) {
-	// The parameter param is currently not used, so the next line is
-	// for silencing the warning
-	(void)param;
-	autopin_attached = true;
-}
-
-QStringList OSServices::getArguments(QString cmd) {
-	QStringList result;
-	QString token = "";
-	int state = 0;
-	bool escape = false;
-
-	for (auto &elem : cmd) {
-		switch (state) {
-		case 0:
-			if (elem == ' ')
-				break;
-			else {
-				state = 1;
-				token += elem;
-			}
-			break;
-		case 1:
-			if (elem == ' ') {
-				if (!escape) {
-					state = 0;
-					result.push_back(token);
-					token.clear();
-				} else {
-					token += elem;
-					escape = false;
-				}
-
-				break;
-			} else if (elem == '\\') {
-				if (escape) {
-					token += elem;
-					escape = false;
-				} else
-					escape = true;
-				break;
-			} else {
-				token += elem;
-				escape = false;
-				break;
-			}
-		default:
-			break;
-		}
-	}
-
-	if (state == 1) result.push_back(token);
 
 	return result;
 }

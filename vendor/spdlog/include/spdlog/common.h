@@ -24,15 +24,25 @@
 
 #pragma once
 
-#include<initializer_list>
-#include<chrono>
+#include <string>
+#include <initializer_list>
+#include <chrono>
+#include <memory>
 
 //visual studio does not support noexcept yet
 #ifndef _MSC_VER
 #define SPDLOG_NOEXCEPT noexcept
 #else
-#define SPDLOG_NOEXCEPT
+#define SPDLOG_NOEXCEPT throw()
 #endif
+
+// under linux, you can use the much faster CLOCK_REALTIME_COARSE clock.
+// this clock is less accurate - can be off by few millis - depending on the kernel HZ
+// uncomment to use it instead of the regular (and slower) clock
+
+//#ifdef __linux__
+//#define SPDLOG_CLOCK_COARSE
+//#endif
 
 namespace spdlog
 {
@@ -69,11 +79,29 @@ typedef enum
 
 static const char* level_names[] { "trace", "debug", "info", "notice", "warning", "error", "critical", "alert", "emerg", "off"};
 
+static const char* short_level_names[] { "T", "D", "I", "N", "W", "E", "C", "A", "M", "O"};
+
 inline const char* to_str(spdlog::level::level_enum l)
 {
     return level_names[l];
 }
+
+inline const char* to_short_str(spdlog::level::level_enum l)
+{
+    return short_level_names[l];
+}
 } //level
+
+
+//
+// Async overflow policy - block by default.
+//
+enum class async_overflow_policy
+{
+    block_retry, // Block / yield / sleep until message can be enqueued
+    discard_log_msg // Discard the message it enqueue fails
+};
+
 
 //
 // Log exception

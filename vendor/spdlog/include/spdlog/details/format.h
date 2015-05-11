@@ -25,8 +25,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef SPDLOG_FMT_FORMAT_H_
-#define SPDLOG_FMT_FORMAT_H_
+#ifndef FMT_FORMAT_H_
+#define FMT_FORMAT_H_
+
+#define FMT_HEADER_ONLY
 
 #include <stdint.h>
 
@@ -44,21 +46,68 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # include <iterator>
 #endif
 
-#ifdef __GNUC__
-// Ignore shadow warnings
-#  pragma GCC diagnostic push
-#  pragma GCC diagnostic ignored "-Wshadow"
+#ifdef _MSC_VER
+# include <intrin.h>  // _BitScanReverse, _BitScanReverse64
 
+namespace fmt
+{
+namespace internal
+{
+# pragma intrinsic(_BitScanReverse)
+inline uint32_t clz(uint32_t x)
+{
+    unsigned long r = 0;
+    _BitScanReverse(&r, x);
+    return 31 - r;
+}
+# define FMT_BUILTIN_CLZ(n) fmt::internal::clz(n)
+
+# ifdef _WIN64
+#  pragma intrinsic(_BitScanReverse64)
+# endif
+
+inline uint32_t clzll(uint64_t x)
+{
+    unsigned long r = 0;
+# ifdef _WIN64
+    _BitScanReverse64(&r, x);
+# else
+    // Scan the high 32 bits.
+    if (_BitScanReverse(&r, static_cast<uint32_t>(x >> 32)))
+        return 63 - (r + 32);
+
+    // Scan the low 32 bits.
+    _BitScanReverse(&r, static_cast<uint32_t>(x));
+# endif
+    return 63 - r;
+}
+# define FMT_BUILTIN_CLZLL(n) fmt::internal::clzll(n)
+}
+}
+#endif
+
+#ifdef __GNUC__
 # define FMT_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
 # define FMT_GCC_EXTENSION __extension__
-// Disable warning about "long long" which is sometimes reported even
-// when using __extension__.
 # if FMT_GCC_VERSION >= 406
 #  pragma GCC diagnostic push
+// Disable the warning about "long long" which is sometimes reported even
+// when using __extension__.
 #  pragma GCC diagnostic ignored "-Wlong-long"
+// Disable the warning about declaration shadowing because it affects too
+// many valid cases.
+#  pragma GCC diagnostic ignored "-Wshadow"
+# endif
+# if __cplusplus >= 201103L || defined __GXX_EXPERIMENTAL_CXX0X__
+#  define FMT_HAS_GXX_CXX11 1
 # endif
 #else
 # define FMT_GCC_EXTENSION
+#endif
+
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wdocumentation"
 #endif
 
 #ifdef __GNUC_LIBSTD__
@@ -77,13 +126,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # define FMT_HAS_BUILTIN(x) 0
 #endif
 
+#ifdef __has_cpp_attribute
+# define FMT_HAS_CPP_ATTRIBUTE(x) __has_cpp_attribute(x)
+#else
+# define FMT_HAS_CPP_ATTRIBUTE(x) 0
+#endif
+
 #ifndef FMT_USE_VARIADIC_TEMPLATES
 // Variadic templates are available in GCC since version 4.4
 // (http://gcc.gnu.org/projects/cxx0x.html) and in Visual C++
 // since version 2013.
 # define FMT_USE_VARIADIC_TEMPLATES \
    (FMT_HAS_FEATURE(cxx_variadic_templates) || \
-       (FMT_GCC_VERSION >= 404 && __cplusplus >= 201103) || _MSC_VER >= 1800)
+       (FMT_GCC_VERSION >= 404 && FMT_HAS_GXX_CXX11) || _MSC_VER >= 1800)
 #endif
 
 #ifndef FMT_USE_RVALUE_REFERENCES
@@ -94,7 +149,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # else
 #  define FMT_USE_RVALUE_REFERENCES \
     (FMT_HAS_FEATURE(cxx_rvalue_references) || \
-        (FMT_GCC_VERSION >= 403 && __cplusplus >= 201103) || _MSC_VER >= 1600)
+        (FMT_GCC_VERSION >= 403 && FMT_HAS_GXX_CXX11) || _MSC_VER >= 1600)
 # endif
 #endif
 
@@ -104,21 +159,25 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Define FMT_USE_NOEXCEPT to make C++ Format use noexcept (C++11 feature).
 #if FMT_USE_NOEXCEPT || FMT_HAS_FEATURE(cxx_noexcept) || \
-  (FMT_GCC_VERSION >= 408 && __cplusplus >= 201103)
-# define FMT_NOEXCEPT(expr) noexcept(expr)
+  (FMT_GCC_VERSION >= 408 && FMT_HAS_GXX_CXX11)
+# define FMT_NOEXCEPT noexcept
 #else
-# define FMT_NOEXCEPT(expr)
+# define FMT_NOEXCEPT throw()
 #endif
 
 // A macro to disallow the copy constructor and operator= functions
 // This should be used in the private: declarations for a class
-#define FMT_DISALLOW_COPY_AND_ASSIGN(TypeName) \
-  TypeName(const TypeName&); \
-  void operator=(const TypeName&)
-namespace spdlog
-{
-namespace details
-{
+#if FMT_USE_DELETED_FUNCTIONS || FMT_HAS_FEATURE(cxx_deleted_functions) || \
+  (FMT_GCC_VERSION >= 404 && FMT_HAS_GXX_CXX11) || _MSC_VER >= 1800
+# define FMT_DISALLOW_COPY_AND_ASSIGN(TypeName) \
+    TypeName(const TypeName&) = delete; \
+    TypeName& operator=(const TypeName&) = delete
+#else
+# define FMT_DISALLOW_COPY_AND_ASSIGN(TypeName) \
+    TypeName(const TypeName&); \
+    TypeName& operator=(const TypeName&)
+#endif
+
 namespace fmt
 {
 
@@ -162,7 +221,7 @@ This class is most useful as a parameter type to allow passing
 different types of strings to a function, for example::
 
 template <typename... Args>
-std::string format(StringRef format, const Args & ... args);
+std::string format(StringRef format_str, const Args & ... args);
 
 format("{}", 42);
 format(std::string("{}"), 42);
@@ -310,10 +369,7 @@ public:
             grow(capacity);
     }
 
-    void clear() FMT_NOEXCEPT(true)
-    {
-        size_ = 0;
-    }
+    void clear() FMT_NOEXCEPT { size_ = 0; }
 
     void push_back(const T &value)
     {
@@ -483,19 +539,11 @@ inline int isinfinity(double x)
 {
     return !_finite(x);
 }
+inline int isinfinity(long double x)
+{
+    return !_finite(static_cast<double>(x));
+}
 #endif
-
-template <typename T>
-struct IsLongDouble
-{
-    enum { VALUE = 0 };
-};
-
-template <>
-struct IsLongDouble<long double>
-{
-    enum { VALUE = 1 };
-};
 
 template <typename Char>
 class BasicCharTraits
@@ -519,8 +567,6 @@ private:
     static char convert(wchar_t);
 
 public:
-    typedef const wchar_t *UnsupportedStrType;
-
     static char convert(char value)
     {
         return value;
@@ -536,8 +582,6 @@ template <>
 class CharTraits<wchar_t> : public BasicCharTraits<wchar_t>
 {
 public:
-    typedef const char *UnsupportedStrType;
-
     static wchar_t convert(char value)
     {
         return value;
@@ -635,24 +679,24 @@ struct BasicData
 
 typedef BasicData<> Data;
 
+#if FMT_GCC_VERSION >= 400 || FMT_HAS_BUILTIN(__builtin_clz)
+# define FMT_BUILTIN_CLZ(n) __builtin_clz(n)
+#endif
+
 #if FMT_GCC_VERSION >= 400 || FMT_HAS_BUILTIN(__builtin_clzll)
+# define FMT_BUILTIN_CLZLL(n) __builtin_clzll(n)
+#endif
+
+#ifdef FMT_BUILTIN_CLZLL
 // Returns the number of decimal digits in n. Leading zeros are not counted
 // except for n == 0 in which case count_digits returns 1.
 inline unsigned count_digits(uint64_t n)
 {
     // Based on http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog10
     // and the benchmark https://github.com/localvoid/cxx-benchmark-count-digits.
-    unsigned t = (64 - __builtin_clzll(n | 1)) * 1233 >> 12;
+    unsigned t = (64 - FMT_BUILTIN_CLZLL(n | 1)) * 1233 >> 12;
     return t - (n < Data::POWERS_OF_10_64[t]) + 1;
 }
-# if FMT_GCC_VERSION >= 400 || FMT_HAS_BUILTIN(__builtin_clz)
-// Optional version of count_digits for better performance on 32-bit platforms.
-inline unsigned count_digits(uint32_t n)
-{
-    uint32_t t = (32 - __builtin_clz(n | 1)) * 1233 >> 12;
-    return t - (n < Data::POWERS_OF_10_32[t]) + 1;
-}
-# endif
 #else
 // Fallback version of count_digits used when __builtin_clz is not available.
 inline unsigned count_digits(uint64_t n)
@@ -670,6 +714,15 @@ inline unsigned count_digits(uint64_t n)
         n /= 10000u;
         count += 4;
     }
+}
+#endif
+
+#ifdef FMT_BUILTIN_CLZ
+// Optional version of count_digits for better performance on 32-bit platforms.
+inline unsigned count_digits(uint32_t n)
+{
+    uint32_t t = (32 - FMT_BUILTIN_CLZ(n | 1)) * 1233 >> 12;
+    return t - (n < Data::POWERS_OF_10_32[t]) + 1;
 }
 #endif
 
@@ -762,11 +815,11 @@ public:
 #endif
 
 void format_system_error(fmt::Writer &out, int error_code,
-                         fmt::StringRef message) FMT_NOEXCEPT(true);
+                         fmt::StringRef message) FMT_NOEXCEPT;
 
 #ifdef _WIN32
 void format_windows_error(fmt::Writer &out, int error_code,
-                          fmt::StringRef message) FMT_NOEXCEPT(true);
+                          fmt::StringRef message) FMT_NOEXCEPT;
 #endif
 
 // Computes max(Arg, 1) at compile time. It is used to avoid errors about
@@ -834,6 +887,25 @@ struct Arg : Value
     Type type;
 };
 
+template <typename T>
+struct None {};
+
+// A helper class template to enable or disable overloads taking wide
+// characters and strings in MakeValue.
+template <typename T, typename Char>
+struct WCharHelper
+{
+    typedef None<T> Supported;
+    typedef T Unsupported;
+};
+
+template <typename T>
+struct WCharHelper<T, wchar_t>
+{
+    typedef T Supported;
+    typedef None<T> Unsupported;
+};
+
 // Makes a Value object from any type.
 template <typename Char>
 class MakeValue : public Value
@@ -849,6 +921,16 @@ private:
     template <typename T>
     MakeValue(T *value);
 
+    // The following methods are private to disallow formatting of wide
+    // characters and strings into narrow strings as in
+    //   fmt::format("{}", L"test");
+    // To fix this, use a wide format string: fmt::format(L"{}", L"test").
+    MakeValue(typename WCharHelper<wchar_t, Char>::Unsupported);
+    MakeValue(typename WCharHelper<wchar_t *, Char>::Unsupported);
+    MakeValue(typename WCharHelper<const wchar_t *, Char>::Unsupported);
+    MakeValue(typename WCharHelper<const std::wstring &, Char>::Unsupported);
+    MakeValue(typename WCharHelper<WStringRef, Char>::Unsupported);
+
     void set_string(StringRef str)
     {
         string.value = str.c_str();
@@ -857,7 +939,6 @@ private:
 
     void set_string(WStringRef str)
     {
-        CharTraits<Char>::convert(wchar_t());
         wstring.value = str.c_str();
         wstring.size = str.size();
     }
@@ -921,9 +1002,9 @@ public:
     FMT_MAKE_VALUE(unsigned char, int_value, CHAR)
     FMT_MAKE_VALUE(char, int_value, CHAR)
 
-    MakeValue(wchar_t value)
+    MakeValue(typename WCharHelper<wchar_t, Char>::Supported value)
     {
-        int_value = internal::CharTraits<Char>::convert(value);
+        int_value = value;
     }
     static uint64_t type(wchar_t)
     {
@@ -941,10 +1022,16 @@ public:
     FMT_MAKE_STR_VALUE(const std::string &, STRING)
     FMT_MAKE_STR_VALUE(StringRef, STRING)
 
-    FMT_MAKE_STR_VALUE(wchar_t *, WSTRING)
-    FMT_MAKE_STR_VALUE(const wchar_t *, WSTRING)
-    FMT_MAKE_STR_VALUE(const std::wstring &, WSTRING)
-    FMT_MAKE_STR_VALUE(WStringRef, WSTRING)
+#define FMT_MAKE_WSTR_VALUE(Type, TYPE) \
+  MakeValue(typename WCharHelper<Type, Char>::Supported value) { \
+    set_string(value); \
+              } \
+  static uint64_t type(Type) { return Arg::TYPE; }
+
+    FMT_MAKE_WSTR_VALUE(wchar_t *, WSTRING)
+    FMT_MAKE_WSTR_VALUE(const wchar_t *, WSTRING)
+    FMT_MAKE_WSTR_VALUE(const std::wstring &, WSTRING)
+    FMT_MAKE_WSTR_VALUE(WStringRef, WSTRING)
 
     FMT_MAKE_VALUE(void *, pointer, POINTER)
     FMT_MAKE_VALUE(const void *, pointer, POINTER)
@@ -1056,7 +1143,7 @@ public:
         {
         default:
             assert(false);
-            // Fall through.
+            return Result();
         case Arg::INT:
             return FMT_DISPATCH(visit_int(arg.int_value));
         case Arg::UINT:
@@ -1195,7 +1282,7 @@ private:
 
 public:
     void format(BasicWriter<Char> &writer,
-                BasicStringRef<Char> format, const ArgList &args);
+                BasicStringRef<Char> format_str, const ArgList &args);
 };
 }  // namespace internal
 
@@ -1206,6 +1293,8 @@ class BasicFormatter : private internal::FormatterBase
 private:
     BasicWriter<Char> &writer_;
     const Char *start_;
+
+    FMT_DISALLOW_COPY_AND_ASSIGN(BasicFormatter);
 
     // Parses argument index and returns corresponding argument.
     internal::Arg parse_arg_index(const Char *&s);
@@ -1356,8 +1445,8 @@ private:
     T value_;
 
 public:
-    IntFormatSpec(T value, const SpecT &spec = SpecT())
-        : SpecT(spec), value_(value) {}
+    IntFormatSpec(T val, const SpecT &spec = SpecT())
+        : SpecT(spec), value_(val) {}
 
     T value() const
     {
@@ -1612,6 +1701,7 @@ inline uint64_t make_type(FMT_GEN15(FMT_ARG_TYPE_DEFAULT))
 
 // Emulates a variadic function returning void on a pre-C++11 compiler.
 # define FMT_VARIADIC_VOID(func, arg_type) \
+  inline void func(arg_type arg) { func(arg, fmt::ArgList()); } \
   FMT_WRAP1(func, arg_type, 1) FMT_WRAP1(func, arg_type, 2) \
   FMT_WRAP1(func, arg_type, 3) FMT_WRAP1(func, arg_type, 4) \
   FMT_WRAP1(func, arg_type, 5) FMT_WRAP1(func, arg_type, 6) \
@@ -1669,7 +1759,7 @@ for example a file opening error.
 class SystemError : public internal::RuntimeError
 {
 private:
-    void init(int error_code, StringRef format_str, ArgList args);
+    void init(int err_code, StringRef format_str, ArgList args);
 
 protected:
     int error_code_;
@@ -1681,11 +1771,27 @@ protected:
 public:
     /**
     \rst
-    Constructs a :cpp:class:`fmt::SystemError` object with the description
-    of the form "*<message>*: *<system-message>*", where *<message>* is the
-    formatted message and *<system-message>* is the system message corresponding
-    to the error code.
+    Constructs a :class:`fmt::SystemError` object with the description
+    of the form
+
+    .. parsed-literal::
+    *<message>*: *<system-message>*
+
+    where *<message>* is the formatted message and *<system-message>* is
+    the system message corresponding to the error code.
     *error_code* is a system error code as given by ``errno``.
+    If *error_code* is not a valid error code such as -1, the system message
+    may look like "Unknown error -1" and is platform-dependent.
+
+    **Example**::
+
+    // This throws a SystemError with the description
+    //   cannot open file 'madeup': No such file or directory
+    // or similar (system message may vary).
+    const char *filename = "madeup";
+    std::FILE *file = std::fopen(filename, "r");
+    if (!file)
+    throw fmt::SystemError(errno, "cannot open file '{}'", filename);
     \endrst
     */
     SystemError(int error_code, StringRef message)
@@ -1704,7 +1810,7 @@ public:
 \rst
 This template provides operations for formatting and writing data into
 a character stream. The output is stored in a buffer provided by a subclass
-such as :cpp:class:`fmt::BasicMemoryWriter`.
+such as :class:`fmt::BasicMemoryWriter`.
 
 You can use one of the following typedefs for common character types:
 
@@ -1787,11 +1893,23 @@ private:
     void write_str(
         const internal::Arg::StringValue<StrChar> &str, const FormatSpec &spec);
 
-    // This method is private to disallow writing a wide string to a
-    // char stream and vice versa. If you want to print a wide string
-    // as a pointer as std::ostream does, cast it to const void*.
+    // This following methods are private to disallow writing wide characters
+    // and strings to a char stream. If you want to print a wide string as a
+    // pointer as std::ostream does, cast it to const void*.
     // Do not implement!
-    void operator<<(typename internal::CharTraits<Char>::UnsupportedStrType);
+    void operator<<(typename internal::WCharHelper<wchar_t, Char>::Unsupported);
+    void operator<<(
+        typename internal::WCharHelper<const wchar_t *, Char>::Unsupported);
+
+    // Appends floating-point length specifier to the format string.
+    // The second argument is only used for overload resolution.
+    void append_float_length(Char *&format_ptr, long double)
+    {
+        *format_ptr++ = 'L';
+    }
+
+    template<typename T>
+    void append_float_length(Char *&, T) {}
 
     friend class internal::ArgFormatter<Char>;
     friend class internal::PrintfFormatter<Char>;
@@ -1820,7 +1938,7 @@ public:
     Returns a pointer to the output buffer content. No terminating null
     character is appended.
     */
-    const Char *data() const FMT_NOEXCEPT(true)
+    const Char *data() const FMT_NOEXCEPT
     {
         return &buffer_[0];
     }
@@ -1864,8 +1982,8 @@ public:
     Current point:
     (-3.140000, +3.140000)
 
-    The output can be accessed using :meth:`data`, :meth:`c_str` or :meth:`str`
-    methods.
+    The output can be accessed using :func:`data()`, :func:`c_str` or
+    :func:`str` methods.
 
     See also :ref:`syntax`.
     \endrst
@@ -1930,9 +2048,10 @@ public:
         return *this;
     }
 
-    BasicWriter &operator<<(wchar_t value)
+    BasicWriter &operator<<(
+        typename internal::WCharHelper<wchar_t, Char>::Supported value)
     {
-        buffer_.push_back(internal::CharTraits<Char>::convert(value));
+        buffer_.push_back(value);
         return *this;
     }
 
@@ -1963,10 +2082,7 @@ public:
         return *this;
     }
 
-    void clear() FMT_NOEXCEPT(true)
-    {
-        buffer_.clear();
-    }
+    void clear() FMT_NOEXCEPT { buffer_.clear(); }
 };
 
 template <typename Char>
@@ -2253,14 +2369,14 @@ void BasicWriter<Char>::write_double(
     {
         // Format NaN ourselves because sprintf's output is not consistent
         // across platforms.
-        std::size_t size = 4;
+        std::size_t nan_size = 4;
         const char *nan = upper ? " NAN" : " nan";
         if (!sign)
         {
-            --size;
+            --nan_size;
             ++nan;
         }
-        CharPtr out = write_str(nan, size, spec);
+        CharPtr out = write_str(nan, nan_size, spec);
         if (sign)
             *out = sign;
         return;
@@ -2270,14 +2386,14 @@ void BasicWriter<Char>::write_double(
     {
         // Format infinity ourselves because sprintf's output is not consistent
         // across platforms.
-        std::size_t size = 4;
+        std::size_t inf_size = 4;
         const char *inf = upper ? " INF" : " inf";
         if (!sign)
         {
-            --size;
+            --inf_size;
             ++inf;
         }
-        CharPtr out = write_str(inf, size, spec);
+        CharPtr out = write_str(inf, inf_size, spec);
         if (sign)
             *out = sign;
         return;
@@ -2317,8 +2433,8 @@ void BasicWriter<Char>::write_double(
         *format_ptr++ = '.';
         *format_ptr++ = '*';
     }
-    if (internal::IsLongDouble<T>::VALUE)
-        *format_ptr++ = 'L';
+
+    append_float_length(format_ptr, value);
     *format_ptr++ = type;
     *format_ptr = '\0';
 
@@ -2326,20 +2442,20 @@ void BasicWriter<Char>::write_double(
     Char fill = static_cast<Char>(spec.fill());
     for (;;)
     {
-        std::size_t size = buffer_.capacity() - offset;
+        std::size_t buffer_size = buffer_.capacity() - offset;
 #if _MSC_VER
         // MSVC's vsnprintf_s doesn't work with zero size, so reserve
         // space for at least one extra character to make the size non-zero.
         // Note that the buffer's capacity will increase by more than 1.
-        if (size == 0)
+        if (buffer_size == 0)
         {
             buffer_.reserve(offset + 1);
-            size = buffer_.capacity() - offset;
+            buffer_size = buffer_.capacity() - offset;
         }
 #endif
         Char *start = &buffer_[offset];
         int n = internal::CharTraits<Char>::format_float(
-                    start, size, format, width_for_sprintf, spec.precision(), value);
+                    start, buffer_size, format, width_for_sprintf, spec.precision(), value);
         if (n >= 0 && offset + n < buffer_.capacity())
         {
             if (sign)
@@ -2359,7 +2475,7 @@ void BasicWriter<Char>::write_double(
             if (spec.align() == ALIGN_CENTER &&
                     spec.width() > static_cast<unsigned>(n))
             {
-                unsigned width = spec.width();
+                width = spec.width();
                 CharPtr p = grow_buffer(width);
                 std::copy(p, p + n, p + (width - n) / 2);
                 fill_padding(p, spec.width(), n, fill);
@@ -2427,8 +2543,8 @@ public:
 
 #if FMT_USE_RVALUE_REFERENCES
     /**
-    Constructs a ``BasicMemoryWriter`` object moving the content of the other
-    object to it.
+    Constructs a :class:`fmt::BasicMemoryWriter` object moving the content
+    of the other object to it.
     */
     BasicMemoryWriter(BasicMemoryWriter &&other)
         : BasicWriter<Char>(buffer_), buffer_(std::move(other.buffer_))
@@ -2459,19 +2575,18 @@ void format(BasicFormatter<Char> &f, const Char *&format_str, const T &value)
     internal::Value &arg_value = arg;
     std::basic_string<Char> str = os.str();
     arg_value = internal::MakeValue<Char>(str);
-    arg.type = internal::Arg::STRING;
+    arg.type = static_cast<internal::Arg::Type>(
+                   internal::MakeValue<Char>::type(str));
     format_str = f.format(format_str, arg);
 }
 
 // Reports a system error without throwing an exception.
 // Can be used to report errors from destructors.
-void report_system_error(int error_code, StringRef message) FMT_NOEXCEPT(true);
+void report_system_error(int error_code, StringRef message) FMT_NOEXCEPT;
 
 #ifdef _WIN32
 
-/**
-A Windows error.
-*/
+/** A Windows error. */
 class WindowsError : public SystemError
 {
 private:
@@ -2480,11 +2595,30 @@ private:
 public:
     /**
     \rst
-    Constructs a :cpp:class:`fmt::WindowsError` object with the description
-    of the form "*<message>*: *<system-message>*", where *<message>* is the
-    formatted message and *<system-message>* is the system message corresponding
-    to the error code.
+    Constructs a :class:`fmt::WindowsError` object with the description
+    of the form
+
+    .. parsed-literal::
+    *<message>*: *<system-message>*
+
+    where *<message>* is the formatted message and *<system-message>* is the
+    system message corresponding to the error code.
     *error_code* is a Windows error code as given by ``GetLastError``.
+    If *error_code* is not a valid error code such as -1, the system message
+    will look like "error -1".
+
+    **Example**::
+
+    // This throws a WindowsError with the description
+    //   cannot open file 'madeup': The system cannot find the file specified.
+    // or similar (system message may vary).
+    const char *filename = "madeup";
+    LPOFSTRUCT of = LPOFSTRUCT();
+    HFILE file = OpenFile(filename, &of, OF_READ);
+    if (file == HFILE_ERROR) {
+    throw fmt::WindowsError(GetLastError(),
+    "cannot open file '{}'", filename);
+    }
     \endrst
     */
     WindowsError(int error_code, StringRef message)
@@ -2496,7 +2630,7 @@ public:
 
 // Reports a Windows error without throwing an exception.
 // Can be used to report errors from destructors.
-void report_windows_error(int error_code, StringRef message) FMT_NOEXCEPT(true);
+void report_windows_error(int error_code, StringRef message) FMT_NOEXCEPT;
 
 #endif
 
@@ -2742,9 +2876,7 @@ inline void format_decimal(char *&buffer, T value)
     internal::format_decimal(buffer, abs_value, num_digits);
     buffer += num_digits;
 }
-} // ns fmt
-} // ns deatils
-} // ns spdlog
+}
 
 #if FMT_GCC_VERSION
 // Use the system_header pragma to suppress warnings about variadic macros
@@ -2851,10 +2983,6 @@ fmt::print(format, args...);
 #define FMT_VARIADIC_W(ReturnType, func, ...) \
   FMT_VARIADIC_(wchar_t, ReturnType, func, return func, __VA_ARGS__)
 
-namespace spdlog
-{
-namespace details
-{
 namespace fmt
 {
 FMT_VARIADIC(std::string, format, StringRef)
@@ -2867,20 +2995,17 @@ FMT_VARIADIC(std::string, sprintf, StringRef)
 FMT_VARIADIC(int, printf, StringRef)
 FMT_VARIADIC(int, fprintf, std::FILE *, StringRef)
 }
-}
-}
 
 // Restore warnings.
 #if FMT_GCC_VERSION >= 406
 # pragma GCC diagnostic pop
 #endif
 
-
-#define FMT_HEADER_ONLY
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
+#ifdef FMT_HEADER_ONLY
 # include "format.cc"
-
-#ifdef __GNUC__
-# pragma GCC diagnostic pop //pop -Wshadow warnings ignore
 #endif
 
-#endif  // SPDLOG_FMT_FORMAT_H_
+#endif  // FMT_FORMAT_H_

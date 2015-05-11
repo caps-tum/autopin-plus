@@ -84,6 +84,28 @@ static inline uint8_t calculateChecksum(QByteArray const &array) {
 	return result;
 }
 
+/*!
+* \brief Checks if an array has a specific prefix and drops it.
+*
+* This function checks if an array has a specific prefix and drops it. If the prefix is not present, an exception
+* will be thrown.
+*
+* \param[in] array  The array to be checked
+* \param[in] prefix The prefix which should be present
+* \param[in] field  A description what the prefix is supposed to be.
+*
+* \exception Exception This exception will be thrown if the specified prefix is not present.
+*/
+static inline void checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) {
+	// Check if array starts with the expected prefix.
+	if (array.startsWith(prefix)) {
+		array.remove(0, prefix.size());
+	} else {
+		throw Exception(".checkAndDrop(" + array.toHex() + ", " + prefix.toHex() + ", " + field +
+						") failed: Second argument is not a prefix of the first argument.");
+	}
+}
+
 Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	// Set the "type" field of the base class to the name of our monitor.
@@ -233,16 +255,6 @@ ProcessTree::autopin_tid_list Main::getMonitoredTasks() {
 QString Main::getUnit() {
 	// The ClustSafe device returns the energy in Joules
 	return "Joules";
-}
-
-void Main::checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field) {
-	// Check if array starts with the expected prefix.
-	if (array.startsWith(prefix)) {
-		array.remove(0, prefix.size());
-	} else {
-		throw Exception(".checkAndDrop(" + array.toHex() + ", " + prefix.toHex() + ", " + field +
-						") failed: Second argument is not a prefix of the first argument.");
-	}
 }
 
 void Main::readValueFromDevice(bool reset) {
