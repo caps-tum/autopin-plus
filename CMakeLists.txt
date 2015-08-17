@@ -45,7 +45,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Options required to reduce the noise of spdlog
   ADD_DEFINITIONS(-Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-switch-enum)
   ADD_DEFINITIONS(-Wno-old-style-cast -Wno-undef -Wno-documentation-unknown-command)
-  ADD_DEFINITIONS(-Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors)
+  ADD_DEFINITIONS(-Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors -Wno-newline-eof)
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # Using GCC
@@ -90,7 +90,7 @@ set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/MQTTClient.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.cpp src/AutopinPlus/MQTTClient.cpp)
 
 # OS-Service related classes
-set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/OSServices.h include/AutopinPlus/OS/TraceThread.h include/AutopinPlus/OS/SignalDispatcher.h include/AutopinPlus/OS/CpuInfo.h)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/OSServices.h include/AutopinPlus/OS/TraceThread.h include/AutopinPlus/OS/SignalDispatcher.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/OSServices.cpp  src/AutopinPlus/OS/TraceThread.cpp src/AutopinPlus/OS/SignalDispatcher.cpp src/AutopinPlus/OS/CpuInfo.cpp)
 
 # Autopin1 control strategy
@@ -167,7 +167,7 @@ include_directories(${libfast_path}/include/fast-lib/external)
 
 ########
 # Compiling and linking
-add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS} ${autopin+_HEADERS_MOC})
+add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC})
 target_link_libraries(autopin+ -lpthread)
 
 # Make sure auotpin+ depends on libfast and link with it
