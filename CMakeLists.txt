@@ -18,7 +18,17 @@ string( TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE )
 
 ########
 # Compiler/linker options based on the different compilers
-ADD_DEFINITIONS(-std=c++11 )
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" CXX11_SUPPORTED)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" CXX0X_SUPPORTED)
+if(CXX11_SUPPORTED)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+elseif(CXX0X_SUPPORTED)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+else()
+	message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support.")
+endif()
+
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Using Clang
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
@@ -125,53 +135,19 @@ set(QT_DONT_USE_QTGUI TRUE)
 QT5_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 ########
 
+
+
 ########
-# C-ares
-ExternalProject_Add(libcares
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0/configure --prefix=<INSTALL_DIR> CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+# fast-lib
+ExternalProject_Add(libfast
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/fast-lib
+    CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/vendor/fast-lib
     BUILD_IN_SOURCE 0
     BUILD_COMMAND ${MAKE})
-
-# Store c-ares install directory in variable
-ExternalProject_Get_Property(libcares install_dir)
-set (libcares_path ${install_dir})
-########
-
-########
-# Mosquitto
-ExternalProject_Add(libmosquitto
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
-    CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DARES_PATH=${libcares_path} ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
-    BUILD_IN_SOURCE 0
-    BUILD_COMMAND ${MAKE})
-
-# Make sure mosquitto depends on libcares
-add_dependencies (libmosquitto libcares)
 
 # Store libmosquitto variable in directory
-ExternalProject_Get_Property(libmosquitto install_dir)
-set (libmosquitto_path ${install_dir})
-########
-
-########
-# Boost
-include(vendor/boost/add_boost.cmake)
-########
-
-########
-# Yaml-Cpp
-ExternalProject_Add(libyaml
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/yaml-cpp-0.5.1
-    CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} cmake -DBOOST_ROOT=${BoostSourceDir} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/vendor/yaml-cpp-0.5.1
-    BUILD_IN_SOURCE 0
-    BUILD_COMMAND ${MAKE})
-
-#add_dependencies (libyaml ${AllBoostLibs})
-
-# Store libmosquitto variable in directory
-ExternalProject_Get_Property(libyaml install_dir)
-set (libyaml_path ${install_dir})
+ExternalProject_Get_Property(libfast install_dir)
+set (libfast_path ${install_dir})
 ########
 
 ########
@@ -182,17 +158,11 @@ include_directories(include)
 # spdlog
 include_directories(vendor/spdlog/include/spdlog)
 
-# libcares
-include_directories(${libcares_path}/include)
+# fastlib
+include_directories(${libfast_path}/include/fast-lib)
+include_directories(${libfast_path}/include/fast-lib/external)
 
-# libmosquitto
-include_directories(${libmosquitto_path}/include)
 
-# libyaml-cpp
-include_directories(${libyaml_path}/include)
-
-# Boost
-include_directories(${BoostSourceDir})
 ########
 
 ########
@@ -200,17 +170,9 @@ include_directories(${BoostSourceDir})
 add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS} ${autopin+_HEADERS_MOC})
 target_link_libraries(autopin+ -lpthread)
 
-# Make sure auotpin+ depends on libmosquitto and link with it
-add_dependencies (autopin+ libmosquitto)
-target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a)
-
-# Make sure auotpin+ depends on libcares and link with it
-add_dependencies (autopin+ libcares)
-target_link_libraries(autopin+ ${libcares_path}/lib/libcares.a)
-
-# Make sure auotpin+ depends on libyaml and link with it
-add_dependencies (autopin+ libyaml)
-target_link_libraries(autopin+ ${libyaml_path}/lib/libyaml-cpp.a)
+# Make sure auotpin+ depends on libfast and link with it
+add_dependencies (autopin+ libfast)
+target_link_libraries(autopin+ ${libfast_path}/lib/libfastlib_communication.a ${libfast_path}/lib/libfastlib_serialization.a)
 
 # Add Qt5 libraries
 qt5_use_modules(autopin+ Core)
