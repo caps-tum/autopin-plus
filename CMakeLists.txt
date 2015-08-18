@@ -146,24 +146,15 @@ set (libfast_path ${install_dir})
 ########
 
 ########
-# Download linux kernel
-option (LINUX_DOWNLOAD "Download the linux kernel and use it in the include path" OFF)
-if (LINUX_DOWNLOAD)
-    ExternalProject_Add(linuxkernel
-        URL https://github.com/torvalds/linux/archive/v4.1.tar.gz
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND "")
-endif(LINUX_DOWNLOAD)
-########
-
-########
 # Includes
 # autopin+ include path
 include_directories(include)
 
 # spdlog
 include_directories(vendor/spdlog/include/spdlog)
+
+# linux kernel header
+include_directories(vendor/linux/include)
 
 # fastlib
 include_directories(${libfast_path}/include/fast-lib)
@@ -178,13 +169,6 @@ target_link_libraries(autopin+ -lpthread)
 # Make sure auotpin+ depends on libfast and link with it
 add_dependencies (autopin+ libfast)
 target_link_libraries(autopin+ ${libfast_path}/lib/libfastlib_communication.a ${libfast_path}/lib/libfastlib_serialization.a)
-
-if (LINUX_DOWNLOAD)
-    add_dependencies (autopin+ linuxkernel)
-    ExternalProject_Get_Property(linuxkernel SOURCE_DIR)
-    include_directories(${SOURCE_DIR}/include/uapi)
-    include_directories(${SOURCE_DIR}/include)
-endif(LINUX_DOWNLOAD)
 
 # Add Qt5 libraries
 qt5_use_modules(autopin+ Core)

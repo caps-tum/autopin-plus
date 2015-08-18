@@ -18,6 +18,7 @@ install:
     - travis_retry sudo aptitude -f install -y qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev
     - travis_retry sudo aptitude -f install -y qt5-default qttools5-dev-tools
     - travis_retry sudo aptitude -f install -y gcc-4.8 g++-4.8
+    - travis_retry sudo apt-get -f install -y linux-libc-dev
 
     - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
     - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
@@ -27,7 +28,7 @@ install:
 script:
     - mkdir build
     - cd build
-    - cmake -DLINUX_DOWNLOAD=ON ..
+    - cmake ..
     - make
 
 notifications:
