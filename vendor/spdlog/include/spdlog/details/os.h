@@ -23,15 +23,28 @@
 /*************************************************************************/
 
 #pragma once
-
 #include<string>
 #include<cstdio>
 #include<ctime>
 
 #ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
+# ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+# endif
+# include <Windows.h>
+
+#ifdef __MINGW32__
+#include <share.h>
 #endif
+
+#elif __linux__
+#include <sys/syscall.h> //Use gettid() syscall under linux to get thread id
+#include <unistd.h>
+#else
+#include <thread>
+#endif
+
+#include "../common.h"
 
 namespace spdlog
 {
@@ -40,6 +53,21 @@ namespace details
 namespace os
 {
 
+inline spdlog::log_clock::time_point now()
+{
+
+#if defined __linux__ && defined SPDLOG_CLOCK_COARSE
+    timespec ts;
+    ::clock_gettime(CLOCK_REALTIME_COARSE, &ts);
+    return std::chrono::time_point<log_clock, typename log_clock::duration>(
+               std::chrono::duration_cast<typename log_clock::duration>(
+                   std::chrono::seconds(ts.tv_sec) + std::chrono::nanoseconds(ts.tv_nsec)));
+
+#else
+    return log_clock::now();
+#endif
+
+}
 inline std::tm localtime(const std::time_t &time_tt)
 {
 
@@ -55,7 +83,7 @@ inline std::tm localtime(const std::time_t &time_tt)
 
 inline std::tm localtime()
 {
-    std::time_t now_t = time(0);
+    std::time_t now_t = time(nullptr);
     return localtime(now_t);
 }
 
@@ -75,7 +103,7 @@ inline std::tm gmtime(const std::time_t &time_tt)
 
 inline std::tm gmtime()
 {
-    std::time_t now_t = time(0);
+    std::time_t now_t = time(nullptr);
     return gmtime(now_t);
 }
 inline bool operator==(const std::tm& tm1, const std::tm& tm2)
@@ -148,10 +176,22 @@ inline int utc_minutes_offset(const std::tm& tm = details::os::localtime())
 #endif
 }
 
+//Return current thread id as size_t
+//It exists because the std::this_thread::get_id() is much slower(espcially under VS 2013)
+inline size_t thread_id()
+{
+#ifdef _WIN32
+    return  static_cast<size_t>(::GetCurrentThreadId());
+#elif __linux__
+    return  static_cast<size_t>(syscall(SYS_gettid));
+#else //Default to standard C++11 (OSX and other Unix)
+    return static_cast<size_t>(std::hash<std::thread::id>()(std::this_thread::get_id()));
+#endif
+
+}
 
 } //os
 } //details
 } //spdlog
-
 
 
