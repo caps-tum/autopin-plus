@@ -20,11 +20,8 @@ string( TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE )
 # Compiler/linker options based on the different compilers
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" CXX11_SUPPORTED)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" CXX0X_SUPPORTED)
 if(CXX11_SUPPORTED)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-elseif(CXX0X_SUPPORTED)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 else()
 	message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support.")
 endif()
@@ -135,8 +132,6 @@ set(QT_DONT_USE_QTGUI TRUE)
 QT5_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 ########
 
-
-
 ########
 # fast-lib
 ExternalProject_Add(libfast
@@ -151,6 +146,15 @@ set (libfast_path ${install_dir})
 ########
 
 ########
+# Download linux kernel
+option (LINUX_DOWNLOAD "Download the linux kernel and use it in the include path" OFF)
+ExternalProject_Add(linuxkernel
+    URL https://github.com/torvalds/linux/archive/v4.1.tar.gz
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND "")
+
+########
 # Includes
 # autopin+ include path
 include_directories(include)
@@ -161,8 +165,6 @@ include_directories(vendor/spdlog/include/spdlog)
 # fastlib
 include_directories(${libfast_path}/include/fast-lib)
 include_directories(${libfast_path}/include/fast-lib/external)
-
-
 ########
 
 ########
@@ -173,6 +175,12 @@ target_link_libraries(autopin+ -lpthread)
 # Make sure auotpin+ depends on libfast and link with it
 add_dependencies (autopin+ libfast)
 target_link_libraries(autopin+ ${libfast_path}/lib/libfastlib_communication.a ${libfast_path}/lib/libfastlib_serialization.a)
+
+if (LINUX_DOWNLOAD)
+    add_dependencies (autopin+ linuxkernel)
+    ExternalProject_Get_Property(linuxkernel SOURCE_DIR)
+    include_directories(${SOURCE_DIR}/include)
+endif(LINUX_DOWNLOAD)
 
 # Add Qt5 libraries
 qt5_use_modules(autopin+ Core)
