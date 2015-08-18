@@ -148,11 +148,14 @@ set (libfast_path ${install_dir})
 ########
 # Download linux kernel
 option (LINUX_DOWNLOAD "Download the linux kernel and use it in the include path" OFF)
-ExternalProject_Add(linuxkernel
-    URL https://github.com/torvalds/linux/archive/v4.1.tar.gz
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND "")
+if (LINUX_DOWNLOAD)
+    ExternalProject_Add(linuxkernel
+        URL https://github.com/torvalds/linux/archive/v4.1.tar.gz
+        CONFIGURE_COMMAND ""
+        BUILD_COMMAND ""
+        INSTALL_COMMAND "")
+endif(LINUX_DOWNLOAD)
+########
 
 ########
 # Includes
@@ -179,6 +182,7 @@ target_link_libraries(autopin+ ${libfast_path}/lib/libfastlib_communication.a ${
 if (LINUX_DOWNLOAD)
     add_dependencies (autopin+ linuxkernel)
     ExternalProject_Get_Property(linuxkernel SOURCE_DIR)
+    include_directories(${SOURCE_DIR}/include/uapi)
     include_directories(${SOURCE_DIR}/include)
 endif(LINUX_DOWNLOAD)
 
