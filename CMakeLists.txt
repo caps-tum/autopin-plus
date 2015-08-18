@@ -154,7 +154,7 @@ include_directories(include)
 include_directories(vendor/spdlog/include/spdlog)
 
 # linux kernel header
-include_directories(vendor/linux/include)
+include_directories(vendor/linux)
 
 # fastlib
 include_directories(${libfast_path}/include/fast-lib)
