@@ -1,6 +1,6 @@
 # inspired by https://github.com/gabime/spdlog/blob/master/.travis.yml
 os: linux
-language: c++
+language: cpp
 sudo: false
 
 matrix:
@@ -12,6 +12,11 @@ matrix:
             - clang-3.5
             - linux-libc-dev
             - qt5-default
+            - qtbase5-dev
+            - qtdeclarative5-dev
+            - libqt5webkit5-dev
+            - libsqlite3-dev
+            - qttools5-dev-tools
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.5
@@ -27,6 +32,11 @@ matrix:
             - g++-4.8
             - linux-libc-dev
             - qt5-default
+            - qtbase5-dev
+            - qtdeclarative5-dev
+            - libqt5webkit5-dev
+            - libsqlite3-dev
+            - qttools5-dev-tools
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.5
@@ -34,7 +44,7 @@ matrix:
 
     - env: GCC_VERSION=4.8 BUILD_TYPE=Release
       addons: *gcc48
-      
+
     - env: GCC_VERSION=4.9 BUILD_TYPE=Debug
       addons: &gcc49
         apt:
@@ -42,6 +52,11 @@ matrix:
             - g++-4.9
             - linux-libc-dev
             - qt5-default
+            - qtbase5-dev
+            - qtdeclarative5-dev
+            - libqt5webkit5-dev
+            - libsqlite3-dev
+            - qttools5-dev-tools
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.5
@@ -63,7 +78,7 @@ install:
   - mkdir build
   - cd build
   - cmake ..
-  - make
+  - make -j3
 
 notifications:
   recipients:
