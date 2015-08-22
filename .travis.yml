@@ -17,7 +17,6 @@ matrix:
             - libqt5webkit5-dev
             - libsqlite3-dev
             - qttools5-dev-tools
-            - apt-file
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.5
@@ -38,7 +37,6 @@ matrix:
             - libqt5webkit5-dev
             - libsqlite3-dev
             - qttools5-dev-tools
-            - apt-file
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.5
@@ -59,7 +57,6 @@ matrix:
             - libqt5webkit5-dev
             - libsqlite3-dev
             - qttools5-dev-tools
-            - apt-file
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.5
@@ -78,8 +75,6 @@ before_install:
 
 install:
   - cd $CHECKOUT_PATH
-  - apt-file update
-  - apt-file search Qt5CoreConfig.cmake
   - mkdir build
   - cd build
   - cmake -DCMAKE_PREFIX_PATH=/opt/qt54/lib/cmake ..
