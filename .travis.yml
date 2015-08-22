@@ -1,35 +1,69 @@
-language: cpp
+# inspired by https://github.com/gabime/spdlog/blob/master/.travis.yml
+os: linux
+language: c++
+sudo: false
 
-compiler:
-  - gcc
+matrix:
+  include:
+    - env: CLANG_VERSION=3.5 BUILD_TYPE=Debug
+      addons: &clang35
+        apt:
+          packages:
+            - clang-3.5
+            - linux-libc-dev
+            - qt5-default
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.5
+            - ubuntu-sdk-team
 
-branches:
-  only:
-    - master
+    - env: CLANG_VERSION=3.5 BUILD_TYPE=Release
+      addons: *clang35
+
+    - env: GCC_VERSION=4.8 BUILD_TYPE=Debug
+      addons: &gcc48
+        apt:
+          packages:
+            - g++-4.8
+            - linux-libc-dev
+            - qt5-default
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.5
+            - ubuntu-sdk-team
+
+    - env: GCC_VERSION=4.8 BUILD_TYPE=Release
+      addons: *gcc48
+      
+    - env: GCC_VERSION=4.9 BUILD_TYPE=Debug
+      addons: &gcc49
+        apt:
+          packages:
+            - g++-4.9
+            - linux-libc-dev
+            - qt5-default
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.5
+            - ubuntu-sdk-team
+
+    - env: GCC_VERSION=4.9 BUILD_TYPE=Release
+      addons: *gcc49
 
 before_install:
-    - travis_retry sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
-    - travis_retry sudo add-apt-repository --yes ppa:ubuntu-sdk-team/ppa
-    - travis_retry sudo apt-get update -y
+  - export CHECKOUT_PATH=`pwd`;
+  - if [ -n "$GCC_VERSION" ]; then export CXX="g++-${GCC_VERSION}" CC="gcc-${GCC_VERSION}"; fi
+  - if [ -n "$CLANG_VERSION" ]; then export CXX="clang++-${CLANG_VERSION}" CC="clang-${CLANG_VERSION}"; fi
+  - if [ "$CLANG_VERSION" == "3.4" ]; then export CXX="/usr/local/clang-3.4/bin/clang++" CC="/usr/local/clang-3.4/bin/clang"; fi
+  - which $CXX
+  - which $CC
 
 install:
-    - travis_retry sudo apt-get -f install -y aptitude
-    - travis_retry sudo aptitude -f install -y cmake
-    - travis_retry sudo aptitude -f install -y qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev
-    - travis_retry sudo aptitude -f install -y qt5-default qttools5-dev-tools
-    - travis_retry sudo aptitude -f install -y gcc-4.8 g++-4.8
-    - travis_retry sudo apt-get -f install -y linux-libc-dev
-
-    - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
-    - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
-    - sudo update-alternatives --config gcc
-    - sudo update-alternatives --config g++
-
-script:
-    - mkdir build
-    - cd build
-    - cmake ..
-    - make
+  - cd $CHECKOUT_PATH
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
 
 notifications:
   recipients:
@@ -37,6 +71,3 @@ notifications:
   email:
     on_success: change
     on_failure: always
-
-os:
-  - linux
