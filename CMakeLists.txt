@@ -33,7 +33,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif()
 
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
-    ADD_DEFINITIONS(-g3 -O0 -Weverything)
+    ADD_DEFINITIONS(-g3 -O1 -Weverything)
+    ADD_DEFINITIONS(-fno-omit-frame-pointer -fno-optimize-sibling-calls)
+    ADD_DEFINITIONS(-fsanitize=address,undefined,integer -fno-sanitize=unsigned-integer-overflow)
+    SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined,integer")
   endif()
 
   # Reduce the noise coming from Qt5
@@ -52,6 +55,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
     ADD_DEFINITIONS(-g3 -O0 -Wall -Wextra -Wunused)
+    ADD_DEFINITIONS(-fno-omit-frame-pointer)
   endif()
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
@@ -62,6 +66,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
     ADD_DEFINITIONS(-g3 -O0 -Wall -Wextra)
+    ADD_DEFINITIONS(-fno-omit-frame-pointer)
   endif()
 
 endif()
