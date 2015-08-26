@@ -11,6 +11,7 @@
 #include <AutopinPlus/Monitor/ClustSafe/Main.h>
 #include <AutopinPlus/Monitor/GPerf/Main.h>
 #include <AutopinPlus/Monitor/Random/Main.h>
+#include <AutopinPlus/Monitor/PageMigrate/Main.h>
 #include <AutopinPlus/Strategy/Autopin1/Main.h>
 #include <AutopinPlus/Strategy/Noop/Main.h>
 #include <AutopinPlus/Strategy/Compact/Main.h>
@@ -49,8 +50,11 @@ void Watchdog::slot_watchdogRun() {
 
 	// Setup and initialize performance monitors
 	context->info("Initializing performance monitors");
+	
 	for (auto &elem : monitors) {
 		elem->init();
+		//elem->setObservedProcessPid(npid);
+		
 	}
 
 	// Setup and initialize observed process
@@ -74,9 +78,15 @@ void Watchdog::slot_watchdogRun() {
 	// Starting observed process
 	context->info("Connecting to the observed process ...");
 	process->start();
-
+	int npid=process.get()->getPid();
 	context->info("Starting control strategy ...");
-
+	
+	for (auto &elem : monitors) {
+		elem->init();
+		elem->setObservedProcessPid(npid);
+		
+	}
+	
 	emit sig_watchdogReady();
 }
 
@@ -137,6 +147,12 @@ void Watchdog::createPerformanceMonitors() {
 		if (current_type == "random") {
 			monitors.push_back(
 				std::unique_ptr<Monitor::Random::Main>(new Monitor::Random::Main(current_monitor, *config, *context)));
+			continue;
+		}
+		
+		if (current_type == "pagemigrate") {
+			monitors.push_back(
+				std::unique_ptr<Monitor::PageMigrate::Main>(new Monitor::PageMigrate::Main(current_monitor, *config, *context)));
 			continue;
 		}
 
