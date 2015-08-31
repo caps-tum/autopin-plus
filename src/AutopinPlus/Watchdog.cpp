@@ -53,8 +53,6 @@ void Watchdog::slot_watchdogRun() {
 	
 	for (auto &elem : monitors) {
 		elem->init();
-		//elem->setObservedProcessPid(npid);
-		
 	}
 
 	// Setup and initialize observed process

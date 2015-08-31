@@ -29,23 +29,12 @@ Main::Main(QString name, const Configuration &config, AutopinContext &context)
 }
 
 
-	//int period;
-	
-	///*!
-	 //* The minimum weight for a memory access to be sampled
-	 //*/
-	//int min_weight;
-
-	///*!
-	 //* The time in seconds to look for remote accesses
-	 //*/
-	//int sensing_time;
 	
 void Main::init() {
 	context.info("Initializing monitor \"" + name + "\" (pageMigrate)");
 
-
-
+	//Must be left, this value is read by the strategy
+	valtype = MAX;
 	// Set standard values
 
 
@@ -60,11 +49,12 @@ Configuration::configopts Main::getConfigOpts() {
 	Configuration::configopts result;
 
 	
-
+	result.push_back(Configuration::configopt("valtype", QStringList("MAX")));
 	return result;
 }
 
 void Main::start(int tid) { 
+	std::stringstream temp_str,temp_str2,temp_str3;
 	context.info("My pid " + QString::number(monitored_pid));
 	const char * p1= "./perf";
 	const char * p2= "--numa-migrate";
@@ -75,11 +65,17 @@ void Main::start(int tid) {
 	const char * p8= "3";
 	const char * p9= "--track-accesslvls";
 	const char * p10= "-c";
-	const char * p11= "500";
+	temp_str<<(period);
+	std::string str = temp_str.str();
+	const char * p11= str.c_str();
 	const char * p12= "--weighmin";
-	const char * p13= "150";
+	temp_str2<<(min_weight);
+	std::string str2  = temp_str2.str();
+	const char * p13= str2.c_str();;
 	const char * p14= "--sensing-time";
-	const char * p15= "20";
+	temp_str3<<(sensing_time);
+	std::string str3 = temp_str3.str();
+	const char * p15= str3.c_str();
 	const char * p19= "--npid";
 	char p20[6];
 	sprintf(p20,"%d",monitored_pid);
