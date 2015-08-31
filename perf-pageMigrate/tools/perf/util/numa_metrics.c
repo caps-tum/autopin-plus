@@ -157,7 +157,7 @@ void do_great_migration(struct numa_metrics *nm){
 	pages=malloc(sizeof(void*) * nm->number_pages2move);
 	status=malloc(sizeof(int) * nm->number_pages2move);
 	nodes=malloc(sizeof(int) * nm->number_pages2move);
-	//consolidates the page addresses into a single page address package
+	//consolidates the page addresses into a single page address bundle
 	while(current){
 	//	printf("%p \n", current->page_addr);
 		HASH_FIND_PTR( nm->page_accesses,&(current->page_addr),sear );
@@ -426,8 +426,8 @@ void add_mem_access( struct numa_metrics *multiproc_info, void *page_addr, int a
 	proc=multiproc_info->cpu_to_processor[accessing_cpu];
 	if (current==NULL){
 		current=malloc(sizeof(struct page_stats));
-		current->proc0_acceses=0;
-		current->proc1_acceses=0;
+		//current->proc0_acceses=0;
+		//current->proc1_acceses=0;
 		current->proc_accesses=malloc(sizeof(int)*multiproc_info->n_cpus);
 		memset(current->proc_accesses,0,sizeof(int)*multiproc_info->n_cpus);
 		

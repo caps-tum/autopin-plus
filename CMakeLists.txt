@@ -65,7 +65,7 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
 endif()
 ########
 
-set(PERF_SOURCE "/home" CACHE FILEPATH "Points to the folder that contains the perf tools source")
+set(PERF_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/perf-pageMigrate/tools/perf/)
 
 ########
 # Source files
@@ -136,11 +136,7 @@ ExternalProject_Add(perf-numa
     BUILD_IN_SOURCE 1
     BUILD_COMMAND make DEBUG=1 WERROR=0 NO_LIBPERL=1 NO_LIBPHYTHON=1 NO_DWARF=1 NO_SLANG=1 NO_LIBELF=1 NO_LIBUNWIND=1 NO_BACKTRACE=1  NO_LIBAUDIT=1 NO_LIBBIONIC=1
     INSTALL_COMMAND "" )
-    
-
-
-
-    
+       
 ########
 # C-ares
 ExternalProject_Add(libcares
