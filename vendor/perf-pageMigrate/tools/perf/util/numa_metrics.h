@@ -43,8 +43,6 @@ struct numa_metrics {
 	};
 
 struct page_stats{
-	int proc0_acceses;
-	int proc1_acceses;
 	int *proc_accesses;
 	void* page_addr;
 	UT_hash_handle hh;
@@ -103,7 +101,6 @@ static const char * const mem_lvl[] = {
 
 void sort_entries(struct numa_metrics *nm);
 
-int do_migration(struct numa_metrics *nm, int pid, struct perf_sample *sample);
 
 void init_processor_mapping(struct numa_metrics *multiproc_info, struct cpu_topo *topol);
 

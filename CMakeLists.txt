@@ -65,7 +65,7 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
 endif()
 ########
 
-set(PERF_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/perf-pageMigrate/tools/perf/)
+set(PERF_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/perf-pageMigrate/tools/perf/)
 
 ########
 # Source files

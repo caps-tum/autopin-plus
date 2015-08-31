@@ -201,5 +201,12 @@ int init_numa_analysis(int mode, int pid,const char **command_args,int command_a
 	pthread_join(numatool_thread, NULL); 
 		return NUMATOOL_SUCCESS;
 }
+//int main(int argc, const char **argv){
+	//int resp;
+	
+	//page_size = sysconf(_SC_PAGE_SIZE);
+
+	//resp=init_numa_analysis(RUN_COMMAND, 0,argv, argc);
+//}
 
 

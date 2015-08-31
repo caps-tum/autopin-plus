@@ -132,11 +132,11 @@ void print_migration_statistics(struct numa_metrics *nm){
 	
 	sort_entries(nm);
 	HASH_ITER(hh, nm->page_accesses, current, tmp) {
-		freq=current->proc0_acceses + current->proc1_acceses;
-		add_freq_access(nm,freq);
-		if(nm->report)	
-			fprintf(nm->report," Accessed %p count %d %d \n",current->page_addr, current->proc0_acceses,current->proc1_acceses);
-			
+		freq=0;
+		for(i=0; i<nm->n_cpus; i++){
+			freq+=current->proc_accesses[i];
+		}
+		add_freq_access(nm,freq);	
 	}
 	//sort the frequencies
 	HASH_SORT( nm->freq_accesses, freq_sort );
@@ -178,6 +178,7 @@ void do_great_migration(struct numa_metrics *nm){
 		count++;
 
 		*(nodes+count)=destination_node;
+		
 	}
 	
 	if(nm->migrate_chunk_size >0 )
@@ -200,111 +201,13 @@ void do_great_migration(struct numa_metrics *nm){
 	
 	tfin=wtime()-tinit;
 	
-	nm->moved_pages=count;
+	nm->moved_pages=succesfully_moved;
 	printf("%d pages moved successfully, move pages time %f \n",succesfully_moved,tfin);
-	//TODO take move decission 
+ 
 }
 
-int do_migration(struct numa_metrics *nm, int pid, struct perf_sample *sample){
-	
-	u64 mask,addr;
-	int count,*nodes,node,calling_cpu,home_count, remote_count;
-	void *page, **pages;
-	int* status,st;
-	long ret;
-	struct page_stats *sear=NULL,*hashtable;
-	union perf_mem_data_src data_src; 
 
-	
-	st=-1;
-	
-	data_src.val=sample->data_src;
-	
-	if (!data_src.val)
-		return -1;
 
-		
-	//Assuming page size is 4K the 12 LSBs are discharged to 
-	//obtain the page number
-	//TODO page number must be parametrized
-	mask= 0xFFF; // 12 bytes
-	addr=sample->addr;
-	addr= addr & ~mask ;
-	count=1;
-	node=0;
-	nodes=NULL;
-	page= (void *) addr;
-	pages=&page;
-	status=&st;
-	
-	hashtable=nm->page_accesses;
-	HASH_FIND_PTR( hashtable,&page,sear );
-	if(!sear) return 0;
-	
-	if(nm->logging_detail_level > 3)
-		printf("Hash table lookup %p %d %d **\n", sear->page_addr ,sear->proc0_acceses,sear->proc1_acceses );
-	
-	ret= move_pages(pid, count, pages, nodes, status,0);
-	
-	//only if the pages query is successful and the home node is different than the node that queries the address the page is migrated
-	if (ret != 0){
-		if(nm->logging_detail_level > 3)	
-		printf ("Error on query\n");
-		return 0;
-		
-	}
-	//an only be different to the requesting proc and this home proc must be 0 or 1
-	calling_cpu=nm->cpu_to_processor[sample->cpu];
-	if ( calling_cpu== st ){
-		if(nm->logging_detail_level > 3)	
-		printf ("Page is already at requesting node (L3 hit) %d \n",status[0]);
-		return 0;
-		
-	}
-	if ( st < 0 || st>1  ){
-		if(nm->logging_detail_level > 3)	
-		printf ("Problematic status %d \n",status[0]);
-		return 0;
-		
-	}
-		
-	if(nm->logging_detail_level > 3)	
-		printf ("Move candidate:  home proc %d - requesting proc %d (core %d)\n ",
-	status[0], nm->cpu_to_processor[sample->cpu],sample->cpu);		
-	//the page is only moved if the number of accesses from the calling processor is greater than on the home
-	home_count= status[0]==0 ? sear->proc0_acceses : sear->proc1_acceses;
-	remote_count= status[0]==0 ? sear->proc1_acceses : sear->proc0_acceses;
-	
-	if(	remote_count <= home_count) {
-		if(nm->logging_detail_level > 3)	
-		printf ("Moving criteria not met\n");
-		return;
-	}
-	
-	//determine the new home processor
-	node = nm->cpu_to_processor[sample->cpu]; 
-	nodes=&node;
-	
-	//we want to move the page to its new home
-	ret= 	move_pages(pid, count, pages, nodes, status,0);
-	
-	if (ret!=0){
-		printf("error moving page \n");
-		return;
-	}
-	
-	//we will query again for the home of the page
-	nodes=NULL;
-	ret= move_pages(pid, count, pages, nodes, status,0);
-		if(nm->logging_detail_level > 3)
-		printf ("Page %p moved new home %d\n ",page,status[0] );	
-	if(ret==0 && status[0] >=0)
-		nm->moved_pages++;
-	return ret;
-	
-}
-
-//used by numa-an to determine the type of access
 
 int filter_local_accesses(union perf_mem_data_src *entry){
 	//This method is based on util/sort.c:hist_entry__lvl_snprintf
@@ -441,15 +344,15 @@ void add_mem_access( struct numa_metrics *multiproc_info, void *page_addr, int a
 		}
 	}
 	
-	/* With the new processor mapping this part should be removed*/
-	if (proc==0){
-		current->proc0_acceses++;
-	}else if(proc==1){
-		current->proc1_acceses++;
-	}
-	
+	///* With the new processor mapping this part should be removed*/
+	//if (proc==0){
+		//current->proc0_acceses++;
+	//}else if(proc==1){
+		//current->proc1_acceses++;
+	//}
 	/*Here begins the new page access bookkeeping*/
 	current->proc_accesses[proc]++;
+	//printf("%d", proc);
 }
 
 void print_access_info(struct numa_metrics *multiproc_info ){
