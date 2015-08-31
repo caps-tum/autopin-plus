@@ -47,20 +47,19 @@ class Main : public PerformanceMonitor {
 	typedef std::map<int, double> rand_map;
 
 	/*!
-	 * \brief Returns a random value between rand_min and rand_max
+	 * The period used to make the memory loads sampling
 	 */
-	double getRandomValue();
+	int period;
+	
+	/*!
+	 * The minimum weight for a memory access to be sampled
+	 */
+	int min_weight;
 
 	/*!
-	 * Minimum random value
+	 * The time in seconds to look for remote accesses
 	 */
-	double rand_min;
-
-	/*!
-	 * Maximum random value
-	 */
-	double rand_max;
-
+	int sensing_time;
 	/*!
 	 * Performance values of "monitored" tasks
 	 */

@@ -22,78 +22,79 @@ Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
 	type = "random";
 	started=false;
+	//parameters for the memory access sampling
+	period=1000;
+	min_weight=50;
+	sensing_time=30;
 }
 
+
+	//int period;
+	
+	///*!
+	 //* The minimum weight for a memory access to be sampled
+	 //*/
+	//int min_weight;
+
+	///*!
+	 //* The time in seconds to look for remote accesses
+	 //*/
+	//int sensing_time;
+	
 void Main::init() {
 	context.info("Initializing monitor \"" + name + "\" (pageMigrate)");
 
-	// Set random seed
-	qsrand(QTime::currentTime().msec());
+
 
 	// Set standard values
-	rand_min = 0;
-	rand_max = 1;
-	valtype = MAX;
-	QString valtype_str = "MAX";
 
-	if (config.configOptionExists(name + ".rand_min") == 1) rand_min = config.getConfigOptionDouble(name + ".rand_min");
-	if (config.configOptionExists(name + ".rand_max") == 1) rand_max = config.getConfigOptionDouble(name + ".rand_max");
-	if (config.configOptionExists(name + ".valtype") == 1) {
-		if (config.getConfigOption(name + ".valtype") == "max") {
-			valtype = MAX;
-			valtype_str = "MAX";
-		} else if (config.getConfigOption(name + ".valtype") == "min") {
-			valtype = MIN;
-			valtype_str = "MIN";
-		} else {
-			valtype = UNKNOWN;
-			valtype_str = "UNKNOWN";
-		}
-	}
 
-	context.info("Minimum random value " + QString::number(rand_min));
-	context.info("Maximum random value " + QString::number(rand_max));
+	if (config.configOptionExists(name + ".sampling_period") == 1) period = config.getConfigOptionInt(name + ".sampling_period");
+	if (config.configOptionExists(name + ".min_weight") == 1) min_weight = config.getConfigOptionInt(name + ".min_weight");
+	if (config.configOptionExists(name + ".sensing_time") == 1) sensing_time = config.getConfigOptionInt(name + ".sensing_time");
+	
+	//context.info("Maximum random value " + QString::number(rand_max));
 }
 
 Configuration::configopts Main::getConfigOpts() {
 	Configuration::configopts result;
 
-	result.push_back(Configuration::configopt("rand_min", QStringList(QString::number(rand_min))));
-	result.push_back(Configuration::configopt("rand_max", QStringList(QString::number(rand_max))));
-
-	switch (valtype) {
-	case MAX:
-		result.push_back(Configuration::configopt("valtype", QStringList("MAX")));
-		break;
-	case MIN:
-		result.push_back(Configuration::configopt("valtype", QStringList("MIN")));
-		break;
-	default:
-		result.push_back(Configuration::configopt("valtype", QStringList("UNKNOWN")));
-		break;
-	}
+	
 
 	return result;
 }
 
 void Main::start(int tid) { 
 	context.info("My pid " + QString::number(monitored_pid));
-	const char * p1= "top";
-	const char * p2= "--help";
-	const char * args[]={p1,p2};
+	const char * p1= "./perf";
+	const char * p2= "--numa-migrate";
+	const char * p3= "-e";
+	const char * p4= "cpu/mem-loads/pp";
+	const char * p5= "--cpu=0-31";
+	const char * p7= "--numa-repdetail";
+	const char * p8= "3";
+	const char * p9= "--track-accesslvls";
+	const char * p10= "-c";
+	const char * p11= "500";
+	const char * p12= "--weighmin";
+	const char * p13= "150";
+	const char * p14= "--sensing-time";
+	const char * p15= "20";
+	const char * p19= "--npid";
+	char p20[6];
+	sprintf(p20,"%d",monitored_pid);
+	//"--numa-migrate -e cpu/mem-loads/pp --cpu=0-31  --numa-repdetail 3 --track-accesslvls -c 500
+	// --weighmin 150 --sensing-time 20   --npid 84789";
+	const char * args[]={p1,p2,p3,p4,p5,p7,p8,p9,p10,p11,p12,p13,p14,p15,p19,p20};
 	if(!started){
-		int resp=init_numa_analysis(RUN_COMMAND, 0,args, 2);
+		int resp=init_numa_analysis(RUN_COMMAND, 0,args, 16);
 		started=true;
 	}
 	
-	rands[tid] = getRandomValue(); }
+	 }
 
 double Main::value(int tid) {
 	
-	if (rands.find(tid) != rands.end()) return rands[tid];
-
-	context.report(Error::MONITOR, "value", "Could not random result for " + QString::number(tid));
-	//cmd_top(0,NULL,NULL);
 	return 0;
 }
 
@@ -119,14 +120,6 @@ ProcessTree::autopin_tid_list Main::getMonitoredTasks() {
 	return result;
 }
 
-double Main::getRandomValue() {
-	double result = qrand();
-
-	// Adapt result to the requested range
-	result = ((rand_max - rand_min) / RAND_MAX) * result + rand_min;
-
-	return result;
-}
 
 } // namespace Random
 } // namespace Monitor
