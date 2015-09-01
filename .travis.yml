@@ -18,7 +18,6 @@ install:
     - travis_retry sudo aptitude -f install -y qtbase5-dev qtdeclarative5-dev libqt5webkit5-dev libsqlite3-dev
     - travis_retry sudo aptitude -f install -y qt5-default qttools5-dev-tools
     - travis_retry sudo aptitude -f install -y gcc-4.8 g++-4.8
-    - travis_retry sudo aptitude -f install -y libnuma-dev
     - travis_retry sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu/ trusty main"
     - travis_retry sudo apt-get update -y
     - travis_retry sudo apt-get -f install -y linux-libc-dev
