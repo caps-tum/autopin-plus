@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+*.d 
 
 # Compiled Dynamic libraries
 *.so
@@ -34,3 +35,4 @@ doc/
 build1/
 build2/
 build3/
+build4/
