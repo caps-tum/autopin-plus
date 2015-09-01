@@ -36,7 +36,7 @@ else (WIN32)
 	else (${CMAKE_INSTALL_PREFIX} STREQUAL /usr)
 		set (SYSCONFDIR etc/mosquitto)
 	endif (${CMAKE_INSTALL_PREFIX} STREQUAL /usr)
-	
+
 	set (LIBDIR lib${LIB_SUFFIX})
 	set (INCLUDEDIR include)
 	set (DATAROOTDIR share)

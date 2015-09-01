@@ -38,11 +38,11 @@ autopin_estate AutopinContext::report(Error::autopin_errors error, QString opt, 
 	autopin_estate result;
 	result = err.report(error, opt);
 	if (isError()) {
-		logger->error(msg.toLocal8Bit());
+		logger->error(msg.toStdString());
 		// Emit signal to Watchdog
 		emit sig_error();
 	} else {
-		logger->warn(msg.toLocal8Bit());
+		logger->warn(msg.toStdString());
 	}
 
 	return result;
