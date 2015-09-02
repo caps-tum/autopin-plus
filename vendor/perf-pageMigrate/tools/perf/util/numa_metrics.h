@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include "types.h"
 #include "event.h" 
+#include "util/top.h"
 
 
 
@@ -142,6 +143,7 @@ void add_expensive_access(struct numa_metrics *nm,u64 addr);
 
 struct cpu_topo *build_cpu_topology(void);
 
-int __cmd_top(struct perf_top *top);
+int* get_cpu_interval(int max_cores, char* siblings );
  
+int __cmd_top(struct perf_top *top);
 #endif

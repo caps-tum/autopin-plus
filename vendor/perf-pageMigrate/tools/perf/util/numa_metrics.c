@@ -6,6 +6,7 @@
 #include "numa_metrics.h"
 
 #include <numaif.h>
+#include <numa.h>
 #include <time.h>
 #include <signal.h>
 #include <omp.h>
@@ -19,11 +20,11 @@
 
 int* get_cpu_interval(int max_cores, char* siblings ){
 	int* sibling_array,i;
-	if(max_cores < 1) return NULL;
-	char *interval1,*interval2;
 	char *savep1,*savep2;
 	char* tok=strtok_r(siblings, ",",&savep1),*tokcpy;
 	int high, low;
+	char *interval1,*interval2;
+	if(max_cores < 1) return NULL;
 	
 	sibling_array=malloc(sizeof(int)*max_cores);
 	
@@ -65,15 +66,15 @@ double wtime(void)
   return tv.tv_sec+1e-6*tv.tv_usec;
 }
 
-int freq_sort(struct freq_stats *a, struct freq_stats *b) {
+static int freq_sort(struct freq_stats *a, struct freq_stats *b) {
     return a->freq - b->freq;
 }
 
 void add_expensive_access(struct numa_metrics *nm,u64 addr){
-	struct l3_addr *new_entry;
+	struct exp_access *new_entry;
 	
-	new_entry=malloc(sizeof(struct l3_addr));
-	memset(new_entry,0,sizeof(struct l3_addr));
+	new_entry=malloc(sizeof(struct exp_access));
+	memset(new_entry,0,sizeof(struct exp_access));
 	new_entry->page_addr=(void *)addr;
 	
 	if(nm->expensive_accesses){
@@ -162,7 +163,7 @@ void do_great_migration(struct numa_metrics *nm){
 	//	printf("%p \n", current->page_addr);
 		HASH_FIND_PTR( nm->page_accesses,&(current->page_addr),sear );
 		if(!sear){
-			printf("cannot find entry %lux,this should not happen \n",current->page_addr);
+			printf("cannot find entry %p,this should not happen \n",current->page_addr);
 			current=current->next;
 			continue;
 		}
@@ -258,9 +259,9 @@ int filter_local_accesses(union perf_mem_data_src *entry){
 void init_processor_mapping(struct numa_metrics *nm, struct cpu_topo *topol){
 
 	int i,j,*siblings;
-	int max_cores=0;;
 	int *core_to_node;
-
+	int max_cores=0;
+	
 	//the new part begins here
 	max_cores=numa_num_configured_cpus();
 	core_to_node=malloc(sizeof(int)*max_cores);
@@ -276,7 +277,7 @@ void init_processor_mapping(struct numa_metrics *nm, struct cpu_topo *topol){
 			free(siblings);
 	}
 	
-	for(int i=0; i<max_cores;i++) 
+	for(i=0; i<max_cores;i++) 
 	nm->cpu_to_processor[i]=core_to_node[i];
 	
 	free(core_to_node);
@@ -357,11 +358,11 @@ void add_mem_access( struct numa_metrics *multiproc_info, void *page_addr, int a
 
 void print_access_info(struct numa_metrics *multiproc_info ){
 	struct access_stats *current=NULL,*tmp;
-	FILE *file=multiproc_info->report;
+	//FILE *file=multiproc_info->report;
 	int i=0,ubound,lbound;
 	char * lbl;
 	
-	lbl= !multiproc_info->file_label || strlen(multiproc_info->file_label)<1 ? " " : multiproc_info->file_label;  
+	lbl=(char *) ( !multiproc_info->file_label || strlen(multiproc_info->file_label)<1 ? " " : multiproc_info->file_label);  
 	
 	HASH_ITER(hh, multiproc_info->lvl_accesses, current, tmp) {
 		print_info(multiproc_info->report,"%s:LEVEL %d count %d %s \n", lbl, current->mem_lvl, current->count,print_access_type(current->mem_lvl) );
@@ -379,12 +380,12 @@ void print_access_info(struct numa_metrics *multiproc_info ){
 //This method is based on util/sort.c:hist_entry__lvl_snprintf
 char* print_access_type(int entry)
 {
-	char out[500];
+	char* out;
 	size_t sz = 500 - 1; /* -1 for null termination */
 	size_t i, l = 0;
 	u64 m =  PERF_MEM_LVL_NA;
 	u64 hit, miss;
-
+	out=malloc(500*sizeof(char));
 
 	m  = (u64)entry;
 
@@ -472,10 +473,10 @@ char ** put_end_params(char **argv,int argc){
 }
 
 int launch_command( char** argv, int argc){
-	int pid,ret=0;
+	int pid;
 	char ** args;
 	if(argc< 1 || !argv[0])
-		return;
+		return -1;
 	args=put_end_params(argv,argc);
 	if ((pid = fork()) == 0){
   
