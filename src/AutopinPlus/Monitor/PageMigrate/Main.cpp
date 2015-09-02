@@ -83,7 +83,7 @@ void Main::start(int tid) {
 	// --weighmin 150 --sensing-time 20   --npid 84789";
 	const char * args[]={p1,p2,p3,p4,p5,p7,p8,p9,p10,p11,p12,p13,p14,p15,p19,p20};
 	if(!started){
-		int resp=init_numa_analysis(RUN_COMMAND, 0,args, 16);
+		int resp=init_numa_analysis(args, 16);
 		started=true;
 	}
 	

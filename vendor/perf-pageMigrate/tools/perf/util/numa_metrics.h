@@ -22,10 +22,11 @@
 
 struct numa_metrics {
 	int n_cpus;
+	int n_cores;
 	unsigned int pid_uo;
-	int remote_accesses[32];
-	int process_accesses[32];
-	int cpu_to_processor[32];
+	int *remote_accesses;
+	int *process_accesses;
+	int *cpu_to_processor;
 	int logging_detail_level;
 	int number_pages2move;
 	int access_by_weight[WEIGHT_BUCKETS_NR];
@@ -121,11 +122,11 @@ void init_report_file(struct numa_metrics *nm);
 
 void close_report_file(struct numa_metrics *nm);
 
-int launch_command( char** argv, int argc);
+int launch_command(const char** argv, int argc);
 
 void print_info(FILE* file, const char* format, ...);
 
-char ** put_end_params(char **argv,int argc);
+char ** put_end_params(const char **argv,int argc);
 
 char* get_command_string(const char ** argv, int argc);
 
@@ -146,4 +147,6 @@ struct cpu_topo *build_cpu_topology(void);
 int* get_cpu_interval(int max_cores, char* siblings );
  
 int __cmd_top(struct perf_top *top);
+
+
 #endif

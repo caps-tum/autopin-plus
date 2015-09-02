@@ -109,7 +109,7 @@ void print_migration_statistics(struct numa_metrics *nm){
 	float rem2loc =0;
 	char lbl[30];
 	
-	for(i=0; i<32; i++){
+	for(i=0; i<nm->n_cores; i++){
 		total_accesses+= nm->process_accesses[i];
 		remote_accesses+= nm->remote_accesses[i];
 	}
@@ -126,7 +126,7 @@ void print_migration_statistics(struct numa_metrics *nm){
 		lbl,total_accesses, lbl, remote_accesses,lbl,rem2loc);
 	print_info(nm->report,"%s moved pages: %d \n",lbl,nm->moved_pages);
 	
-	for(i=0; i<32; i++){
+	for(i=0; i<nm->n_cores; i++){
 		print_info(nm->report,"%s: CPU- %d	sampled- %d \t remote- %d \n",lbl,i, nm->process_accesses[i], nm->remote_accesses[i]);
 	}
 	
@@ -263,7 +263,7 @@ void init_processor_mapping(struct numa_metrics *nm, struct cpu_topo *topol){
 	int max_cores=0;
 	
 	//the new part begins here
-	max_cores=numa_num_configured_cpus();
+	max_cores=nm->n_cores;
 	core_to_node=malloc(sizeof(int)*max_cores);
 	for(j=0; j<max_cores; j++){
 		*(core_to_node+j)=-1;
@@ -459,12 +459,12 @@ void close_report_file(struct numa_metrics *nm){
 }
 
 //makes sure that the list of arguments ends with a null pointer
-char ** put_end_params(char **argv,int argc){
+char ** put_end_params(const char **argv,int argc){
 	char ** list_args=malloc(sizeof(char*)*(argc+1));
 	int i;
 	
 	for(i=0; i<argc; i++){
-		*(list_args+i)=*(argv+i);
+		*(list_args+i)=(char*)*(argv+i);
 	}
 	
 	*(list_args+argc)=NULL;
@@ -472,7 +472,7 @@ char ** put_end_params(char **argv,int argc){
 	return list_args;
 }
 
-int launch_command( char** argv, int argc){
+int launch_command( const char** argv, int argc){
 	int pid;
 	char ** args;
 	if(argc< 1 || !argv[0])
