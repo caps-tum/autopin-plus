@@ -150,13 +150,27 @@ void print_migration_statistics(struct numa_metrics *nm){
 void do_great_migration(struct numa_metrics *nm){
 	struct l3_addr *current=nm->pages_2move;
 	void **pages;
-	int ret,count=0,*nodes,*status,i,succesfully_moved=0,destination_node=0,greatest_count=0;
+	int ret,count=0,count2=0,*nodes,*nodes_query, *status,i,succesfully_moved=0,destination_node=0,greatest_count=0;
 	double tinit=0, tfin=0;
 	struct page_stats *sear=NULL;
 
 	
 	pages=malloc(sizeof(void*) * nm->number_pages2move);
 	status=malloc(sizeof(int) * nm->number_pages2move);
+	nodes_query=malloc(sizeof(int) * nm->number_pages2move);
+	memset(nodes_query, 0, sizeof(int) * nm->number_pages2move);
+	//get the home of the current target pages
+	while(current){
+		*(pages+count)=(void *)current->page_addr;
+		current=current->next;	
+		count++;
+	}
+	
+	move_pages(nm->pid_uo, count, pages, nodes_query, status,0);
+	
+	count=0;
+	memset(pages, 0, sizeof(int) * nm->number_pages2move);
+	current=nm->pages_2move;
 	nodes=malloc(sizeof(int) * nm->number_pages2move);
 	//consolidates the page addresses into a single page address bundle
 	while(current){
@@ -165,6 +179,7 @@ void do_great_migration(struct numa_metrics *nm){
 		if(!sear){
 			printf("cannot find entry %p,this should not happen \n",current->page_addr);
 			current=current->next;
+			count2++;
 			continue;
 		}
 		//The destination is the node with the greatest number of accesses
@@ -174,10 +189,16 @@ void do_great_migration(struct numa_metrics *nm){
 					destination_node=i;
 			}
 		}
+		if(*(nodes_query+count2)==destination_node){
+			count2++;
+			current=current->next;	
+			continue;
+		}
+		
 		*(pages+count)=(void *)current->page_addr;
 		current=current->next;	
 		count++;
-
+		count2++;
 		*(nodes+count)=destination_node;
 		
 	}
@@ -194,13 +215,14 @@ void do_great_migration(struct numa_metrics *nm){
 	
 	//check the new home of the pages
 	ret= 	move_pages(nm->pid_uo, count, pages, NULL, status,0);
+	tfin=wtime()-tinit;
 	
 	for(i=0; i<count;i++){
 			if(status[i] >=0 && status[i]<nm->n_cpus)
 			succesfully_moved++;		
 		}
 	
-	tfin=wtime()-tinit;
+	
 	
 	nm->moved_pages=succesfully_moved;
 	printf("%d pages moved successfully, move pages time %f \n",succesfully_moved,tfin);
@@ -480,8 +502,6 @@ int launch_command( const char** argv, int argc){
 	args=put_end_params(argv,argc);
 	if ((pid = fork()) == 0){
   
-           setenv("OMP_NUM_THREADS","2",0);
-           setenv("GOMP_CPU_AFFINITY", "7,14",1);
            system("sleep 0.5");
 
            execv(argv[0],args);
