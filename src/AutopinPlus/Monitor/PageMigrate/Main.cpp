@@ -58,8 +58,17 @@ void Main::start(int tid) {
 	std::list<const char *> params_list;
 	context.info("My pid " + QString::number(monitored_pid));
 	
+	/**Description of how the calling of the spm works
+	 * --numa-migrate: Specifies that perf's tool to use is the special sample-pagemigrate mode
+	 * -e cpu/mem-loads/pp: Describes that the register to use is the load latency record
+	 * --numa-repdetail 3: Determines how much is written on the screen, bigger (up to 5) prints more details, not obligatory
+	 * --track-accesslvls: Specifies whether the statistics about access levels are used
+	 * --weighmin: specifies which is the minimun weight of a sample to be collected
+	 * --sensing time: Specifies how much time is spent in the first phase collecting samples and analyzing before doing the migration
+	 * --npid: Specifies what is the PID of the process to attach
+	 */
+	
 	//this represents the parameters sent to the SPM via command line
-	params_list.push_back("./perf");
 	params_list.push_back("--numa-migrate");
 	params_list.push_back("-e");
 	params_list.push_back("cpu/mem-loads/pp");
@@ -91,32 +100,7 @@ void Main::start(int tid) {
 		params_array[i]=params_list.front();
 		params_list.pop_front();
 	}
-	//const char * p1= "./perf";
-	//const char * p2= "--numa-migrate";
-	//const char * p3= "-e";
-	//const char * p4= "cpu/mem-loads/pp";
-	//const char * p5= "--cpu=0-31";
-	//const char * p7= "--numa-repdetail";
-	//const char * p8= "3";
-	//const char * p9= "--track-accesslvls";
-	//const char * p10= "-c";
-	//temp_str<<(period);
-	//std::string str = temp_str.str();
-	//const char * p11= str.c_str();
-	//const char * p12= "--weighmin";
-	//temp_str2<<(min_weight);
-	//std::string str2  = temp_str2.str();
-	//const char * p13= str2.c_str();;
-	//const char * p14= "--sensing-time";
-	//temp_str3<<(sensing_time);
-	//std::string str3 = temp_str3.str();
-	//const char * p15= str3.c_str();
-	//const char * p19= "--npid";
-	//char p20[6];
-	//sprintf(p20,"%d",monitored_pid);
-	////"--numa-migrate -e cpu/mem-loads/pp --cpu=0-31  --numa-repdetail 3 --track-accesslvls -c 500
-	//// --weighmin 150 --sensing-time 20   --npid 84789";
-	//const char * args[]={p1,p2,p3,p4,p5,p7,p8,p9,p10,p11,p12,p13,p14,p15,p19,p20};
+	
 	if(!started){
 		init_numa_analysis(params_array, list_size);
 		started=true;
