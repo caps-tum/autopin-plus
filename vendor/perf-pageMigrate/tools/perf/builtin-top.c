@@ -341,7 +341,7 @@ static void perf_event__process_sample(struct perf_tool *tool,
 			filter_access=filter_local_accesses(&data_src);
 			
 			
-			if(sample->cpu <31 ){
+			if(sample->cpu <top->numa_metrics->n_cores ){
 				//statistics and hash table
 				top->numa_metrics->process_accesses[sample->cpu]++;
 				page_addr=sample->addr & ~mask ;
@@ -356,36 +356,22 @@ static void perf_event__process_sample(struct perf_tool *tool,
 					 add_lvl_access( nm, &data_src,sample->weight );
 				}
 			}
-			//we care about return value 0
+			//we care about return value 0 - L3 misses or remote accesses
 			if(!filter_access){
 				top->numa_metrics->remote_accesses[sample->cpu]++;
-				
-				add_page_2move(top->numa_metrics, page_addr);
+				if(top->numa_metrics->gather_candidates)
+					add_page_2move(top->numa_metrics, page_addr);
 
-				// migration cancelled, instead the L3s are added to the candidates list
-				//migrate_res=do_migration(nm, nm->pid_uo, sample);
+
 			}
 			//If the sample has a higher cost we save the address
 			// This is for analysis on the phase II
-			if(sample->weight > SAMPLE_WEIGHT_THRESHOLD){
+			if(sample->weight > SAMPLE_WEIGHT_THRESHOLD && !top->numa_metrics->gather_candidates){
 					add_expensive_access(top->numa_metrics,page_addr);
 			}
 		              
 		}
 		
-		//since numa-mig does not use gui, the hists are disabled
-		//he = perf_evsel__add_hist_entry(evsel, &al, sample);
-		//if (he == NULL) {
-			//pr_err("Problem incrementing symbol period, skipping event\n");
-			//return;
-		//}
-
-		//err = hist_entry__append_callchain(he, sample);
-		//if (err)
-			//return;
-
-		//if (sort__has_sym)
-			//perf_top__record_precise_ip(top, he, evsel->idx, ip);
 	}
 
 	return;

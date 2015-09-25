@@ -39,30 +39,32 @@ void* run_numa_analysis(void *arg){
 	
 }
 
-//This is an O^2 algorithm
-//not intended for production use!
 static void run_expensive_access_analysis(struct numa_metrics* nm){
 	struct l3_addr *start=nm->pages_2move,*tom_cursor;
-	struct exp_access *current=nm->expensive_accesses;
+	struct exp_access *current=nm->expensive_accesses,*c;
 	int repeated=0,counted=0;
-	//union perf_mem_data_src ds;
-	//u64 dsrc;
+	struct exp_access *ht_accesses=NULL;
+	void *page_addr;
+	
+	
 	
 	while(current){
-		tom_cursor=start;
-		while(tom_cursor){
-			if(current->page_addr==tom_cursor->page_addr){
-				repeated++;
-				//dsrc=current->samp.data_src;
-				//ds.val=dsrc;
-				//printf("ea %s \n",print_access_type(ds.mem_lvl));
-				goto next_acc;			
-			}
-			tom_cursor=tom_cursor->next;
-			
-		}
-		next_acc: counted++;
+		HASH_FIND_PTR(ht_accesses, &current->page_addre,c);
+		
+		if(c==NULL){
+			HASH_ADD_PTR(ht_accesses,page_addre,current);
+		} 
+		
 		current=current->next;
+		counted++;
+	}
+	
+	while(start){
+		HASH_FIND_PTR(ht_accesses, &start->page_addr,c);
+		
+		if(c!=NULL) repeated++;
+		start=start->next;
+		
 	}
 	
 	printf("%d Slow access as part of move page out of %d \n", repeated,counted);
@@ -113,21 +115,19 @@ void * measure_aux_thread(void *arg){
 	char* newlabel;
 	
 	sleep_time=sleep_time<1 ?  DEFAULT_SENSING_TIME  : sleep_time;
-	
-	
-	
+	top->numa_metrics->gather_candidates=true;
 	wait_res=wait_watch_process(sleep_time,top->numa_metrics);
 	if(wait_res) goto end_noproc;
-	printf("MIG-CTRL> End of sampling period\n");
+	printf("\x1b[0m" "MIG-CTRL> End of sampling period\n");
 	top->numa_analysis_enabled=false;
 	
 	do_great_migration(top->numa_metrics);
+	top->numa_metrics->gather_candidates=false;
 	//print the overall statistics right after moving pages
 	print_migration_statistics(top->numa_metrics);
 	if(top->migrate_track_levels){
 		print_access_info(top->numa_metrics);
 	}
-	
 	top->numa_metrics->page_accesses=NULL;
 	top->numa_metrics->lvl_accesses=NULL;
 	top->numa_metrics->freq_accesses=NULL;

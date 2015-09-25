@@ -13,7 +13,7 @@
 #define WEIGHT_BUCKETS_NR 19
 #define WEIGHT_BUCKET_INTERVAL 50
 #define LINE_SIZE 500
-#define SAMPLE_WEIGHT_THRESHOLD 800
+#define SAMPLE_WEIGHT_THRESHOLD 600
 
  #define CORE_SIB_FMT \
          "/sys/devices/system/cpu/cpu%d/topology/core_siblings_list"
@@ -38,6 +38,7 @@ struct numa_metrics {
 	struct exp_access *expensive_accesses;
 	int moved_pages;
 	FILE *report;
+	bool gather_candidates;
 	char* report_filename;
 	char* command2_launch;
 	const char* file_label;
@@ -77,9 +78,10 @@ struct l3_addr{
 };
 
 struct exp_access{
-	void* page_addr;
+	void* page_addre;
 	struct exp_access *next;
 	struct perf_sample samp;
+	UT_hash_handle hh;
 };
 
 

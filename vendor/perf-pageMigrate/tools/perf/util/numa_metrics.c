@@ -75,13 +75,14 @@ void add_expensive_access(struct numa_metrics *nm,u64 addr){
 	
 	new_entry=malloc(sizeof(struct exp_access));
 	memset(new_entry,0,sizeof(struct exp_access));
-	new_entry->page_addr=(void *)addr;
+	new_entry->page_addre=(void *)addr;
 	
 	if(nm->expensive_accesses){
 		new_entry->next=nm->expensive_accesses;
 	}
 	
 	//nm->expensive_accesses++;
+
 	nm->expensive_accesses=new_entry;
 }
 
@@ -98,6 +99,7 @@ void add_page_2move(struct numa_metrics *nm,u64 addr){
 	
 	nm->number_pages2move++;
 	nm->pages_2move=new_entry;
+
 	
 }
 
@@ -177,7 +179,7 @@ void do_great_migration(struct numa_metrics *nm){
 	//	printf("%p \n", current->page_addr);
 		HASH_FIND_PTR( nm->page_accesses,&(current->page_addr),sear );
 		if(!sear){
-			printf("cannot find entry %p,this should not happen \n",current->page_addr);
+			printf("cannot find entry %p when moving pages \n",current->page_addr);
 			current=current->next;
 			count2++;
 			continue;
@@ -219,7 +221,10 @@ void do_great_migration(struct numa_metrics *nm){
 	
 	for(i=0; i<count;i++){
 			if(status[i] >=0 && status[i]<nm->n_cpus)
-			succesfully_moved++;		
+				succesfully_moved++;		
+			//printf(" %d ",status[i]);
+			
+			//if(i%20==0) printf ("\n");	
 		}
 	
 	
