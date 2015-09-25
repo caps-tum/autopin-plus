@@ -77,6 +77,8 @@ if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
 endif()
 ########
 
+set(PERF_SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/vendor/perf-pageMigrate/tools/perf/)
+
 ########
 # Source files
 # Base files
@@ -123,6 +125,8 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/GPerf/Main.cpp)
 
 # Random performance monitor
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/Random/Main.cpp)
+#PageMigrate performance monitor
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/PageMigrate/Main.cpp)
 ########
 
 ########
@@ -137,6 +141,14 @@ set(QT_DONT_USE_QTGUI TRUE)
 QT5_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 ########
 
+#Perf tools 
+ExternalProject_Add(perf-numa
+    SOURCE_DIR ${PERF_SOURCE}
+    CONFIGURE_COMMAND ""
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND make DEBUG=1 WERROR=0 NO_LIBPERL=1 NO_LIBPHYTHON=1 NO_DWARF=1 NO_SLANG=1 NO_LIBELF=1 NO_LIBUNWIND=1 NO_BACKTRACE=1  NO_LIBAUDIT=1 NO_LIBBIONIC=1
+    INSTALL_COMMAND "" )
+       
 ########
 # fast-lib
 ExternalProject_Add(libfast
@@ -166,6 +178,20 @@ include_directories(${libfast_path}/include/fast-lib)
 include_directories(${libfast_path}/include/fast-lib/external)
 ########
 
+#We need this in order to be able to link perd
+include_directories(${PERF_SOURCE}/util/include)
+include_directories(${PERF_SOURCE}/arch/x86/include)
+include_directories(${PERF_SOURCE}/../include)
+include_directories(${PERF_SOURCE}/../../arch/x86/include/uapi)
+include_directories(${PERF_SOURCE}/../../arch/x86/include)
+include_directories(${PERF_SOURCE}/../../include/uapi)
+include_directories(${PERF_SOURCE}/../../include)
+include_directories(${PERF_SOURCE}/util)
+include_directories(${PERF_SOURCE})
+include_directories(${PERF_SOURCE}/../lib)
+
+ADD_DEFINITIONS( -fpermissive  -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE -DHAVE_GTK2_SUPPORT -DNO_LIBPERL -DHAVE_TIMERFD_SUPPORT -DNO_DEMANGLE -DHAVE_ON_EXIT_SUPPORT -DHAVE_LIBNUMA_SUPPORT  -DHAVE_ARCH_X86_64_SUPPORT -DHAVE_PERF_REGS_SUPPORT)
+
 ########
 # Compiling and linking
 add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC})
@@ -178,6 +204,16 @@ target_link_libraries(autopin+ ${libfast_path}/lib/libfastlib_communication.a ${
 # Add Qt5 libraries
 qt5_use_modules(autopin+ Core)
 qt5_use_modules(autopin+ Network)
+
+#perf libraries
+add_dependencies (autopin+ perf-numa)
+target_link_libraries(autopin+ ${PERF_SOURCE}/libperf.a)
+target_link_libraries(autopin+ ${PERF_SOURCE}/../lib/api/libapikfs.a)
+target_link_libraries(autopin+ ${PERF_SOURCE}/../lib/traceevent/libtraceevent.a)
+target_link_libraries(autopin+ pthread)
+target_link_libraries(autopin+ python2.7)
+target_link_libraries(autopin+ dl)
+target_link_libraries(autopin+ numa)
 ########
 
 ########

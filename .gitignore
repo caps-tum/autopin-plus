@@ -3,6 +3,7 @@
 *.lo
 *.o
 *.obj
+*.d 
 
 # Compiled Dynamic libraries
 *.so
@@ -31,3 +32,8 @@ build
 
 # doxygen directory
 doc/
+build5/
+build2/
+build3/
+build4/
+build*/

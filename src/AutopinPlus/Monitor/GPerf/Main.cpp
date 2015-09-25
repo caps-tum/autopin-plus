@@ -18,6 +18,7 @@
 #include <errno.h>			   // for errno
 #include <iostream>			   // for cout, operator<<, ostream, etc
 #include <linux/perf_event.h>  // for perf_event_attr, etc
+#include "perf.h"
 #include <qfileinfo.h>		   // for QFileInfo
 #include <qlist.h>			   // for QList
 #include <qmap.h>			   // for QMap
@@ -900,6 +901,9 @@ QString Main::showSensor(const Sensor &input) {
 
 int Main::perf_event_open(struct perf_event_attr *attr, pid_t pid, int cpu, int group_fd, unsigned long flags) {
 	return syscall(__NR_perf_event_open, attr, pid, cpu, group_fd, flags);
+	//TODO the line above must be re enable - see what the comp error is
+	
+
 }
 
 } // namespace GPerf

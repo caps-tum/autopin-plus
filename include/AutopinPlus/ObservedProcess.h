@@ -134,7 +134,9 @@ class ObservedProcess : public QObject {
 	 *
 	 */
 	QString getCommChanAddr() const;
-
+	
+	
+	
 	/*!
 	 * \brief Sets the minimum between two phase change notifications from the observed process
 	 *
@@ -258,7 +260,7 @@ signals:
 	 * Stores if autopin+ process tracing is enabled
 	 */
 	bool trace;
-
+	
 	/*!
 	 * Stores if the process is currently running
 	 */
@@ -279,6 +281,9 @@ signals:
 	 * Timeout for the communication channel
 	 */
 	int comm_timeout;
+	
+
+	 
 };
 
 } // namespace AutopinPlus
