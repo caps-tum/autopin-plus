@@ -79,7 +79,15 @@ class PerformanceMonitor {
 	 * \return Name of the performance monitor
 	 */
 	QString getName();
-
+	
+	/*!
+	 * \brief Sets the pid of the observed process
+	 *
+	 * \param[in] pid The pid of the process under observation
+	 *
+	 */
+	void setObservedProcessPid(int npid) ;
+	
 	/*!
 	 * \brief Get the unit of the performance monitor.
 	 *
@@ -213,6 +221,7 @@ class PerformanceMonitor {
 	 */
 	static QString showMontype(const montype &type);
 
+
   protected:
 	/*!
 	 * Reference of the current Configuration object
@@ -238,6 +247,12 @@ class PerformanceMonitor {
 	 * Name of the performance monitor
 	 */
 	QString name;
+	
+	/**
+	 * The pid being monitored
+	 **/
+	 int monitored_pid;
+
 };
 
 } // namespace AutopinPlus

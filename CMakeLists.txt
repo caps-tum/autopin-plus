@@ -19,6 +19,7 @@ string( TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE )
 ########
 # Compiler/linker options based on the different compilers
 ADD_DEFINITIONS(-std=c++11 )
+ADD_DEFINITIONS(-std=gnu99 )
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Using Clang
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
@@ -99,9 +100,15 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Compact/Main.c
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Scatter/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Scatter/Main.cpp)
 
+set(autopin+_HEADERS ${autopin+_HEADERS} vendor/spm/spm.h vendor/spm/uthash.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} vendor/spm/sampling-core.c vendor/spm/perf_helpers.c vendor/spm/sample_processing.c vendor/spm/control.c)
+
 # External data logger
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Logger/External/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Logger/External/Main.cpp src/AutopinPlus/Logger/External/Process.cpp)
+
+#PageMigrate performance monitor
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/PageMigrate/Main.cpp)
 
 # ClustSafe performance monitor
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/ClustSafe/Main.cpp)
@@ -211,6 +218,8 @@ target_link_libraries(autopin+ ${libcares_path}/lib/libcares.a)
 # Make sure auotpin+ depends on libyaml and link with it
 add_dependencies (autopin+ libyaml)
 target_link_libraries(autopin+ ${libyaml_path}/lib/libyaml-cpp.a)
+
+target_link_libraries(autopin+ numa)
 
 # Add Qt5 libraries
 qt5_use_modules(autopin+ Core)
