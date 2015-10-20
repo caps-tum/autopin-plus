@@ -32,6 +32,11 @@
 #include "../sinks/stdout_sinks.h"
 #include "../sinks/syslog_sink.h"
 
+inline void spdlog::register_logger(std::shared_ptr<logger> logger)
+{
+    return details::registry::instance().register_logger(logger);
+}
+
 inline std::shared_ptr<spdlog::logger> spdlog::get(const std::string& name)
 {
     return details::registry::instance().get(name);
@@ -43,46 +48,46 @@ inline void spdlog::drop(const std::string &name)
 }
 
 // Create multi/single threaded rotating file logger
-inline std::shared_ptr<spdlog::logger> spdlog::rotating_logger_mt(const std::string& logger_name, const std::string& filename, size_t max_file_size, size_t max_files, bool auto_flush)
+inline std::shared_ptr<spdlog::logger> spdlog::rotating_logger_mt(const std::string& logger_name, const std::string& filename, size_t max_file_size, size_t max_files, bool force_flush)
 {
-    return create<spdlog::sinks::rotating_file_sink_mt>(logger_name, filename, "txt", max_file_size, max_files, auto_flush);
+    return create<spdlog::sinks::rotating_file_sink_mt>(logger_name, filename, "txt", max_file_size, max_files, force_flush);
 }
 
-inline std::shared_ptr<spdlog::logger> spdlog::rotating_logger_st(const std::string& logger_name, const std::string& filename, size_t max_file_size, size_t max_files, bool auto_flush)
+inline std::shared_ptr<spdlog::logger> spdlog::rotating_logger_st(const std::string& logger_name, const std::string& filename, size_t max_file_size, size_t max_files, bool force_flush)
 {
-    return create<spdlog::sinks::rotating_file_sink_st>(logger_name, filename, "txt", max_file_size, max_files, auto_flush);
+    return create<spdlog::sinks::rotating_file_sink_st>(logger_name, filename, "txt", max_file_size, max_files, force_flush);
 }
 
 // Create file logger which creates new file at midnight):
-inline std::shared_ptr<spdlog::logger> spdlog::daily_logger_mt(const std::string& logger_name, const std::string& filename, bool auto_flush)
+inline std::shared_ptr<spdlog::logger> spdlog::daily_logger_mt(const std::string& logger_name, const std::string& filename, int hour, int minute, bool force_flush)
 {
-    return create<spdlog::sinks::daily_file_sink_mt>(logger_name, filename, "txt", auto_flush);
+    return create<spdlog::sinks::daily_file_sink_mt>(logger_name, filename, "txt", hour, minute, force_flush);
 }
-inline std::shared_ptr<spdlog::logger> spdlog::daily_logger_st(const std::string& logger_name, const std::string& filename, bool auto_flush)
+inline std::shared_ptr<spdlog::logger> spdlog::daily_logger_st(const std::string& logger_name, const std::string& filename, int hour, int minute, bool force_flush)
 {
-    return create<spdlog::sinks::daily_file_sink_st>(logger_name, filename, "txt", auto_flush);
+    return create<spdlog::sinks::daily_file_sink_st>(logger_name, filename, "txt", hour, minute, force_flush);
 }
 
 
 // Create stdout/stderr loggers
 inline std::shared_ptr<spdlog::logger> spdlog::stdout_logger_mt(const std::string& logger_name)
 {
-    return create<spdlog::sinks::stdout_sink_mt>(logger_name);
+    return details::registry::instance().create(logger_name, spdlog::sinks::stdout_sink_mt::instance());
 }
 
 inline std::shared_ptr<spdlog::logger> spdlog::stdout_logger_st(const std::string& logger_name)
 {
-    return create<spdlog::sinks::stdout_sink_st>(logger_name);
+    return details::registry::instance().create(logger_name, spdlog::sinks::stdout_sink_st::instance());
 }
 
 inline std::shared_ptr<spdlog::logger> spdlog::stderr_logger_mt(const std::string& logger_name)
 {
-    return create<spdlog::sinks::stderr_sink_mt>(logger_name);
+    return details::registry::instance().create(logger_name, spdlog::sinks::stderr_sink_mt::instance());
 }
 
 inline std::shared_ptr<spdlog::logger> spdlog::stderr_logger_st(const std::string& logger_name)
 {
-    return create<spdlog::sinks::stderr_sink_st>(logger_name);
+    return details::registry::instance().create(logger_name, spdlog::sinks::stderr_sink_st::instance());
 }
 
 #ifdef __linux__
@@ -132,9 +137,9 @@ inline void spdlog::set_level(level::level_enum log_level)
 }
 
 
-inline void spdlog::set_async_mode(size_t queue_size)
+inline void spdlog::set_async_mode(size_t queue_size, const async_overflow_policy overflow_policy, const std::function<void()>& worker_warmup_cb, const std::chrono::milliseconds& flush_interval_ms)
 {
-    details::registry::instance().set_async_mode(queue_size);
+    details::registry::instance().set_async_mode(queue_size, overflow_policy, worker_warmup_cb, flush_interval_ms);
 }
 
 inline void spdlog::set_sync_mode()
@@ -142,4 +147,8 @@ inline void spdlog::set_sync_mode()
     details::registry::instance().set_sync_mode();
 }
 
+inline void spdlog::drop_all()
+{
+    details::registry::instance().drop_all();
+}
 

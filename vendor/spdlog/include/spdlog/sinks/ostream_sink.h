@@ -39,17 +39,26 @@ template<class Mutex>
 class ostream_sink: public base_sink<Mutex>
 {
 public:
-    explicit ostream_sink(std::ostream& os) :_ostream(os) {}
+    explicit ostream_sink(std::ostream& os, bool force_flush=false) :_ostream(os), _force_flush(force_flush) {}
     ostream_sink(const ostream_sink&) = delete;
     ostream_sink& operator=(const ostream_sink&) = delete;
     virtual ~ostream_sink() = default;
 
 protected:
-    virtual void _sink_it(const details::log_msg& msg) override
+    void _sink_it(const details::log_msg& msg) override
     {
         _ostream.write(msg.formatted.data(), msg.formatted.size());
+        if (_force_flush)
+            _ostream.flush();
     }
+
+    void flush() override
+    {
+        _ostream.flush();
+    }
+
     std::ostream& _ostream;
+    bool _force_flush;
 };
 
 typedef ostream_sink<std::mutex> ostream_sink_mt;

@@ -75,20 +75,6 @@ class Main : public PerformanceMonitor {
 
   private:
 	/*!
-	 * \brief Checks if an array has a specific prefix and drops it.
-	 *
-	 * This function checks if an array has a specific prefix and drops it. If the prefix is not present, an exception
-	 * will be thrown.
-	 *
-	 * \param[in] array  The array to be checked
-	 * \param[in] prefix The prefix which should be present
-	 * \param[in] field  A description what the prefix is supposed to be.
-	 *
-	 * \exception Exception This exception will be thrown if the specified prefix is not present.
-	 */
-	static void checkAndDrop(QByteArray &array, const QByteArray &prefix, const QString &field);
-
-	/*!
 	 * \brief Sends a command to a ClustSafe device and returns the answer.
 	 *
 	 * This function sends a command to a ClustSafe device and returns the answer. If no answer was received in time

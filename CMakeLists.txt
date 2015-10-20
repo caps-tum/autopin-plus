@@ -20,6 +20,16 @@ string( TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE )
 # Compiler/linker options based on the different compilers
 ADD_DEFINITIONS(-std=c++11 )
 ADD_DEFINITIONS(-std=gnu99 )
+
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++11" CXX11_SUPPORTED)
+if(CXX11_SUPPORTED)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+else()
+	message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support.")
+endif()
+
+>>>>>>> father/master
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Using Clang
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "release")
@@ -27,7 +37,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   endif()
 
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
-    ADD_DEFINITIONS(-g3 -O0 -Weverything)
+    ADD_DEFINITIONS(-g3 -O1 -Weverything)
+    ADD_DEFINITIONS(-fno-omit-frame-pointer -fno-optimize-sibling-calls)
+    ADD_DEFINITIONS(-fsanitize=address,undefined,integer -fno-sanitize=unsigned-integer-overflow)
+    SET( CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address,undefined,integer")
   endif()
 
   # Reduce the noise coming from Qt5
@@ -36,7 +49,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
   # Options required to reduce the noise of spdlog
   ADD_DEFINITIONS(-Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-sign-conversion -Wno-padded -Wno-switch-enum)
   ADD_DEFINITIONS(-Wno-old-style-cast -Wno-undef -Wno-documentation-unknown-command)
-  ADD_DEFINITIONS(-Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors)
+  ADD_DEFINITIONS(-Wno-weak-vtables -Wno-global-constructors -Wno-exit-time-destructors -Wno-newline-eof)
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   # Using GCC
@@ -46,6 +59,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
     ADD_DEFINITIONS(-g3 -O0 -Wall -Wextra -Wunused)
+    ADD_DEFINITIONS(-fno-omit-frame-pointer)
   endif()
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
@@ -56,6 +70,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "debug")
     ADD_DEFINITIONS(-g3 -O0 -Wall -Wextra)
+    ADD_DEFINITIONS(-fno-omit-frame-pointer)
   endif()
 
 endif()
@@ -81,7 +96,7 @@ set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/MQTTClient.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/StandardConfiguration.cpp src/AutopinPlus/MQTTClient.cpp)
 
 # OS-Service related classes
-set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/OSServices.h include/AutopinPlus/OS/TraceThread.h include/AutopinPlus/OS/SignalDispatcher.h include/AutopinPlus/OS/CpuInfo.h)
+set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/OS/OSServices.h include/AutopinPlus/OS/TraceThread.h include/AutopinPlus/OS/SignalDispatcher.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/OS/OSServices.cpp  src/AutopinPlus/OS/TraceThread.cpp src/AutopinPlus/OS/SignalDispatcher.cpp src/AutopinPlus/OS/CpuInfo.cpp)
 
 # Autopin1 control strategy
@@ -134,52 +149,16 @@ QT5_WRAP_CPP(autopin+_HEADERS_MOC ${autopin+_HEADERS})
 ########
 
 ########
-# C-ares
-ExternalProject_Add(libcares
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0
-    CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/vendor/c-ares-1.10.0/configure --prefix=<INSTALL_DIR> CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER}
+# fast-lib
+ExternalProject_Add(libfast
+    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/fast-lib
+    CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/vendor/fast-lib
     BUILD_IN_SOURCE 0
     BUILD_COMMAND ${MAKE})
-
-# Store c-ares install directory in variable
-ExternalProject_Get_Property(libcares install_dir)
-set (libcares_path ${install_dir})
-########
-
-########
-# Mosquitto
-ExternalProject_Add(libmosquitto
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
-    CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} cmake -DWITH_TLS=OFF -DWITH_TLS_PSK=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DARES_PATH=${libcares_path} ${CMAKE_CURRENT_SOURCE_DIR}/vendor/mosquitto-1.3.5
-    BUILD_IN_SOURCE 0
-    BUILD_COMMAND ${MAKE})
-
-# Make sure mosquitto depends on libcares
-add_dependencies (libmosquitto libcares)
 
 # Store libmosquitto variable in directory
-ExternalProject_Get_Property(libmosquitto install_dir)
-set (libmosquitto_path ${install_dir})
-########
-
-########
-# Boost
-include(vendor/boost/add_boost.cmake)
-########
-
-########
-# Yaml-Cpp
-ExternalProject_Add(libyaml
-    SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/vendor/yaml-cpp-0.5.1
-    CONFIGURE_COMMAND  CC=${CMAKE_C_COMPILER} CXX=${CMAKE_CXX_COMPILER} cmake -DBOOST_ROOT=${BoostSourceDir} -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> ${CMAKE_CURRENT_SOURCE_DIR}/vendor/yaml-cpp-0.5.1
-    BUILD_IN_SOURCE 0
-    BUILD_COMMAND ${MAKE})
-
-#add_dependencies (libyaml ${AllBoostLibs})
-
-# Store libmosquitto variable in directory
-ExternalProject_Get_Property(libyaml install_dir)
-set (libyaml_path ${install_dir})
+ExternalProject_Get_Property(libfast install_dir)
+set (libfast_path ${install_dir})
 ########
 
 ########
@@ -190,11 +169,8 @@ include_directories(include)
 # spdlog
 include_directories(vendor/spdlog/include/spdlog)
 
-# libcares
-include_directories(${libcares_path}/include)
-
-# libmosquitto
-include_directories(${libmosquitto_path}/include)
+# linux kernel header
+include_directories(vendor/linux)
 
 # libyaml-cpp
 include_directories(${libyaml_path}/include)
@@ -204,24 +180,19 @@ include_directories(vendor/spm/)
 
 # Boost
 include_directories(${BoostSourceDir})
-########
+
+# fastlib
+include_directories(${libfast_path}/include/fast-lib)
+include_directories(${libfast_path}/include/fast-lib/external)
 
 ########
 # Compiling and linking
-add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS} ${autopin+_HEADERS_MOC})
+add_executable(autopin+ ${autopin+_SOURCES} ${autopin+_HEADERS_MOC})
 target_link_libraries(autopin+ -lpthread)
 
-# Make sure auotpin+ depends on libmosquitto and link with it
-add_dependencies (autopin+ libmosquitto)
-target_link_libraries(autopin+ ${libmosquitto_path}/lib/libmosquitto.a)
-
-# Make sure auotpin+ depends on libcares and link with it
-add_dependencies (autopin+ libcares)
-target_link_libraries(autopin+ ${libcares_path}/lib/libcares.a)
-
-# Make sure auotpin+ depends on libyaml and link with it
-add_dependencies (autopin+ libyaml)
-target_link_libraries(autopin+ ${libyaml_path}/lib/libyaml-cpp.a)
+# Make sure auotpin+ depends on libfast and link with it
+add_dependencies (autopin+ libfast)
+target_link_libraries(autopin+ ${libfast_path}/lib/libfastlib_communication.a ${libfast_path}/lib/libfastlib_serialization.a)
 
 target_link_libraries(autopin+ numa)
 

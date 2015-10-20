@@ -227,7 +227,7 @@ class OSServices : public QObject {
 	 */
 	static int getCpuCount();
 
-signals:
+  signals:
 	/*!
 	 * \brief Signals that a task has terminated
 	 *
@@ -295,19 +295,6 @@ signals:
 	 * 	is empty
 	 */
 	QString getProcEntry(int tid, int index, bool error = true);
-
-	/*!
-	 * \brief Extracts all arguments from a command line expression
-	 *
-	 * This method is used to convert an expression of the form <I>cmd -arg</I>
-	 * to a list of strings containing the elements <I>cmd</I> and <I>-arg</I>
-	 *
-	 * \param[in] cmd The command which will be converted into a list of strings
-	 *
-	 * \return A list of strings containing all parts of cmd in the same order as
-	 * 	they appear in the command (from left to right)
-	 */
-	static QStringList getArguments(QString cmd);
 
 	/*!
 	 * \brief Converts a list of QStrings to a list of integers

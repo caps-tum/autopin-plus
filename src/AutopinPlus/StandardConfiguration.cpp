@@ -77,7 +77,7 @@ void StandardConfiguration::getArgs(QString arg) {
 
 		setOption(opt_pair);
 	} else
-		context.report(Error::BAD_CONFIG, "option_format", "Invalid option format: \"" + arg + "\"");
+		context.report(Error::BAD_CONFIG, "option_format", QString("Invalid option format: \"") + arg + "\"");
 }
 
 void StandardConfiguration::setOption(StandardConfiguration::arg_pair opt) {
