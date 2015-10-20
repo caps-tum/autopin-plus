@@ -100,6 +100,7 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Compact/Main.c
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Scatter/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Scatter/Main.cpp)
 
+#Numa migration tool
 set(autopin+_HEADERS ${autopin+_HEADERS} vendor/spm/spm.h vendor/spm/uthash.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} vendor/spm/sampling-core.c vendor/spm/perf_helpers.c vendor/spm/sample_processing.c vendor/spm/control.c)
 
@@ -197,6 +198,9 @@ include_directories(${libmosquitto_path}/include)
 
 # libyaml-cpp
 include_directories(${libyaml_path}/include)
+
+# NUMA migration tool
+include_directories(vendor/spm/)
 
 # Boost
 include_directories(${BoostSourceDir})
