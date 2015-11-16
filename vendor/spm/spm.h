@@ -1,3 +1,6 @@
+#ifndef __SPM_HEADER
+#define __SPM_HEADER
+
 #include "uthash.h"
 #include <linux/perf_event.h>
 #include <pthread.h>
@@ -11,6 +14,8 @@ typedef __u32 u32;
 #define NUMATOOL_ERROR	0
 #define NUMATOOL_SUCCESS	1
 #define DEFAULT_MEASURE_TIME	45
+
+
 #define DEFAULT_LL_SAMPLING_PERIOD	500
 #define DEFAULT_LL_WEIGHT_THRESHOLD	3
 #define IP_NUM	32
@@ -142,3 +147,5 @@ int start_sampling(struct sampling_settings *ss);
 int launch_command( const char** argv, int argc);
 int stop_sampling(struct sampling_settings *ss);
 int init_spm(struct sampling_settings *ss);
+
+#endif

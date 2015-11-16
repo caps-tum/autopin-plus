@@ -9,9 +9,8 @@
 
 #include <QTime>
 #include <stdlib.h>
-extern "C" {
-	#include "spm.h"
-}
+#include "spm.h"
+
 
 
 namespace AutopinPlus {
@@ -20,7 +19,7 @@ namespace PageMigrate {
 
 Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	: PerformanceMonitor(name, config, context) {
-	type = "random";
+	type = "page-migration";
 	started=false;
 	//parameters for the memory access sampling
 	period=1000;
@@ -42,7 +41,7 @@ void Main::init() {
 	if (config.configOptionExists(name + ".min_weight") == 1) min_weight = config.getConfigOptionInt(name + ".min_weight");
 	if (config.configOptionExists(name + ".sensing_time") == 1) sensing_time = config.getConfigOptionInt(name + ".sensing_time");
 	
-	//context.info("Maximum random value " + QString::number(rand_max));
+
 }
 
 Configuration::configopts Main::getConfigOpts() {
@@ -55,7 +54,7 @@ Configuration::configopts Main::getConfigOpts() {
 
 void Main::start(int tid) { 
 	struct sampling_settings st;
-	//std::list<const char *> params_list;
+
 	memset(&st,0,sizeof(struct sampling_settings));
 	context.info("My pid " + QString::number(monitored_pid));
 	st.ll_sampling_period=period;
@@ -76,7 +75,7 @@ double Main::stop(int tid) {
 		return 0;
 	}
 
-	rands.erase(tid);
+
 	return result;
 }
 
@@ -87,12 +86,10 @@ void Main::clear(int tid) {
 ProcessTree::autopin_tid_list Main::getMonitoredTasks() {
 	ProcessTree::autopin_tid_list result;
 
-	for (auto &elem : rands) result.insert(elem.first);
-
 	return result;
 }
 
 
-} // namespace Random
+} // namespace PageMigrate
 } // namespace Monitor
 } // namespace AutopinPlus

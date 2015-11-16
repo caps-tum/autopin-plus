@@ -10,15 +10,22 @@
 #include <AutopinPlus/PerformanceMonitor.h>
 #include <map>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+#include "spm.h"
+#ifdef __cplusplus
+}
+#endif
+
 namespace AutopinPlus {
 namespace Monitor {
 namespace PageMigrate {
 
 /*!
- * \brief Random performance counter
+ * \brief PageMigrate counter
  *
- * This class simulates a real performance counter by generating random
- * performance values.
+ * This class integrates autopin with the page migration logic
  */
 class Main : public PerformanceMonitor {
   public:
@@ -68,6 +75,7 @@ class Main : public PerformanceMonitor {
 	bool started;
 };
 
-} // namespace Random
+} 
 } // namespace Monitor
 } // namespace AutopinPlus
+
