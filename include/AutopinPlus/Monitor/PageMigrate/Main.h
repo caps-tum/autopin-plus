@@ -73,6 +73,10 @@ class Main : public PerformanceMonitor {
 	rand_map rands;
 	
 	bool started;
+	/*!
+	 * The configuration fot the page migration
+	 */
+	struct sampling_settings st;
 };
 
 } 

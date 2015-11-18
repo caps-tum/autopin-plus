@@ -22,7 +22,7 @@ Main::Main(QString name, const Configuration &config, AutopinContext &context)
 	type = "page-migration";
 	started=false;
 	//parameters for the memory access sampling
-	period=1000;
+	period=100;
 	min_weight=50;
 	sensing_time=30;
 }
@@ -40,6 +40,7 @@ void Main::init() {
 	if (config.configOptionExists(name + ".sampling_period") == 1) period = config.getConfigOptionInt(name + ".sampling_period");
 	if (config.configOptionExists(name + ".min_weight") == 1) min_weight = config.getConfigOptionInt(name + ".min_weight");
 	if (config.configOptionExists(name + ".sensing_time") == 1) sensing_time = config.getConfigOptionInt(name + ".sensing_time");
+	st.pid_uo= -1; 
 	
 
 }
@@ -53,8 +54,14 @@ Configuration::configopts Main::getConfigOpts() {
 }
 
 void Main::start(int tid) { 
-	struct sampling_settings st;
-
+	if(st.pid_uo!= -1){
+		//We only need to init the spm once no matter how many threads there are
+		return;
+	}
+	st.pid_uo= -1; 
+	st.only_sample=B_FALSE;
+	st.pf_measurements=B_FALSE;
+	
 	memset(&st,0,sizeof(struct sampling_settings));
 	context.info("My pid " + QString::number(monitored_pid));
 	st.ll_sampling_period=period;
@@ -65,18 +72,19 @@ void Main::start(int tid) {
 }
 
 double Main::value(int tid) {
+	//Will return the average number of executed instructions
+	if( !st.metrics.number_pf_samples || !st.metrics.running_accum || !st.metrics.running_accum[2] ){
+		return 0;
+	}
 	
-	return tid;
+	
+	return (double) st.metrics.running_accum[2]/(st.n_cores*!st.metrics.number_pf_samples );
 }
 
 double Main::stop(int tid) {
-	double result = value(tid);
-	if (context.isError()) {
-		return 0;
-	}
-
-
-	return result;
+	context.info("Sampling stopped ");
+	st.end_recording=B_TRUE;
+	return 0;
 }
 
 void Main::clear(int tid) {

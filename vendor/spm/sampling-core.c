@@ -65,14 +65,7 @@ typedef enum {
 	COUNT_LMA
 } count_id_t;
 
-typedef struct _pf_profiling_rec {
-	unsigned int pid;
-	unsigned int tid;
-	uint64_t period;
-	count_value_t countval;
-	unsigned int ip_num;
-	uint64_t ips[IP_NUM];
-} pf_profiling_rec_t;
+
 
 typedef struct _pf_conf {
 	count_id_t count_id;
@@ -351,7 +344,15 @@ profiling_recbuf_update(pf_profiling_rec_t *rec_arr, int *nrec,
 	 */
 	i = *nrec;
 	memcpy(&rec_arr[i], rec, sizeof (pf_profiling_rec_t));
-	*nrec += 1;
+	//printf("copy1 %d %d %f %f %f\n",i, rec->pid, rec->countval.counts[i],
+		//		rec->countval.counts[1], rec->countval.counts[2]  );
+	//printf("copy2 %d %d %f %f %f\n",i, rec_arr[i].pid, rec_arr[i].countval.counts[i],
+		//	rec_arr[i].countval.counts[1], rec_arr[i].countval.counts[2]  );
+	if(*nrec == BUFFER_SIZE-1){
+		*nrec=0;
+	}else{
+		*nrec += 1;
+	}
 }
 
 static uint64_t
@@ -432,11 +433,15 @@ profiling_sample_read(struct perf_event_mmap_page *mhdr, int size,
 		 * who multiplex globally.
 		 */
 		value = scale(value, time_enabled, time_running);
-		countval->counts[i] = value;
-		printf("v %lu ", value);
+		rec->countval.counts[i]=value;
+		//countval->counts[i] = value;
+		//printf("v %d %lu %lu + \n", i, countval->counts[i],rec->countval.counts[i]);
+		//printf("copy-1  %d %lu %lu %lu\n", rec->pid, rec->countval.counts[0],
+									//rec->countval.counts[1], rec->countval.counts[2]  );
 	}
-	printf("\n");
-
+	//printf("\n");
+	//printf("copy-1  %d %f %f %f\n", rec->pid, rec->countval.counts[0],
+							//rec->countval.counts[1], rec->countval.counts[2]  );
 	if (mmap_buffer_read(mhdr, &nr, sizeof (nr)) == -1) {
 		printf( "profiling_sample_read: read nr failed.\n");
 		goto L_EXIT;
@@ -470,6 +475,9 @@ profiling_sample_read(struct perf_event_mmap_page *mhdr, int size,
 	rec->ip_num = j;
 	rec->pid = id.pid;
 	rec->tid = id.tid;
+
+
+
 	ret = 0;
 	
 L_EXIT:	
@@ -490,8 +498,8 @@ void pf_profiling_record(struct _perf_cpu *cpu, pf_profiling_rec_t *rec_arr,
 	pf_profiling_rec_t rec;
 	int size;
 
-	if (nrec != NULL) {
-		*nrec = 0;
+	if (nrec == NULL) {
+		printf("erroneous reference to record position");
 	}
 
 	for (;;) {
@@ -505,9 +513,11 @@ void pf_profiling_record(struct _perf_cpu *cpu, pf_profiling_rec_t *rec_arr,
 		}
 
 		if ((ehdr.type == PERF_RECORD_SAMPLE) && (rec_arr != NULL)) {
-			printf("-  %d cpu --",cpu->cpuid );
+			//printf("sample-id* %d %d \n-",cpu->cpuid, *nrec );
 			if (profiling_sample_read(mhdr, size, &rec) == 0) {
+				//printf("copy0  %d %d %lu \n", rec.pid, cpu->cpuid, rec.countval.counts[0] );
 				profiling_recbuf_update(rec_arr, nrec, &rec);
+				//printf("... %d %d ",*nrec,cpu->cpuid);
 			} else {
 				/* No valid record in ring buffer. */
 				return;	
@@ -521,6 +531,7 @@ void pf_profiling_record(struct _perf_cpu *cpu, pf_profiling_rec_t *rec_arr,
 int pf_profiling_start(struct _perf_cpu *cpu, count_id_t count_id)
 {
 	if (cpu->fds[count_id] != INVALID_FD) {
+		ioctl(cpu->fds[count_id], PERF_EVENT_IOC_RESET, 0);
 		return (ioctl(cpu->fds[count_id], PERF_EVENT_IOC_ENABLE, 0));
 	}
 	
@@ -545,7 +556,7 @@ int pf_ll_setup(struct _perf_cpu *cpu, struct sampling_settings *ss )
 	memset(&attr, 0, sizeof (attr));
 	attr.type = 4;
 	attr.config = 461;
-	attr.config1 = 148;
+	attr.config1 = ss->ll_weight_threshold;
 	attr.sample_period = ss->ll_sampling_period;
 	attr.precise_ip = 1;
 	attr.exclude_guest = 1;
@@ -597,6 +608,7 @@ pf_ll_record(struct _perf_cpu *cpu, pf_ll_rec_t *rec_arr, int *nrec)
 		if ((ehdr.type == PERF_RECORD_SAMPLE) && (rec_arr != NULL)) {
 			if (ll_sample_read(mhdr, size, &rec) == 0) {
 				ll_recbuf_update(rec_arr, nrec, &rec);
+
 			} else {
 				/* No valid record in ring buffer. */
 				return;	
@@ -652,6 +664,7 @@ int pf_profiling_setup(struct _perf_cpu *cpu, int idx, pf_conf_t *conf)
 	attr.config = conf->config;
 	attr.config1 = conf->config1;
 	attr.sample_period = conf->sample_period;
+	attr.disabled=1;
 	attr.sample_type = PERF_SAMPLE_TID | PERF_SAMPLE_READ |
 		PERF_SAMPLE_CALLCHAIN;
 	attr.read_format = PERF_FORMAT_GROUP |
@@ -699,10 +712,14 @@ int pf_profiling_setup(struct _perf_cpu *cpu, int idx, pf_conf_t *conf)
 static int
 cpu_profiling_setup(perf_cpu_t *cpu, void *arg)
 {
-	
+	/*The events to use are declared here
+	 * */
 	pf_conf_t evt1={ .type=PERF_TYPE_RAW,.config= 0x5301B7,  .config1=0x67f800001, .count_id= COUNT_RMA, .sample_period=10000};
 	pf_conf_t evt2={ .type=PERF_TYPE_RAW,.config= 0x5301BB,  .config1=0x600400001, .count_id= COUNT_LMA, .sample_period=10000};
-	pf_conf_t conf_arr[2]={evt1,evt2} ;
+	pf_conf_t evt3={ .type=PERF_TYPE_HARDWARE,.config= PERF_COUNT_HW_INSTRUCTIONS,  .config1=0, .count_id= COUNT_IR, .sample_period=10000};
+
+	// PERF_TYPE_HARDWARE, PERF_COUNT_HW_INSTRUCTIONS, 0x53, 0, "instr_retired.any" },
+	pf_conf_t conf_arr[COUNT_NUM]={evt1,evt2,evt3} ;
 	int i, ret = 0;
 
 	cpu_init(cpu);
@@ -731,6 +748,41 @@ cpu_profiling_setup(perf_cpu_t *cpu, void *arg)
 }
 
 
+void reset_pf_sampling(struct sampling_settings *ss){
+	boolean_t enabled=ss->pf_measurements;
+	ss->pf_measurements=0;
+	sleep(1);
+	if(!enabled)return;
+	for(int i=0; i<ss->n_cores; i++){
+			if(enabled){
+				for(int j=0; j<COUNT_NUM; j++){
+					pf_profiling_stop((ss->cpus_pf+i),j);
+					printf(" stop pmu ");
+				}
+			}
+	}
+
+
+	for(int i=0; i<ss->n_cores; i++){
+			memset((ss->cpus_ll+i),0,sizeof(perf_cpu_t));
+			ss->cpus_pf[i].cpuid=i;
+			if(enabled){
+				cpu_profiling_setup(ss->cpus_pf+i,NULL);
+				printf(" enable pmu ");
+			}
+		}
+
+	for(int i=0; i<ss->n_cores; i++){
+			if(enabled){
+				for(int j=0; j<COUNT_NUM; j++){
+					pf_profiling_start((ss->cpus_pf+i),j);
+					printf("start  pmu ");
+				}
+			}
+		}
+	ss->pf_measurements=1;
+
+}
 
 //TODO return values
 int setup_sampling(struct sampling_settings *ss){
@@ -739,8 +791,11 @@ int setup_sampling(struct sampling_settings *ss){
 		memset((ss->cpus_pf+i),0,sizeof(perf_cpu_t));
 		ss->cpus_ll[i].cpuid=i;
 		ss->cpus_pf[i].cpuid=i;
-		cpu_profiling_setup(ss->cpus_pf+i,NULL);
-		pf_ll_setup(ss->cpus_ll+i,ss);		
+
+		pf_ll_setup(ss->cpus_ll+i,ss);
+		if(ss->pf_measurements){
+			cpu_profiling_setup(ss->cpus_pf+i,NULL);
+		}
 	}
 	
 	return  0;
@@ -749,8 +804,11 @@ int setup_sampling(struct sampling_settings *ss){
 //TODO return values
 int start_sampling(struct sampling_settings *ss){
 	for(int i=0; i<ss->n_cores; i++){
-		pf_profiling_start((ss->cpus_pf+i),0);
-		pf_profiling_start((ss->cpus_pf+i),1);
+		if(ss->pf_measurements){
+			for(int j=0; j<COUNT_NUM; j++){
+				pf_profiling_start((ss->cpus_pf+i),j);
+			}
+		}
 		pf_ll_start((ss->cpus_ll+i));
 		
 	}
@@ -759,80 +817,77 @@ int start_sampling(struct sampling_settings *ss){
 
 int stop_sampling(struct sampling_settings *ss){
 	for(int i=0; i<ss->n_cores; i++){
-		pf_profiling_stop((ss->cpus_pf+i),0);
-		pf_profiling_stop((ss->cpus_pf+i),1);
+		if(ss->pf_measurements){
+			for(int j=0; j<COUNT_NUM; j++){
+				pf_profiling_stop((ss->cpus_pf+i),j);
+			}
+		}
 		pf_ll_stop((ss->cpus_ll+i));
 		
 	}
 	return 0;
 	
 }
-	
 
 
-void consume_sample(struct sampling_settings *st,  pf_ll_rec_t *record, int current){
-	
-	int core=record[current].cpu;
-	if(record[current].cpu <0 || record[current].cpu >= st->n_cores){
-		return;
-	}
-	//TODO counter with mismatching number of cpus
-	
-	st->metrics.total_samples++;
-	//TODO also get samples from the sampling process, detect high overhead
-	if(record[current].pid != st->pid_uo){
-		return; }
-	
-	st->metrics.process_samples[core]++;
-	int access_type= filter_local_accesses(&(record[current].data_source));
-	//TODO this depends on the page size
-	u64 mask=0xFFF;
-	u64 page_sampled=record[current].addr & ~mask ;
-	
-	add_mem_access( st, (void*)page_sampled, core);
-	add_lvl_access( st, &(record[current].data_source),record[current].latency );
-	if(!access_type){
-		st->metrics.remote_samples[core]++;
-		add_page_2move(st,page_sampled );
-	}
-}
 
 //TODO return values
-int read_samples(struct sampling_settings *ss, pf_ll_rec_t *record){
-	int nrec=0,nrec2=0;
-	int bef=0, wr_diff=0,current;
-	pf_profiling_rec_t* record_pf=malloc(sizeof(pf_profiling_rec_t)*1000);
+int read_samples(struct sampling_settings *ss, pf_ll_rec_t *ll_record,pf_profiling_rec_t *pf_record ){
+	int nrec_ll=0;
+	int last_read_ll=0, wr_diff_ll=0,current;
+	int nrec_pf=0;
+	int last_read_pf=0,wr_diff_pf=0;
+
 	for(;;){
 	readagain:	for(int i=0; i<ss->n_cores; i++){
-			bef=nrec;
-			pf_ll_record((ss->cpus_ll+i),record,&nrec);
-			//pf_profiling_record((ss->cpus_pf+i),record_pf,&nrec2);
-			wr_diff=nrec >= bef ? nrec > bef : nrec+BUFFER_SIZE-bef;
+			last_read_ll=nrec_ll;
+
+			pf_ll_record((ss->cpus_ll+i),ll_record,&nrec_ll);
+			wr_diff_ll=nrec_ll >= last_read_ll ? nrec_ll - last_read_ll : nrec_ll+BUFFER_SIZE-last_read_ll;
 			
-			while(wr_diff>0){
-				current=nrec-wr_diff;
-				current = current < 0 ? BUFFER_SIZE+current : current;
-				//here we consume the sample
-				//printf("%lu %d %d *", (record + current)->latency, nrec, current);
-				consume_sample(ss,record,current);
-				current=current != BUFFER_SIZE-1 ? current++ : 0;
-				wr_diff--;
-			}
 			if(ss->end_recording)
 				return 0;
+
+			//read the ll samples until catching up with what was read
+			while(wr_diff_ll>0){
+				current=nrec_ll-wr_diff_ll;
+				current = current < 0 ? BUFFER_SIZE+current : current;
+				//here we consume the sample
+				consume_sample(ss,ll_record,current);
+				current=current != BUFFER_SIZE-1 ? current++ : 0;
+				wr_diff_ll--;
+			}
+ 		}
+
+	if(!ss->pf_measurements)
+					continue;
+
+		for (int i = 0; i < ss->n_cores; i++) {
+
+			last_read_pf = nrec_pf;
+
+			pf_profiling_record((ss->cpus_pf + i), pf_record, &nrec_pf);
+			wr_diff_pf =
+					nrec_pf >= last_read_pf ?
+							nrec_pf - last_read_pf :
+							nrec_pf + BUFFER_SIZE - last_read_pf;
+
+			while (wr_diff_pf > 0) {
+				current = nrec_pf - wr_diff_pf;
+				current = current < 0 ? BUFFER_SIZE + current : current;
+				//here we consume the sample
+				//if(wtime()-ss->start_time>105 && wtime()-ss->start_time<125 )
+				//printf("sample %d %lu ", i, pf_record[current]);
+				update_pf_reading(ss, pf_record, current, (ss->cpus_pf + i));
+				current = current != BUFFER_SIZE - 1 ? current++ : 0;
+				wr_diff_pf--;
+			}
 		}
 	}
-	
 	return 0;
 }
 
 
-void* controlsamp(void *arg){
-	printf("control on \n");
-	sleep(20);
-	end_s=1;
-	printf("end of measurement \n");
-}
 void init_globals(){
 	pagesize_init();
 	g_precise=PRECISE_HIGH;
