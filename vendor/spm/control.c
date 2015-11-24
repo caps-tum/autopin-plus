@@ -12,16 +12,7 @@
 #include <sys/ioctl.h>
 #include <linux/perf_event.h>
 #include <asm/unistd.h>
-static long
-perf_event_open(struct perf_event_attr *hw_event, pid_t pid,
-                int cpu, int group_fd, unsigned long flags)
-{
-    int ret;
 
-    ret = syscall(__NR_perf_event_open, hw_event, pid, cpu,
-                   group_fd, flags);
-    return ret;
-}
 int wait_watch_process(int seconds,struct sampling_settings* ss){
 	int i=0,exit=0;
 	int sigres,*st=0,errn;
@@ -123,13 +114,13 @@ void *control_spm (void *arg){
 	ss->pid_uo= -1; 
 	fflush(stdout);
 	
-
+	return NULL;
 }
 
 
 //this is the main thread which itself will spawn another thread
 void* run_numa_sampling(void *arg){
-	pthread_t control_thread;
+	pthread_t control_thread, res;
 	struct sampling_settings *ss=(struct sampling_settings* ) arg;
 	
 	//circular buffer for storing the samples
@@ -138,7 +129,11 @@ void* run_numa_sampling(void *arg){
 
 	ss->end_recording=0;
 	setup_sampling(ss);
-	start_sampling(ss);
+	res=start_sampling(ss);
+	if(res){
+		printf("Could not initialize sampling system \n");
+		return NULL;
+	}
 	ss->disable_ll=0;
 	//launch control thread
 	if(pthread_create(&control_thread,NULL,control_spm,ss)){
@@ -149,12 +144,13 @@ void* run_numa_sampling(void *arg){
 	read_samples(ss,ll_record,pf_record);
 	pthread_join(control_thread, NULL); 
 	printf("MIG-CTRL> sampling ended \n");
+	return NULL;
 }
 
 
 int init_spm(struct sampling_settings *ss){
 	pthread_t spm_thread;
-	int launched_pid,stres;
+	int stres;
 	//struct sampling_metrics old_sm;
 	struct cpu_topo *cpu_topo;
 	struct stat *buf;
@@ -204,8 +200,6 @@ int init_spm(struct sampling_settings *ss){
 	ss->metrics.running_accum=malloc(sizeof(int)*COUNT_NUM);
 	memset(ss->metrics.running_accum,0,sizeof(int)*COUNT_NUM);
 	ss->metrics.number_pf_samples=0;
-	
-	//Set up registers and start before taking samples
 	
 	
 	//launches process if no existing process is specified

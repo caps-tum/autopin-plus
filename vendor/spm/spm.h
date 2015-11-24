@@ -31,7 +31,7 @@ typedef __u32 u32;
 //taken from fs/xfs/xfs_linux.h
 #define MAXPATHLEN      1024
 //taken from kernel.h
-#define UINT_MAX        (~0U)
+//#define UINT_MAX        (~0U)
 
 typedef enum {
 	B_FALSE = 0,

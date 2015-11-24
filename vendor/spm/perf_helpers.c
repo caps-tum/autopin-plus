@@ -3,6 +3,7 @@
 #include <linux/perf_event.h>
 #include <string.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "spm.h"
 //perf/util/util.h

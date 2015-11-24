@@ -53,7 +53,7 @@ Configuration::configopts Main::getConfigOpts() {
 	return result;
 }
 
-void Main::start(int tid) { 
+void Main::start(int /*tid*/) { 
 	if(st.pid_uo!= -1){
 		//We only need to init the spm once no matter how many threads there are
 		return;
@@ -71,7 +71,7 @@ void Main::start(int tid) {
 	init_spm(&st);
 }
 
-double Main::value(int tid) {
+double Main::value(int /*tid*/) {
 	//Will return the average number of executed instructions
 	if( !st.metrics.number_pf_samples || !st.metrics.running_accum || !st.metrics.running_accum[2] ){
 		return 0;
@@ -81,7 +81,7 @@ double Main::value(int tid) {
 	return (double) st.metrics.running_accum[2]/(st.n_cores*!st.metrics.number_pf_samples );
 }
 
-double Main::stop(int tid) {
+double Main::stop(int /*tid*/) {
 	context.info("Sampling stopped ");
 	st.end_recording=B_TRUE;
 	return 0;

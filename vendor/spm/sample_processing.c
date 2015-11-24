@@ -22,7 +22,6 @@ double wtime(void)
 
 void add_mem_access( struct sampling_settings *ss, void *page_addr, int accessing_cpu){
 	struct page_stats *current=NULL; 
-	struct page_stats *cursor=NULL; 
 	int proc;
 
 	//search the node for apparances
@@ -38,7 +37,6 @@ void add_mem_access( struct sampling_settings *ss, void *page_addr, int accessin
 		current->page_addr=page_addr;
 		
 		HASH_ADD_PTR(ss->metrics.page_accesses,page_addr,current);
-		//printf ("add %d \n",HASH_COUNT(ss->metrics.page_accesses));
 		current->last_access=accessing_cpu;
 		
 	}else{
@@ -52,7 +50,7 @@ void add_mem_access( struct sampling_settings *ss, void *page_addr, int accessin
 	/*Here begins the new page access bookkeeping*/
 	current->proc_accesses[proc]++;
 
-	//printf("%d", proc);
+
 }
 
 void add_lvl_access( struct sampling_settings *ss, union perf_mem_data_src *entry, int weight ){
@@ -190,7 +188,6 @@ void print_statistics(struct sampling_settings *ss){
 				flips[current->home_flips]++;
 			else if(current->home_flips>19)
 				flips[20]++;
-				//printf("record ");
 			add_freq_access(ss,freq);	
 		}
 		
@@ -209,7 +206,7 @@ void print_statistics(struct sampling_settings *ss){
 void do_great_migration(struct sampling_settings *ss){
 	struct l3_addr *current=ss->pages_2move;
 	void **pages;
-	int ret,count=0,count2=0,*nodes,*nodes_query, *status,i,succesfully_moved=0,destination_node=0,greatest_count=0,truncated=0;
+	int ret,count=0,count2=0,*nodes,*nodes_query, *status,i,succesfully_moved=0,destination_node=0,greatest_count=0;
 	int move_pending=0,move_size,already_moved=0,same_home=0,*destinations,significant_threshold=0;
 	double tinit=0, tfin=0;
 	struct page_stats *sear=NULL;
@@ -251,7 +248,6 @@ void do_great_migration(struct sampling_settings *ss){
 	nodes=malloc(sizeof(int) * ss->number_pages2move);
 	//consolidates the page addresses into a single page address bundle
 	while(current){
-	//	printf("%p \n", current->page_addr);
 		HASH_FIND_PTR( ss->metrics.page_accesses,&(current->page_addr),sear );
 		if(!sear){
 			printf("cannot find entry %p when moving pages \n",current->page_addr);
@@ -286,8 +282,6 @@ void do_great_migration(struct sampling_settings *ss){
 		*(nodes+count)=destination_node;
 	}
 
-	//if(ss->migrate_chunk_size >0 )
-	//	count=ss->migrate_chunk_size;
 	printf("MIG> The initial query has found %d pages to move out of %d,(%d,%d) candidates \n",count,count2+same_home,same_home,count2);
 	printf("Destination breakdown: ");
 	for(i=0; i<ss->n_cpus; i++){
@@ -447,21 +441,15 @@ void free_metrics(struct sampling_metrics *sm){
 void update_pf_reading(struct sampling_settings *st,  pf_profiling_rec_t *record, int current, struct _perf_cpu *cpu){
 	pf_profiling_rec_t sample;
 	int ncpu=cpu->cpuid;
-	int ncores=st->n_cores;
+	
 	uint64_t val;
 	sample=record[current];
 
 	//updates the found value
 
 	for(int i=0; i<COUNT_NUM; i++){
-		//*(st->metrics.pf_read_values+i*ncores+ncpu)
 		val=sample.countval.counts[i];
-		//the value must always be increasing
-		//if(*(st->metrics.pf_read_values+ncpu*COUNT_NUM+i)<val){
-			*(st->metrics.pf_read_values+ncpu*COUNT_NUM+i)=val;
-			if(wtime()-st->start_time>13 && i==2)
-			;//	printf (" %d %lu %lu %lu \n",ncpu,*(st->metrics.pf_read_values+ncpu*COUNT_NUM+i),sample.countval.counts[i],val);
-		//}
+		*(st->metrics.pf_read_values+ncpu*COUNT_NUM+i)=val;
 	}
 
 	if(wtime()-st->time_last_read>1){
@@ -472,7 +460,6 @@ void update_pf_reading(struct sampling_settings *st,  pf_profiling_rec_t *record
 }
 
 void calculate_pf_diff(struct sampling_settings *st){
-	int ncores=st->n_cores;
 	struct perf_info *current;
 
 	for(int j=0; j<st->n_cores; j++){
@@ -494,7 +481,6 @@ void calculate_pf_diff(struct sampling_settings *st){
 
 
 			*(st->metrics.pf_diff_values+j*COUNT_NUM+i)=*(st->metrics.pf_read_values+j*COUNT_NUM+i)-*(st->metrics.pf_last_values+j*COUNT_NUM+i);
-			//printf("-*- %f %d %lu %lu %lu",current->time,j,*(st->metrics.pf_diff_values+j*COUNT_NUM+i),*(st->metrics.pf_read_values+j*COUNT_NUM+i), *(st->metrics.pf_last_values+j*COUNT_NUM+i));
 			*(st->metrics.pf_last_values+j*COUNT_NUM+i)=*(st->metrics.pf_read_values+j*COUNT_NUM+i);
 			current->values[i]=*(st->metrics.pf_diff_values+j*COUNT_NUM+i);
 			st->metrics.running_accum[i]+=current->values[i];
@@ -506,20 +492,20 @@ void calculate_pf_diff(struct sampling_settings *st){
 void consume_sample(struct sampling_settings *st,  pf_ll_rec_t *record, int current){
 
 	int core=record[current].cpu;
-	if(record[current].cpu <0 || record[current].cpu >= st->n_cores){
+	if((int)record[current].cpu >=  st->n_cores){
 		return;
 	}
 	//TODO counter with mismatching number of cpus
 	if(st->disable_ll) return;
 	
-	if(getpid() == record[current].pid){
+	if(getpid() == (int)record[current].pid){
 		st->sampling_samples++; 
 	}
 		
 	st->total_samples++;
 	st->metrics.total_samples++;
 	//TODO also get samples from the sampling process, detect high overhead
-	if(record[current].pid != st->pid_uo){
+	if((int)record[current].pid != st->pid_uo){
 		return; }
 
 	st->metrics.process_samples[core]++;
@@ -541,7 +527,6 @@ void consume_sample(struct sampling_settings *st,  pf_ll_rec_t *record, int curr
 void print_performance(struct perf_info **firsts, struct sampling_settings *st ){
 		int out=1,i,j,first;
 		struct perf_info **currents=malloc(st->n_cores*sizeof(struct perf_info));
-		struct perf_info **previouses=malloc(st->n_cores*sizeof(struct perf_info));
 		double ltime,val;
 		for(i=0; i<st->n_cores; i++){
 			currents[i]=firsts[i];
@@ -569,7 +554,6 @@ void print_performance(struct perf_info **firsts, struct sampling_settings *st )
 						printf("\n");
 					}
 					ltime=currents[i]->time;
-					//previouses[i]=currents[i];
 					currents[i]=currents[i]->next;
 					
 				}

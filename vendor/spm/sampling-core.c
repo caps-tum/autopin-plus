@@ -215,8 +215,8 @@ ll_sample_read(struct perf_event_mmap_page *mhdr, int size,
 	pf_ll_rec_t *rec)
 {
 	struct { uint32_t pid, tid; } id;
-	uint64_t addr, cpu, weight, nr, value, *ips,origin,time,ip,period;
-	int i, j, ret = -1;
+	uint64_t addr, cpu, weight, time,ip,period;
+	int  j, ret = -1;
 	union perf_mem_data_src dsrc;
 
 	/*
@@ -280,15 +280,13 @@ ll_sample_read(struct perf_event_mmap_page *mhdr, int size,
 		printf("ll_sample_read: read origin failed.\n");
 		goto L_EXIT;
 	}
-	//printf("%d %s %lu %d %lu -",dsrc.mem_lvl, print_access_type(dsrc.mem_lvl),weight,id.pid, dsrc);
-	
 	size -= sizeof (dsrc);
 	
 	rec->ip_num = j;
 	rec->pid = id.pid;
 	rec->tid = id.tid;
 	rec->addr = addr;
-	rec->cpu = cpu;
+	rec->cpu = cpu; 
 	rec->latency = weight;
 	rec->data_source=dsrc;	
 	ret = 0;
@@ -344,10 +342,7 @@ profiling_recbuf_update(pf_profiling_rec_t *rec_arr, int *nrec,
 	 */
 	i = *nrec;
 	memcpy(&rec_arr[i], rec, sizeof (pf_profiling_rec_t));
-	//printf("copy1 %d %d %f %f %f\n",i, rec->pid, rec->countval.counts[i],
-		//		rec->countval.counts[1], rec->countval.counts[2]  );
-	//printf("copy2 %d %d %f %f %f\n",i, rec_arr[i].pid, rec_arr[i].countval.counts[i],
-		//	rec_arr[i].countval.counts[1], rec_arr[i].countval.counts[2]  );
+
 	if(*nrec == BUFFER_SIZE-1){
 		*nrec=0;
 	}else{
@@ -376,7 +371,6 @@ profiling_sample_read(struct perf_event_mmap_page *mhdr, int size,
 	pf_profiling_rec_t *rec)
 {
 	struct { uint32_t pid, tid; } id;
-	count_value_t *countval = &rec->countval;
 	uint64_t time_enabled, time_running, nr, value, *ips;
 	int i, j, ret = -1;
 
@@ -433,15 +427,9 @@ profiling_sample_read(struct perf_event_mmap_page *mhdr, int size,
 		 * who multiplex globally.
 		 */
 		value = scale(value, time_enabled, time_running);
-		rec->countval.counts[i]=value;
-		//countval->counts[i] = value;
-		//printf("v %d %lu %lu + \n", i, countval->counts[i],rec->countval.counts[i]);
-		//printf("copy-1  %d %lu %lu %lu\n", rec->pid, rec->countval.counts[0],
-									//rec->countval.counts[1], rec->countval.counts[2]  );
+		rec->countval.counts[i]=value;		
 	}
-	//printf("\n");
-	//printf("copy-1  %d %f %f %f\n", rec->pid, rec->countval.counts[0],
-							//rec->countval.counts[1], rec->countval.counts[2]  );
+
 	if (mmap_buffer_read(mhdr, &nr, sizeof (nr)) == -1) {
 		printf( "profiling_sample_read: read nr failed.\n");
 		goto L_EXIT;
@@ -513,11 +501,8 @@ void pf_profiling_record(struct _perf_cpu *cpu, pf_profiling_rec_t *rec_arr,
 		}
 
 		if ((ehdr.type == PERF_RECORD_SAMPLE) && (rec_arr != NULL)) {
-			//printf("sample-id* %d %d \n-",cpu->cpuid, *nrec );
 			if (profiling_sample_read(mhdr, size, &rec) == 0) {
-				//printf("copy0  %d %d %lu \n", rec.pid, cpu->cpuid, rec.countval.counts[0] );
 				profiling_recbuf_update(rec_arr, nrec, &rec);
-				//printf("... %d %d ",*nrec,cpu->cpuid);
 			} else {
 				/* No valid record in ring buffer. */
 				return;	
@@ -616,7 +601,7 @@ pf_ll_record(struct _perf_cpu *cpu, pf_ll_rec_t *rec_arr, int *nrec)
 		} else {
 			mmap_buffer_skip(mhdr, size);
 		}
-		//printf("read sample %d value %d ",*nrec,rec_arr[*nrec].latency, ehdr.size);
+
 	}
 }
 
@@ -784,7 +769,7 @@ void reset_pf_sampling(struct sampling_settings *ss){
 
 }
 
-//TODO return values
+
 int setup_sampling(struct sampling_settings *ss){
 	for(int i=0; i<ss->n_cores; i++){
 		memset((ss->cpus_ll+i),0,sizeof(perf_cpu_t));
@@ -801,12 +786,14 @@ int setup_sampling(struct sampling_settings *ss){
 	return  0;
 }
 
-//TODO return values
+
 int start_sampling(struct sampling_settings *ss){
+	int ret;
 	for(int i=0; i<ss->n_cores; i++){
 		if(ss->pf_measurements){
 			for(int j=0; j<COUNT_NUM; j++){
-				pf_profiling_start((ss->cpus_pf+i),j);
+				ret=pf_profiling_start((ss->cpus_pf+i),j);
+				if(ret) return ret;
 			}
 		}
 		pf_ll_start((ss->cpus_ll+i));
@@ -816,10 +803,12 @@ int start_sampling(struct sampling_settings *ss){
 }	
 
 int stop_sampling(struct sampling_settings *ss){
+	int ret;
 	for(int i=0; i<ss->n_cores; i++){
 		if(ss->pf_measurements){
 			for(int j=0; j<COUNT_NUM; j++){
-				pf_profiling_stop((ss->cpus_pf+i),j);
+				ret=pf_profiling_stop((ss->cpus_pf+i),j);
+				if(ret) return ret;
 			}
 		}
 		pf_ll_stop((ss->cpus_ll+i));
@@ -829,9 +818,6 @@ int stop_sampling(struct sampling_settings *ss){
 	
 }
 
-
-
-//TODO return values
 int read_samples(struct sampling_settings *ss, pf_ll_rec_t *ll_record,pf_profiling_rec_t *pf_record ){
 	int nrec_ll=0;
 	int last_read_ll=0, wr_diff_ll=0,current;
@@ -876,8 +862,6 @@ int read_samples(struct sampling_settings *ss, pf_ll_rec_t *ll_record,pf_profili
 				current = nrec_pf - wr_diff_pf;
 				current = current < 0 ? BUFFER_SIZE + current : current;
 				//here we consume the sample
-				//if(wtime()-ss->start_time>105 && wtime()-ss->start_time<125 )
-				//printf("sample %d %lu ", i, pf_record[current]);
 				update_pf_reading(ss, pf_record, current, (ss->cpus_pf + i));
 				current = current != BUFFER_SIZE - 1 ? current++ : 0;
 				wr_diff_pf--;
