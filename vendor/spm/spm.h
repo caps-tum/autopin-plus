@@ -23,7 +23,7 @@ typedef __u32 u32;
  #define THRD_SIB_FMT \
          "/sys/devices/system/cpu/cpu%d/topology/thread_siblings_list"
          
-//NUMBER OF PERFORMANCE counters to use
+//NUMBER OF PERFORMANCE counters to use.
 #define COUNT_NUM   3
 //number of samples in cirbular buffer
 #define BUFFER_SIZE					500
