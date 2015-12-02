@@ -11,7 +11,8 @@
 #include <errno.h>
 
 
-
+/** @brief gets the time
+ **/
 double wtime(void)
 {
   struct timeval tv;
@@ -20,6 +21,12 @@ double wtime(void)
   return tv.tv_sec+1e-6*tv.tv_usec;
 }
 
+/** @brief adds a memory access from a sample to the hash table of accesses
+ * @param ss Overal configuration of the sampling and container of the metrics
+ * @param page_addr Memory location where the access was made
+ * @param accessing_cpu id of the core that made the access
+ */
+ 
 void add_mem_access( struct sampling_settings *ss, void *page_addr, int accessing_cpu){
 	struct page_stats *current=NULL; 
 	int proc;
@@ -53,6 +60,13 @@ void add_mem_access( struct sampling_settings *ss, void *page_addr, int accessin
 
 }
 
+
+/** @brief adds a level access to the count of accesses that were made to that level, useful for statistics
+ * @param ss Overal configuration of the sampling and container of the metrics
+ * @param entry Data adress where the access was made
+ * @param weight Cost of the access, as reported by the sample
+ */
+ 
 void add_lvl_access( struct sampling_settings *ss, union perf_mem_data_src *entry, int weight ){
 	struct access_stats *current=NULL;
 	int key=(int)entry->mem_lvl;
@@ -73,7 +87,12 @@ void add_lvl_access( struct sampling_settings *ss, union perf_mem_data_src *entr
 	
 }
 
-//makes sure that the list of arguments ends with a null pointer
+
+/** @brief makes sure that the list of arguments ends with a null pointer
+ * @param argv array of char*
+ * @param argc number of arguments present
+ */
+ 
 char ** put_end_params(const char **argv,int argc){
 	char ** list_args=malloc(sizeof(char*)*(argc+1));
 	int i;
@@ -87,6 +106,11 @@ char ** put_end_params(const char **argv,int argc){
 	return list_args;
 }
 
+/** @brief makes sure that the list of arguments ends with a null pointer
+ * @param argv array of char*
+ * @param argc number of arguments present
+ */
+ 
 int launch_command( const char** argv, int argc){
 	int pid;
 	char ** args;
@@ -104,16 +128,25 @@ int launch_command( const char** argv, int argc){
 	}
 	
 }
-
+/**
+ * @brief sorting function
+ **/ 
 static int freq_sort(struct freq_stats *a, struct freq_stats *b) {
     return a->freq - b->freq;
 }
 
+/**
+ * @brief sorting function
+ **/ 
 long id_sort(struct page_stats *a, struct page_stats *b) {
     long rst= (long )a->page_addr - (long)b->page_addr;
     return rst;
 }
 
+/** @brief Adds a page to the list of pages to be moved
+ * @param ss global configuration of the sampling
+ * @param addr Address of the page to add to rhe list
+ */
 void add_page_2move(struct sampling_settings *ss, u64 addr){
 	struct l3_addr *new_entry;
 	
@@ -131,6 +164,10 @@ void add_page_2move(struct sampling_settings *ss, u64 addr){
 	
 }
 
+/** @brief Used to compute the frequency of accesses for a certain number of accesses to a page
+ * @param ss global configuration of the sampling
+ * @param addr Address of the page to add to rhe list
+ */
 void add_freq_access(struct sampling_settings *ss, int frequency){
 	struct freq_stats *current=NULL; 
 	HASH_FIND_INT(ss->metrics.freq_accesses, &frequency,current);
@@ -147,6 +184,10 @@ void add_freq_access(struct sampling_settings *ss, int frequency){
 	
 }
 
+
+/** @brief Prints on screen the statistics of a sampling interval
+ * @param ss global configuration of the sampling
+ */
 void print_statistics(struct sampling_settings *ss){
 		struct sampling_metrics m=ss->metrics;
 		struct page_stats *current,*tmp;
@@ -203,6 +244,15 @@ void print_statistics(struct sampling_settings *ss){
 		}
 }
 
+
+/** @brief Makes the migration of the pages that were put in the candidate migration list.
+ * Makes the migration of the pages that were put in the candidate migration list.
+ * First it checks that the candidate pages are indeed remote accesses
+ * For those remote, a query is made to see if the page should be moved or left on the current node
+ * at the end the migration is done
+ *  @param ss global configuration of the sampling
+ */
+ 
 void do_great_migration(struct sampling_settings *ss){
 	struct l3_addr *current=ss->pages_2move;
 	void **pages;
@@ -323,6 +373,11 @@ void do_great_migration(struct sampling_settings *ss){
 	
 
 }
+/** @brief Used to parse the list of cores belonging to a cpunode.
+ *  @param max_cores the maximum nuber of cores in the system
+ *  @param siblings A string that contains the intervals of cores in the sor X-Y, A-B,... where A,B,X,Y are positive integers
+ */
+ 
 
 int* get_cpu_interval(int max_cores, char* siblings ){
 	int* sibling_array,i;
@@ -364,6 +419,11 @@ int* get_cpu_interval(int max_cores, char* siblings ){
 	return sibling_array;
 }
 
+/** @brief Used to get whe location of every core in the system, that is to which numa node it belongs
+ *  @param ss global configuration of the sampling
+ * @param cpu_topo Core distribution as returned by the helper method
+ */
+ 
 void init_processor_mapping(struct sampling_settings *ss, struct cpu_topo *topol){
 
 	int i,j,*siblings;
@@ -391,6 +451,9 @@ void init_processor_mapping(struct sampling_settings *ss, struct cpu_topo *topol
 	free(core_to_node);
 }
 
+/** @brief Frees memory used by the metrics
+ */
+ 
 void free_metrics(struct sampling_metrics *sm){
 	struct page_stats *current,*tmp;
 	struct access_stats *crr_lvl,*lvltmp;
@@ -438,6 +501,14 @@ void free_metrics(struct sampling_metrics *sm){
 	
 }
 
+/** @brief Used to update a reading by a performance register
+ * @param st The overall configuration containing the metrics
+ * @param current the id of the meqasure to update
+ * @param record contains the new reading
+ * @param cpu contains the cpu that generated the new record
+ */
+ 
+ 
 void update_pf_reading(struct sampling_settings *st,  pf_profiling_rec_t *record, int current, struct _perf_cpu *cpu){
 	pf_profiling_rec_t sample;
 	int ncpu=cpu->cpuid;
@@ -459,6 +530,10 @@ void update_pf_reading(struct sampling_settings *st,  pf_profiling_rec_t *record
 
 }
 
+/** @brief Calculated the difference between two performance readings which is the actual change
+ * @param st The overall configuration containing the metrics
+
+ */
 void calculate_pf_diff(struct sampling_settings *st){
 	struct perf_info *current;
 
@@ -489,13 +564,20 @@ void calculate_pf_diff(struct sampling_settings *st){
 	}
 
 }
+
+/** @brief This method is the entry point for processing an incoming pebs load latency sample
+ * @param st The overall configuration containing the metrics
+ * @param record the record to process
+	@param current The current sample in the circular buffer to process
+ */
+ 
 void consume_sample(struct sampling_settings *st,  pf_ll_rec_t *record, int current){
 
 	int core=record[current].cpu;
 	if((int)record[current].cpu >=  st->n_cores){
 		return;
 	}
-	//TODO counter with mismatching number of cpus
+
 	if(st->disable_ll) return;
 	
 	if(getpid() == (int)record[current].pid){
@@ -504,7 +586,6 @@ void consume_sample(struct sampling_settings *st,  pf_ll_rec_t *record, int curr
 		
 	st->total_samples++;
 	st->metrics.total_samples++;
-	//TODO also get samples from the sampling process, detect high overhead
 	if((int)record[current].pid != st->pid_uo){
 		return; }
 
@@ -523,7 +604,9 @@ void consume_sample(struct sampling_settings *st,  pf_ll_rec_t *record, int curr
 
 
 }
-
+/**
+ * @brief Prints the performance information second by second. The environmen variable SPM_PRINT_PERFORMANCE  must be declared
+ **/
 void print_performance(struct perf_info **firsts, struct sampling_settings *st ){
 		int out=1,i,j,first;
 		struct perf_info **currents=malloc(st->n_cores*sizeof(struct perf_info));

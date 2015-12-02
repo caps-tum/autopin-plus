@@ -1,3 +1,6 @@
+/** @file perf-helpers.c
+ *  @brief This file contains a collection of methods extracted from the perf tools source code used by spm
+ **/
 #include <stdio.h>
 #include <stdlib.h>
 #include <linux/perf_event.h>
@@ -9,6 +12,7 @@
 //perf/util/util.h
 #define zfree(ptr) ({ free(*ptr); *ptr = NULL; })
 
+ 
 static const char * const mem_lvl[] = {
 	"N/A",
 	"HIT",
@@ -28,6 +32,14 @@ static const char * const mem_lvl[] = {
 
 #define NUM_MEM_LVL (sizeof(mem_lvl)/sizeof(const char *))
 
+
+/** @brief Takes a memory source as given by a sample and determines whether it shoul be taken as remote access or not
+ *  l1, l2 accesses and l3 hits are considered remote accesses
+ *  @param entry The entry whose type is to be looked up
+ *  @return The type of access 0 means the access sould be examined, 1 that it can be ignored and to that it belongs 
+ *   to another type not being cache hit or remote access
+ */
+ 
 int filter_local_accesses(union perf_mem_data_src *entry){
 	//This method is based on util/sort.c:hist_entry__lvl_snprintf
 	u64 m =  PERF_MEM_LVL_NA;
@@ -71,7 +83,11 @@ int filter_local_accesses(union perf_mem_data_src *entry){
 	//any other accesses are filtered but passed as different information
 	return 2;
 }
-
+/** @brief Returns a string representation of a memory access type as given by a perf sample
+ *  @param entry The number that represents the type of access
+ *  @return The string description of the type of access
+ */
+ 
 char* print_access_type(int entry)
 {
 	char* out;
@@ -111,7 +127,9 @@ char* print_access_type(int entry)
 	return  out;
 }
 
-
+/** @brief Funtion used in the determination of the processor distribution of the machine
+ */
+ 
 static void free_cpu_topo(struct cpu_topo *tp)
 {
 	u32 i;
@@ -129,6 +147,9 @@ static void free_cpu_topo(struct cpu_topo *tp)
 }
 
 
+/** @brief Function used in the determination of the processor distribution of the machine
+ */
+ 
 static int build_cpu_topo(struct cpu_topo *tp, int cpu)
 {
 	FILE *fp;
@@ -195,6 +216,10 @@ done:
 	return ret;
 }
 
+/** @brief Function used in the determination of the processor distribution of the machine. Makes a 
+ *  system call and fills a data structure
+ */
+ 
  struct cpu_topo *build_cpu_topology(void)
 {
 	struct cpu_topo *tp;

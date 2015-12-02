@@ -1,3 +1,6 @@
+/** @file control.c
+ *  @brief This file contains the functions used to coordinate the overall action of the spm tool, including the sampling and control threads
+ **/
 
 #include <stdio.h>
 #include <errno.h>
@@ -13,6 +16,12 @@
 #include <linux/perf_event.h>
 #include <asm/unistd.h>
 
+/** @brief Every second wakes up to query if the observed process is still running for a maximal amount of time
+ * @param seconds The maximal number of seconds it will query before returning
+ * @param ss Contains the pid to observe
+ * @return -1 if the process was killed or recording must be ended, 0 if the timeout period was reached
+ */
+ 
 int wait_watch_process(int seconds,struct sampling_settings* ss){
 	int i=0,exit=0;
 	int sigres,*st=0,errn;
@@ -40,7 +49,9 @@ int wait_watch_process(int seconds,struct sampling_settings* ss){
 	return 0;
 }
 
-
+/** @brief This methods represents the control thread
+ */
+ 
 void *control_spm (void *arg){
 	int measuring_time;
 	struct sampling_settings *ss=(struct sampling_settings*  ) arg;
@@ -118,7 +129,9 @@ void *control_spm (void *arg){
 }
 
 
-//this is the main thread which itself will spawn another thread
+
+/** @brief this is the main thread which itself will spawn another thread
+ */
 void* run_numa_sampling(void *arg){
 	pthread_t control_thread, res;
 	struct sampling_settings *ss=(struct sampling_settings* ) arg;
@@ -147,7 +160,8 @@ void* run_numa_sampling(void *arg){
 	return NULL;
 }
 
-
+/** @brief This is the spmm entry point
+ */
 int init_spm(struct sampling_settings *ss){
 	pthread_t spm_thread;
 	int stres;
@@ -235,6 +249,7 @@ int init_spm(struct sampling_settings *ss){
 //Define standalone if an standalone version of the program is to be made
 //if not it will be embedded in another program with its own main
 #ifdef STANDALONE
+
 int main(int argc, char **argv)
 {	struct sampling_settings st;
 	int pid,period,wmin,mtime;
