@@ -605,7 +605,7 @@ void consume_sample(struct sampling_settings *st,  pf_ll_rec_t *record, int curr
 
 }
 /**
- * @brief Prints the performance information second by second. The environmen variable SPM_PRINT_PERFORMANCE  must be declared
+ * @brief Prints the performance information second by second. The environmen variable SPM_PRINT_PERFORMANCE  must be declared in order for the method to be called
  **/
 void print_performance(struct perf_info **firsts, struct sampling_settings *st ){
 		int out=1,i,j,first;

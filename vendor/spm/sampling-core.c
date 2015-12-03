@@ -1,5 +1,11 @@
 /** @file sampling-core.c
  *  @brief This file contains the methods from NumaTop used to access the PMU through the perf interface.
+ * 
+ *  For the complete numaTop's code, please consult its GitHub repository.
+ * 
+ * 	The methods with "ll" on their name act on load latency measurement, which is a precise performance event .
+ * 
+ *   The methods with pf act on numeric register readings, which are non precise events
  **/
  
  
@@ -95,7 +101,9 @@ int pf_ringsize_init(void)
 	return (s_mapsize - g_pagesize);
 }
 
-
+/**
+ * @brief After reading a sample updatesn the last written position in the circular buffer
+ **/ 
 static void ll_recbuf_update(pf_ll_rec_t *rec_arr, int *nrec, pf_ll_rec_t *rec)
 {
 	int i;
@@ -119,6 +127,9 @@ static void ll_recbuf_update(pf_ll_rec_t *rec_arr, int *nrec, pf_ll_rec_t *rec)
 	
 }
 
+/**
+ * @brief Called to ignore a certain number of bytes in the event descriptor
+ **/ 
  static void mmap_buffer_skip(struct perf_event_mmap_page *header, int size)
 {
 	int data_head;
@@ -144,6 +155,11 @@ mmap_buffer_reset(struct perf_event_mmap_page *header)
 	header->data_tail = data_head;
 }
 
+/**
+ * @brief Reads a certain number of buffers from the event descriptor, the result is written in buf
+ * 
+ **/ 
+ 
 static int
 mmap_buffer_read(struct perf_event_mmap_page *header, void *buf, size_t size)
 {
@@ -191,9 +207,11 @@ mmap_buffer_read(struct perf_event_mmap_page *header, void *buf, size_t size)
 	return (0);
 }
 
-
-static int
-ll_sample_read(struct perf_event_mmap_page *mhdr, int size,
+/**
+ * @brief High level method for invokeing a load latency read from the event descriptor.
+ **/
+  
+static int ll_sample_read(struct perf_event_mmap_page *mhdr, int size,
 	pf_ll_rec_t *rec)
 {
 	struct { uint32_t pid, tid; } id;
@@ -283,6 +301,10 @@ L_EXIT:
 	return (ret);
 }
 
+/**
+ * @brief Performs the system call for enabling a performance recording event
+ **/ 
+ 
 static int
 pf_event_open(struct perf_event_attr *attr, pid_t pid, int cpu, int group_fd,
 	unsigned long flags)
@@ -290,6 +312,10 @@ pf_event_open(struct perf_event_attr *attr, pid_t pid, int cpu, int group_fd,
 	return (syscall(__NR_perf_event_open, attr, pid, cpu, group_fd, flags));
 }
 
+/**
+ * @brief Performs the system call for enabling a performance recording event
+ **/
+ 
 void pf_resource_free(struct _perf_cpu *cpu)
 {
 	int i;
@@ -308,6 +334,9 @@ void pf_resource_free(struct _perf_cpu *cpu)
 	}
 }
 
+/**
+ * @brief After reading a sample, writes on the circular buffer the acquired sample and updates the circular buffer's pointer
+ **/ 
 static void
 profiling_recbuf_update(pf_profiling_rec_t *rec_arr, int *nrec,
 	pf_profiling_rec_t *rec)
@@ -332,6 +361,9 @@ profiling_recbuf_update(pf_profiling_rec_t *rec_arr, int *nrec,
 	}
 }
 
+/**
+ * @brief Used for ajusting the reading of load latency samples when a register is shared between many events
+ **/
 static uint64_t
 scale(uint64_t value, uint64_t time_enabled, uint64_t time_running)
 {
@@ -348,6 +380,9 @@ scale(uint64_t value, uint64_t time_enabled, uint64_t time_running)
 	return (res);
 }
 
+/**
+ * @brief High level method for reading a performance sample by invoking a mmapa buffer read for every field.
+ **/
 static int
 profiling_sample_read(struct perf_event_mmap_page *mhdr, int size,
 	pf_profiling_rec_t *rec)
@@ -459,7 +494,9 @@ L_EXIT:
 
 	return (ret);
 }
-
+/**
+ * @brief It reads many performance samples until the buffer is empty
+ */ 
 void pf_profiling_record(struct _perf_cpu *cpu, pf_profiling_rec_t *rec_arr,
 	int *nrec)
 {
@@ -495,6 +532,9 @@ void pf_profiling_record(struct _perf_cpu *cpu, pf_profiling_rec_t *rec_arr,
 	}
 }
 
+/**
+ * @brief Performs the system call to enable performance sampling for a given cpu and event
+ **/
 int pf_profiling_start(struct _perf_cpu *cpu, count_id_t count_id)
 {
 	if (cpu->fds[count_id] != INVALID_FD) {
@@ -505,6 +545,10 @@ int pf_profiling_start(struct _perf_cpu *cpu, count_id_t count_id)
 	return (0);
 }
 
+/**
+ *  @brief Makes the system call responsible for stopping the sampling for a given cpu and event
+ **/
+ 
 int
 pf_profiling_stop(struct _perf_cpu *cpu, count_id_t count_id)
 {
@@ -515,6 +559,9 @@ pf_profiling_stop(struct _perf_cpu *cpu, count_id_t count_id)
 	return (0);
 }
 
+/**
+ * @brief Makes the system call responsible for setting up the PMU
+ **/
 int pf_ll_setup(struct _perf_cpu *cpu, struct sampling_settings *ss )
 {
 	struct perf_event_attr attr;
@@ -549,7 +596,9 @@ int pf_ll_setup(struct _perf_cpu *cpu, struct sampling_settings *ss )
 	return (0);
 }
 
-
+/**
+ * @brief Respinsible for reading many load latency records for a certain cpu until the descriptor's buffer is empty
+ **/
 void
 pf_ll_record(struct _perf_cpu *cpu, pf_ll_rec_t *rec_arr, int *nrec)
 {
@@ -587,8 +636,11 @@ pf_ll_record(struct _perf_cpu *cpu, pf_ll_rec_t *rec_arr, int *nrec)
 	}
 }
 
-int
-pf_ll_start(struct _perf_cpu *cpu)
+/**
+ * @brief Perform the system call for starting the load latency sampling for a given cpu.
+ **/
+ 
+int pf_ll_start(struct _perf_cpu *cpu)
 {
 	if (cpu->fds[0] != INVALID_FD) {
 		return (ioctl(cpu->fds[0], PERF_EVENT_IOC_ENABLE, 0));
@@ -597,8 +649,12 @@ pf_ll_start(struct _perf_cpu *cpu)
 	return (0);
 }
 
-int
-pf_ll_stop(struct _perf_cpu *cpu)
+/**
+ * @brief Perform the system call for stopping the load latency sampling for a given cpu.
+ **/
+ 
+ 
+int pf_ll_stop(struct _perf_cpu *cpu)
 {
 	if (cpu->fds[0] != INVALID_FD) {
 		return (ioctl(cpu->fds[0], PERF_EVENT_IOC_DISABLE, 0));
@@ -606,7 +662,10 @@ pf_ll_stop(struct _perf_cpu *cpu)
 	
 	return (0);
 }
-	
+/**
+ *	@brief Initializes the cpu struct that describes every core in the system
+ **/ 	
+ 
 static void
 cpu_init(perf_cpu_t *cpu)
 {
@@ -619,7 +678,10 @@ cpu_init(perf_cpu_t *cpu)
 	cpu->map_base = MAP_FAILED;
 }
 
-
+/**
+ *	@brief Sets up the PMU for a give n event and CPU
+ **/
+ 
 int pf_profiling_setup(struct _perf_cpu *cpu, int idx, pf_conf_t *conf)
 {
 	struct perf_event_attr attr;
@@ -675,9 +737,10 @@ int pf_profiling_setup(struct _perf_cpu *cpu, int idx, pf_conf_t *conf)
 	return (0);
 }
 
-
-static int
-cpu_profiling_setup(perf_cpu_t *cpu, void *arg)
+/**
+ * @brief Sets up all the performance events that will be used by the measurement
+ **/
+static int cpu_profiling_setup(perf_cpu_t *cpu, void *arg)
 {
 	/*The events to use are declared here
 	 * */
@@ -715,43 +778,9 @@ cpu_profiling_setup(perf_cpu_t *cpu, void *arg)
 }
 
 
-void reset_pf_sampling(struct sampling_settings *ss){
-	boolean_t enabled=ss->pf_measurements;
-	ss->pf_measurements=0;
-	sleep(1);
-	if(!enabled)return;
-	for(int i=0; i<ss->n_cores; i++){
-			if(enabled){
-				for(int j=0; j<COUNT_NUM; j++){
-					pf_profiling_stop((ss->cpus_pf+i),j);
-					printf(" stop pmu ");
-				}
-			}
-	}
-
-
-	for(int i=0; i<ss->n_cores; i++){
-			memset((ss->cpus_ll+i),0,sizeof(perf_cpu_t));
-			ss->cpus_pf[i].cpuid=i;
-			if(enabled){
-				cpu_profiling_setup(ss->cpus_pf+i,NULL);
-				printf(" enable pmu ");
-			}
-		}
-
-	for(int i=0; i<ss->n_cores; i++){
-			if(enabled){
-				for(int j=0; j<COUNT_NUM; j++){
-					pf_profiling_start((ss->cpus_pf+i),j);
-					printf("start  pmu ");
-				}
-			}
-		}
-	ss->pf_measurements=1;
-
-}
-
-
+/**
+ * @brief Top level method for setting up the sampling in all the events and cpus
+ **/
 int setup_sampling(struct sampling_settings *ss){
 	for(int i=0; i<ss->n_cores; i++){
 		memset((ss->cpus_ll+i),0,sizeof(perf_cpu_t));
@@ -768,7 +797,10 @@ int setup_sampling(struct sampling_settings *ss){
 	return  0;
 }
 
-
+/**
+ * @brief Top level method for starting the sampling through all cpus and events 
+ */
+ 
 int start_sampling(struct sampling_settings *ss){
 	int ret;
 	for(int i=0; i<ss->n_cores; i++){
@@ -784,6 +816,9 @@ int start_sampling(struct sampling_settings *ss){
 	return 0;
 }	
 
+/**
+ * @brief Top level method for stopping the sampling through all cpus and events  
+ **/
 int stop_sampling(struct sampling_settings *ss){
 	int ret;
 	for(int i=0; i<ss->n_cores; i++){
@@ -799,7 +834,9 @@ int stop_sampling(struct sampling_settings *ss){
 	return 0;
 	
 }
-
+/**
+ * @brief Invokes the reading of both load latency and performance samples in all the system, it stays there until ss->end_recording is set.
+ */
 int read_samples(struct sampling_settings *ss, pf_ll_rec_t *ll_record,pf_profiling_rec_t *pf_record ){
 	int nrec_ll=0;
 	int last_read_ll=0, wr_diff_ll=0,current;
