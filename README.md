@@ -11,6 +11,7 @@ In order to build ```autopin+```, you'll need
  - a C++ compiler supporting C++ 11 (>= g++ 4.8, >= clang 3.3)
  - the **CMake** build system, at least version 2.8
  - the **Qt5** development framework, at least version 5.0.0
+ - the development version of libnuma
  - the userspace development headers from the **Linux** kernel, at least version 3.13
 
 In order to build the optional documentation, you'll also need

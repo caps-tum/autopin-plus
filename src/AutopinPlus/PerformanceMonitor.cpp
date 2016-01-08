@@ -26,6 +26,11 @@ QString PerformanceMonitor::getName() { return name; }
 
 QString PerformanceMonitor::getUnit() { return ""; }
 
+
+void PerformanceMonitor::setObservedProcessPid(int npid){
+		monitored_pid=npid;
+}
+
 void PerformanceMonitor::start(ProcessTree::autopin_tid_list tasks) {
 	for (const auto &task : tasks) {
 		start(task);

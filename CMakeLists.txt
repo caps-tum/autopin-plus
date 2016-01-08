@@ -18,6 +18,7 @@ string( TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE )
 
 ########
 # Compiler/linker options based on the different compilers
+ADD_DEFINITIONS(-std=gnu99 )
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" CXX11_SUPPORTED)
 if(CXX11_SUPPORTED)
@@ -111,9 +112,16 @@ set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Compact/Main.c
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Strategy/Scatter/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Strategy/Scatter/Main.cpp)
 
+#Numa migration tool
+#set(autopin+_HEADERS ${autopin+_HEADERS} vendor/spm/spm.h vendor/spm/uthash.h)
+set(autopin+_SOURCES ${autopin+_SOURCES} vendor/spm/sampling-core.c vendor/spm/perf_helpers.c vendor/spm/sample_processing.c vendor/spm/control.c)
+
 # External data logger
 set(autopin+_HEADERS ${autopin+_HEADERS} include/AutopinPlus/Logger/External/Main.h)
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Logger/External/Main.cpp src/AutopinPlus/Logger/External/Process.cpp)
+
+#PageMigrate performance monitor
+set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/PageMigrate/Main.cpp)
 
 # ClustSafe performance monitor
 set(autopin+_SOURCES ${autopin+_SOURCES} src/AutopinPlus/Monitor/ClustSafe/Main.cpp)
@@ -161,6 +169,9 @@ include_directories(vendor/spdlog/include/spdlog)
 # linux kernel header
 include_directories(vendor/linux)
 
+# NUMA migration tool
+include_directories(vendor/spm/)
+
 # fastlib
 include_directories(${libfast_path}/include/fast-lib)
 include_directories(${libfast_path}/include/fast-lib/external)
@@ -175,6 +186,8 @@ target_link_libraries(autopin+ -lpthread)
 add_dependencies (autopin+ libfast)
 target_link_libraries(autopin+ ${libfast_path}/lib/libfastlib_communication.a ${libfast_path}/lib/libfastlib_serialization.a)
 
+target_link_libraries(autopin+ numa)
+ 
 # Add Qt5 libraries
 qt5_use_modules(autopin+ Core)
 qt5_use_modules(autopin+ Network)
